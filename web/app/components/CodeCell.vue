@@ -120,21 +120,26 @@ const statusLabel = computed(() => ({
 
 <template>
   <section class="code-cell" :class="{ busy }">
-    <header class="cell-toolbar">
-      <span class="language">{{ cell.fenceLanguage }}</span>
-      <button class="link" title="Abrir no editor" @click="openInEditor">linha {{ cell.line }}</button>
-      <span v-if="cell.flags.length" class="flags">{{ cell.flags.join(' ') }}</span>
-      <span class="spacer" />
-      <span class="status">{{ statusLabel }}</span>
-      <button v-if="modified" class="secondary" title="Voltar ao texto do arquivo" @click="reset">desfazer edição</button>
-      <button v-if="busy" class="stop" title="Interromper" @click="stop">■</button>
-      <button v-else class="run" title="Executar (Shift+Enter)" @click="run">▶</button>
-    </header>
-    <CodeEditor v-model="source" :language="cell.fenceLanguage" @run="run" />
-    <label v-if="stdin !== null" class="stdin">
-      <span>entrada (stdin)</span>
-      <textarea v-model="stdin" :rows="Math.min(8, stdin.split('\n').length)" spellcheck="false" />
-    </label>
-    <TerminalOutput v-show="hasOutput" ref="terminal" @input="input" />
+    <!-- Two glows travel along the 2px gap around the body while the cell runs. -->
+    <div class="star star-bottom" aria-hidden="true" />
+    <div class="star star-top" aria-hidden="true" />
+    <div class="cell-body">
+      <header class="cell-toolbar">
+        <span class="language">{{ cell.fenceLanguage }}</span>
+        <button class="link" title="Abrir no editor" @click="openInEditor">linha {{ cell.line }}</button>
+        <span v-if="cell.flags.length" class="flags">{{ cell.flags.join(' ') }}</span>
+        <span class="spacer" />
+        <span class="status">{{ statusLabel }}</span>
+        <button v-if="modified" class="secondary" title="Voltar ao texto do arquivo" @click="reset">desfazer edição</button>
+        <button v-if="busy" class="stop" title="Interromper" @click="stop">■</button>
+        <button v-else class="run" title="Executar (Shift+Enter)" @click="run">▶</button>
+      </header>
+      <CodeEditor v-model="source" :language="cell.fenceLanguage" @run="run" />
+      <label v-if="stdin !== null" class="stdin">
+        <span>entrada (stdin)</span>
+        <textarea v-model="stdin" :rows="Math.min(8, stdin.split('\n').length)" spellcheck="false" />
+      </label>
+      <TerminalOutput v-show="hasOutput" ref="terminal" @input="input" />
+    </div>
   </section>
 </template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { EditorView, basicSetup } from 'codemirror'
 import { keymap } from '@codemirror/view'
-import { Prec, type Extension } from '@codemirror/state'
+import { Compartment, Prec, type Extension } from '@codemirror/state'
 import { cpp } from '@codemirror/lang-cpp'
 import { python } from '@codemirror/lang-python'
 import { oneDark } from '@codemirror/theme-one-dark'
@@ -11,7 +11,12 @@ const model = defineModel<string>({ required: true })
 const emit = defineEmits<{ run: [] }>()
 
 const container = ref<HTMLElement>()
+const { theme } = useTheme()
+const themeCompartment = new Compartment()
 let view: EditorView | null = null
+
+// Light uses CodeMirror's default highlighting; the page CSS supplies the colors around it.
+const editorTheme = (value: string): Extension => (value === 'dark' ? oneDark : [])
 
 const LANGUAGES: Record<string, () => Extension> = {
   cpp, 'c++': cpp, cxx: cpp, cc: cpp, c: cpp,
@@ -24,7 +29,7 @@ onMounted(() => {
     doc: model.value,
     extensions: [
       basicSetup,
-      oneDark,
+      themeCompartment.of(editorTheme(theme.value)),
       LANGUAGES[props.language]?.() ?? [],
       Prec.highest(
         keymap.of([{ key: 'Shift-Enter', run: () => (emit('run'), true) }]),
@@ -41,6 +46,10 @@ watch(model, (value) => {
   if (view && value !== view.state.doc.toString()) {
     view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } })
   }
+})
+
+watch(theme, (value) => {
+  view?.dispatch({ effects: themeCompartment.reconfigure(editorTheme(value)) })
 })
 
 onBeforeUnmount(() => view?.destroy())

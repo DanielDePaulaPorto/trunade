@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { Terminal } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
+import { TERMINAL_THEMES } from '~/composables/palette'
 
 const MIN_ROWS = 2
 const MAX_ROWS = 24
 
 const emit = defineEmits<{ input: [data: string] }>()
+const { theme } = useTheme()
 
 const container = ref<HTMLElement>()
 let terminal: Terminal | null = null
@@ -22,7 +24,7 @@ onMounted(() => {
     scrollback: 5000,
     fontSize: 15,
     fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
-    theme: { background: '#1b1e24', foreground: '#d7dae0', cursor: '#d7dae0' },
+    theme: TERMINAL_THEMES[theme.value],
   })
   fit = new FitAddon()
   terminal.loadAddon(fit)
@@ -34,6 +36,10 @@ onMounted(() => {
   resizeObserver = new ResizeObserver(fitWidth)
   resizeObserver.observe(container.value!)
   fitWidth()
+})
+
+watch(theme, (value) => {
+  if (terminal) terminal.options.theme = TERMINAL_THEMES[value]
 })
 
 onBeforeUnmount(() => {

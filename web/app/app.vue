@@ -1,5 +1,8 @@
 <script setup lang="ts">
-const { snapshot, connected, lastError } = useConnection()
+const { snapshot, connected, lastError, activeRuns } = useConnection()
+const { mode, cycleMode } = useTheme()
+
+const MODE_LABELS = { auto: 'tema: automático', light: 'tema: claro', dark: 'tema: escuro' }
 
 watch(
   () => snapshot.value?.fileName,
@@ -10,12 +13,16 @@ watch(
 <template>
   <div class="page">
     <header class="topbar">
+      <span class="vortex" :class="{ storming: activeRuns > 0 }" aria-hidden="true" />
       <strong class="brand">Trunade!</strong>
       <span class="file">{{ snapshot?.fileName }}</span>
       <span class="spacer" />
       <span class="connection" :class="{ online: connected }">
         {{ connected ? 'conectado' : 'reconectando…' }}
       </span>
+      <button class="theme-toggle" :title="MODE_LABELS[mode]" @click="cycleMode">
+        {{ { auto: '◐', light: '☀', dark: '☾' }[mode] }}
+      </button>
     </header>
     <main class="document">
       <p v-if="snapshot?.error" class="banner">{{ snapshot.error }}</p>

@@ -1,39 +1,66 @@
-/* System fonts only: the page must work offline in the classroom. */
+/*
+ * Palette from the "Hey, Trunade!" spell card: teal card frame, dark vortex with
+ * mint glow, bronze text-box border, red barn roof. System fonts only: the page
+ * must work offline in the classroom.
+ */
+
+/* Light ("carta"): default, and the better choice for most projectors. */
 :root {
-  --bg: #fbfaf7;
-  --surface: #ffffff;
-  --text: #1f2328;
-  --muted: #6b7077;
-  --border: #e3e1dc;
-  --accent: #c2410c;
-  --accent-text: #ffffff;
-  --code-bg: #f1efe9;
-  --run: #15803d;
-  --stop: #b91c1c;
-  --banner-bg: #fdecea;
-  --banner-text: #8a1c14;
+  --bg: #e8f3ef;
+  --surface: #fbfefd;
+  --text: #0f1f1b;
+  --muted: #4a635d;
+  --border: #a9cfc3;
+  --frame-top: #22a98e;
+  --frame-bottom: #157a68;
+  --frame-text: #ffffff;
+  --frame-muted: rgba(255, 255, 255, 0.78);
+  --accent: #0f7a64;
+  --bronze: #b5651d;
+  --danger: #b3261e;
+  --run: #0f7a64;
+  --run-text: #ffffff;
+  --stop: #b3261e;
+  --code-bg: #d9eee6;
+  --term-bg: #f3faf7;
+  --glow: #12c49e;
+  --busy-ring: #157a68;
+  --comet: #9dfbe6;
+  --banner-bg: #fbe3df;
+  --page-glow: transparent;
   --font-text: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-card: "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --radius: 10px;
+  --ring: 3px;
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #15171c;
-    --surface: #1b1e24;
-    --text: #e6e6e3;
-    --muted: #9aa0a8;
-    --border: #2c3038;
-    --accent: #fb923c;
-    --accent-text: #1b1e24;
-    --code-bg: #23272f;
-    --run: #4ade80;
-    --stop: #f87171;
-    --banner-bg: #3b1d1b;
-    --banner-text: #fca5a5;
-    color-scheme: dark;
-  }
+/* Dark ("vórtice"). */
+:root[data-theme="dark"] {
+  --bg: #08110f;
+  --surface: #0f1d1a;
+  --text: #e1f4ee;
+  --muted: #8aaea5;
+  --border: #1d3a34;
+  --frame-top: #10433a;
+  --frame-bottom: #0a2621;
+  --frame-text: #e1f4ee;
+  --frame-muted: #8aaea5;
+  --accent: #5ef2d0;
+  --bronze: #d99a4e;
+  --danger: #ff6b5e;
+  --run: #2bd4ad;
+  --run-text: #052019;
+  --stop: #ff6b5e;
+  --code-bg: #13272a;
+  --term-bg: #0e1c1a;
+  --glow: #5ef2d0;
+  --busy-ring: #145247;
+  --comet: #8ff7e1;
+  --banner-bg: #3a1714;
+  --page-glow: rgba(94, 242, 208, 0.08);
+  color-scheme: dark;
 }
 
 * {
@@ -46,11 +73,14 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  min-height: 100vh;
+  background: radial-gradient(ellipse 80% 40% at 50% 0%, var(--page-glow), transparent), var(--bg);
   color: var(--text);
   font-family: var(--font-text);
   line-height: 1.6;
 }
+
+/* --------------------------------------------------------------- topbar */
 
 .topbar {
   position: sticky;
@@ -58,33 +88,80 @@ body {
   z-index: 10;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem 1rem;
-  background: var(--bg);
-  border-bottom: 1px solid var(--border);
+  gap: 0.65rem;
+  padding: 0.45rem 1rem;
+  background: linear-gradient(var(--frame-top), var(--frame-bottom));
+  color: var(--frame-text);
   font-size: 0.85rem;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
 }
 
 .brand {
-  color: var(--accent);
+  font-family: var(--font-card);
+  font-variant: small-caps;
+  font-size: 1.15rem;
+  letter-spacing: 0.03em;
+}
+
+.file,
+.connection {
+  color: var(--frame-muted);
 }
 
 .file {
-  color: var(--muted);
   font-family: var(--font-mono);
+}
+
+.connection:not(.online) {
+  color: #ffb4ab;
 }
 
 .spacer {
   flex: 1;
 }
 
-.connection {
-  color: var(--stop);
+.theme-toggle {
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.12);
+  color: var(--frame-text);
+  font-size: 1rem;
+  cursor: pointer;
 }
 
-.connection.online {
-  color: var(--muted);
+/* The giant trunade: a small spinning vortex that speeds up while code runs. */
+.vortex {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: conic-gradient(#08110f, #5ef2d0 12%, #08110f 30%, #1fa58b 55%, #08110f 70%, #5ef2d0 85%, #08110f);
+  box-shadow: 0 0 8px rgba(94, 242, 208, 0.7);
+  animation: spin 6s linear infinite;
 }
+
+.vortex::after {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: #08110f;
+}
+
+.vortex.storming {
+  animation-duration: 0.7s;
+  box-shadow: 0 0 14px rgba(94, 242, 208, 0.95);
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ------------------------------------------------------------- document */
 
 .document {
   max-width: 920px;
@@ -96,27 +173,29 @@ body {
   padding: 0.75rem 1rem;
   border-radius: var(--radius);
   background: var(--banner-bg);
-  color: var(--banner-text);
+  color: var(--danger);
   cursor: pointer;
 }
-
-/* ------------------------------------------------------------- markdown */
 
 .markdown h1,
 .markdown h2,
 .markdown h3 {
-  line-height: 1.25;
+  font-family: var(--font-card);
+  font-variant: small-caps;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
   margin: 2rem 0 0.75rem;
 }
 
 .markdown h1 {
-  font-size: 2.1rem;
+  font-size: 2.3rem;
+  color: var(--accent);
 }
 
 .markdown h2 {
-  font-size: 1.6rem;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 0.3rem;
+  font-size: 1.7rem;
+  border-bottom: 2px solid var(--bronze);
+  padding-bottom: 0.2rem;
 }
 
 .markdown a {
@@ -132,6 +211,7 @@ body {
 
 .markdown iframe {
   border: 1px solid var(--border);
+  background: #ffffff;
 }
 
 .markdown code {
@@ -166,23 +246,89 @@ body {
 
 .markdown blockquote {
   margin: 1rem 0;
-  padding-left: 1rem;
-  border-left: 4px solid var(--border);
-  color: var(--muted);
+  padding: 0.25rem 1rem;
+  border-left: 4px solid var(--bronze);
+  background: var(--code-bg);
+  border-radius: 0 var(--radius) var(--radius) 0;
 }
 
 /* ------------------------------------------------------------ code cell */
 
+/*
+ * Star border: the cell's own background is the ring; .cell-body covers all but
+ * a --ring wide gap, and two radial glows slide through that gap while running.
+ */
 .code-cell {
+  position: relative;
   margin: 1.25rem 0;
-  border: 1px solid var(--border);
+  padding: var(--ring);
   border-radius: var(--radius);
+  background: var(--border);
+  overflow: hidden;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+.code-cell.busy {
+  background: var(--busy-ring);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--glow) 35%, transparent);
+}
+
+.cell-body {
+  position: relative;
+  z-index: 1;
+  border-radius: calc(var(--radius) - var(--ring));
   background: var(--surface);
   overflow: hidden;
 }
 
-.code-cell.busy {
-  border-color: var(--accent);
+.star {
+  position: absolute;
+  left: 0;
+  z-index: 0;
+  width: 40%;
+  height: 24px; /* centered on the ring, whatever the cell height */
+  opacity: 0;
+  background: radial-gradient(closest-side, var(--comet), transparent);
+  pointer-events: none;
+}
+
+.star-top {
+  top: -12px;
+}
+
+.star-bottom {
+  bottom: -12px;
+}
+
+/* A comet runs along each edge, in opposite directions (250% of 40% = full width). */
+.code-cell.busy .star-top {
+  animation: star-top 2.4s linear infinite;
+}
+
+.code-cell.busy .star-bottom {
+  animation: star-bottom 2.4s linear infinite;
+}
+
+@keyframes star-top {
+  from {
+    transform: translateX(-100%);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(250%);
+    opacity: 1;
+  }
+}
+
+@keyframes star-bottom {
+  from {
+    transform: translateX(250%);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-100%);
+    opacity: 1;
+  }
 }
 
 .cell-toolbar {
@@ -197,11 +343,12 @@ body {
 .language {
   font-family: var(--font-mono);
   font-weight: 600;
-  color: var(--text);
+  color: var(--accent);
 }
 
 .flags {
   font-family: var(--font-mono);
+  color: var(--bronze);
 }
 
 .cell-toolbar button {
@@ -229,15 +376,21 @@ body {
   width: 2.2rem;
   height: 2rem;
   font-size: 1rem;
-  color: var(--accent-text);
+  color: var(--run-text);
+  transition: box-shadow 0.2s;
 }
 
 .cell-toolbar .run {
   background: var(--run);
 }
 
+.cell-toolbar .run:hover {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--glow) 40%, transparent);
+}
+
 .cell-toolbar .stop {
   background: var(--stop);
+  color: #ffffff;
 }
 
 .code-editor .cm-editor {
@@ -246,6 +399,30 @@ body {
 
 .code-editor .cm-scroller {
   font-family: var(--font-mono);
+}
+
+:root:not([data-theme="dark"]) .code-editor .cm-editor {
+  background: var(--surface);
+}
+
+:root:not([data-theme="dark"]) .code-editor .cm-gutters {
+  background: var(--code-bg);
+  color: var(--muted);
+  border-right-color: var(--border);
+}
+
+:root[data-theme="dark"] .code-editor .cm-editor {
+  background: #10221f;
+}
+
+:root[data-theme="dark"] .code-editor .cm-gutters {
+  background: #0c1a17;
+  border-right: 1px solid var(--border);
+}
+
+:root:not([data-theme="dark"]) .code-editor .cm-activeLine,
+:root:not([data-theme="dark"]) .code-editor .cm-activeLineGutter {
+  background: color-mix(in srgb, var(--glow) 10%, transparent);
 }
 
 .stdin {
@@ -271,9 +448,17 @@ body {
 
 .output {
   padding: 0.5rem 0.75rem;
-  background: #1b1e24;
+  border-top: 1px solid var(--border);
+  background: var(--term-bg);
 }
 
 .output .xterm-viewport {
-  background-color: #1b1e24 !important;
+  background-color: var(--term-bg) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vortex,
+  .star {
+    animation: none !important;
+  }
 }

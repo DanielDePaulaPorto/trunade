@@ -7,6 +7,7 @@ const RECONNECT_DELAY_MS = 1000
 const snapshot = ref<Snapshot | null>(null)
 const connected = ref(false)
 const lastError = ref<string | null>(null)
+const activeRuns = ref(0)
 const runListeners = new Map<string, RunListener>()
 let socket: WebSocket | null = null
 
@@ -15,7 +16,7 @@ export function useConnection() {
   if (!socket && import.meta.client) {
     connect()
   }
-  return { snapshot, connected, lastError, send, onRun, offRun }
+  return { snapshot, connected, lastError, activeRuns, send, onRun, offRun }
 }
 
 function connect() {
@@ -58,8 +59,10 @@ function send(message: object) {
 
 function onRun(runId: string, listener: RunListener) {
   runListeners.set(runId, listener)
+  activeRuns.value = runListeners.size
 }
 
 function offRun(runId: string) {
   runListeners.delete(runId)
+  activeRuns.value = runListeners.size
 }
