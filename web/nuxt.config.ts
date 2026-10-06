@@ -4,11 +4,17 @@ export default defineNuxtConfig({
   ssr: false,
   devtools: { enabled: false },
   telemetry: false,
-  css: ['@xterm/xterm/css/xterm.css', '~/assets/main.css'],
+  css: [
+    '@fontsource-variable/jetbrains-mono',
+    'katex/dist/katex.min.css',
+    '@xterm/xterm/css/xterm.css',
+    '~/assets/main.css',
+  ],
   app: {
     head: {
       title: 'Trunade!',
       meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
+      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
     },
   },
   runtimeConfig: {

@@ -4,13 +4,15 @@ import TerminalOutput from './TerminalOutput.vue'
 
 const props = defineProps<{ cell: CodeCell }>()
 const { send, onRun, offRun } = useConnection()
+const { t } = useI18n()
 
 type Status = 'idle' | 'compiling' | 'running' | 'done'
 
 const source = ref(props.cell.source)
 const stdin = ref(props.cell.stdin)
 const status = ref<Status>('idle')
-const summary = ref('')
+const compileMs = ref<number | null>(null)
+const runMs = ref<number | null>(null)
 const hasOutput = ref(false)
 const terminal = ref<InstanceType<typeof TerminalOutput>>()
 let runId: string | null = null
@@ -25,7 +27,8 @@ function run() {
   if (busy.value) stop()
   runId = crypto.randomUUID()
   hasOutput.value = true
-  summary.value = ''
+  compileMs.value = null
+  runMs.value = null
   endsWithNewline = true
   status.value = 'compiling'
   terminal.value?.reset()
@@ -35,6 +38,13 @@ function run() {
 
 function stop() {
   if (runId) send({ type: 'stop', runId })
+}
+
+function clearOutput() {
+  stop()
+  terminal.value?.reset()
+  hasOutput.value = false
+  status.value = 'idle'
 }
 
 function input(data: string) {
@@ -57,7 +67,8 @@ function handle(message: RunMessage) {
       status.value = 'done'
       terminal.value?.setInteractive(false)
       writeOutcome(message.outcome)
-      summary.value = timings(message.compileMs, message.runMs)
+      compileMs.value = message.compileMs
+      runMs.value = message.runMs
       offRun(message.runId)
       runId = null
   }
@@ -78,22 +89,18 @@ function writeOutcome(outcome: Outcome) {
 
 function describe(outcome: Outcome): string {
   switch (outcome.kind) {
-    case 'exited': return outcome.code === 0 ? '' : `código de saída ${outcome.code}`
+    case 'exited': return outcome.code === 0 ? '' : t('exitCode', { code: outcome.code })
     case 'signaled': return outcome.signal
-    case 'compileFailed': return 'falha na compilação'
-    case 'timedOut': return outcome.phase === 'compile' ? 'compilação excedeu o tempo' : 'tempo limite excedido'
-    case 'outputLimitExceeded': return `saída excedeu ${outcome.limit} bytes`
-    case 'stopped': return 'interrompido'
+    case 'compileFailed': return t('compileFailed')
+    case 'timedOut': return t(outcome.phase === 'compile' ? 'compileTimedOut' : 'runTimedOut')
+    case 'outputLimitExceeded': return t('outputLimit', { limit: outcome.limit })
+    case 'stopped': return t('stopped')
     case 'error': return outcome.message
   }
 }
 
-function timings(compileMs: number | null, runMs: number | null): string {
-  const seconds = (ms: number) => `${(ms / 1000).toFixed(2)} s`
-  return [
-    compileMs != null && `compilou em ${seconds(compileMs)}`,
-    runMs != null && `rodou em ${seconds(runMs)}`,
-  ].filter(Boolean).join(' · ')
+function seconds(ms: number) {
+  return `${(ms / 1000).toFixed(2)} s`
 }
 
 function reset() {
@@ -109,35 +116,49 @@ onBeforeUnmount(() => {
   stop()
   if (runId) offRun(runId)
 })
-
-const statusLabel = computed(() => ({
-  idle: '',
-  compiling: 'compilando…',
-  running: 'executando…',
-  done: summary.value,
-})[status.value])
 </script>
 
 <template>
   <section class="code-cell" :class="{ busy }">
-    <!-- Two glows travel along the 2px gap around the body while the cell runs. -->
+    <!-- Two comets travel along the ring around the body while the cell runs. -->
     <div class="star star-bottom" aria-hidden="true" />
     <div class="star star-top" aria-hidden="true" />
     <div class="cell-body">
       <header class="cell-toolbar">
         <span class="language">{{ cell.fenceLanguage }}</span>
-        <button class="link" title="Abrir no editor" @click="openInEditor">linha {{ cell.line }}</button>
-        <span v-if="cell.flags.length" class="flags">{{ cell.flags.join(' ') }}</span>
+        <span v-if="cell.flags.length" class="chip" :title="t('flags')">
+          <AppIcon name="flag" />{{ cell.flags.join(' ') }}
+        </span>
         <span class="spacer" />
-        <span class="status">{{ statusLabel }}</span>
-        <button v-if="modified" class="secondary" title="Voltar ao texto do arquivo" @click="reset">desfazer edição</button>
-        <button v-if="busy" class="stop" title="Interromper" @click="stop">■</button>
-        <button v-else class="run" title="Executar (Shift+Enter)" @click="run">▶</button>
+        <span v-if="busy" class="chip" :title="t(status === 'compiling' ? 'compiling' : 'running')">
+          <AppIcon name="spinner" class="spin" />
+        </span>
+        <span v-if="compileMs != null" class="chip" :title="t('compileTime')">
+          <AppIcon name="hammer" />{{ seconds(compileMs) }}
+        </span>
+        <span v-if="runMs != null" class="chip" :title="t('runTime')">
+          <AppIcon name="timer" />{{ seconds(runMs) }}
+        </span>
+        <button class="tool" :title="t('openInEditor', { line: cell.line })" @click="openInEditor">
+          <AppIcon name="pencil" />
+        </button>
+        <button v-if="modified" class="tool" :title="t('undoEdit')" @click="reset">
+          <AppIcon name="undo" />
+        </button>
+        <button v-if="hasOutput && !busy" class="tool" :title="t('clearOutput')" @click="clearOutput">
+          <AppIcon name="eraser" />
+        </button>
+        <button v-if="busy" class="tool stop" :title="t('stop')" @click="stop">
+          <AppIcon name="stop" />
+        </button>
+        <button v-else class="tool run" :title="t('run')" @click="run">
+          <AppIcon name="play" />
+        </button>
       </header>
       <CodeEditor v-model="source" :language="cell.fenceLanguage" @run="run" />
-      <label v-if="stdin !== null" class="stdin">
-        <span>entrada (stdin)</span>
-        <textarea v-model="stdin" :rows="Math.min(8, stdin.split('\n').length)" spellcheck="false" />
+      <label v-if="stdin !== null" class="stdin" :title="t('stdin')">
+        <AppIcon name="keyboard" class="stdin-icon" />
+        <textarea v-model="stdin" :rows="Math.min(8, stdin.split('\n').length)" spellcheck="false" :aria-label="t('stdin')" />
       </label>
       <TerminalOutput v-show="hasOutput" ref="terminal" @input="input" />
     </div>

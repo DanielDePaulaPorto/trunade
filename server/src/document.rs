@@ -6,6 +6,13 @@ use comrak::{Arena, Options, markdown_to_html, parse_document};
 use serde::Serialize;
 
 pub const STDIN_FENCE: &str = "stdin";
+pub const QUIZ_FENCE: &str = "quiz";
+
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct QuizOption {
+    pub html: String,
+    pub correct: bool,
+}
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
@@ -26,12 +33,18 @@ pub enum Cell {
         timeout_seconds: Option<f64>,
         stdin: Option<String>,
     },
+    /// ```quiz block: question in Markdown, then `- [ ]` / `- [x]` options.
+    Quiz {
+        id: String,
+        question: String,
+        options: Vec<QuizOption>,
+    },
 }
 
 impl Cell {
     pub fn id(&self) -> &str {
         match self {
-            Cell::Markdown { id, .. } | Cell::Code { id, .. } => id,
+            Cell::Markdown { id, .. } | Cell::Code { id, .. } | Cell::Quiz { id, .. } => id,
         }
     }
 }
@@ -66,12 +79,15 @@ pub fn parse(markdown: &str, is_runnable: impl Fn(&str) -> bool) -> Vec<Cell> {
         let attaches_stdin = info.language == STDIN_FENCE
             && builder.last_code_accepts_stdin()
             && is_blank(&lines, next_markdown_line, start);
-        if !attaches_stdin && !is_runnable(&info.language) {
+        let is_quiz = info.language == QUIZ_FENCE;
+        if !attaches_stdin && !is_quiz && !is_runnable(&info.language) {
             continue;
         }
         builder.push_markdown(&lines, next_markdown_line, start);
         if attaches_stdin {
             builder.attach_stdin(&block.literal);
+        } else if is_quiz {
+            builder.push_quiz(&block.literal);
         } else {
             builder.push_code(info, start, block);
         }
@@ -143,9 +159,33 @@ fn markdown_options() -> Options<'static> {
     options.extension.tasklist = true;
     options.extension.footnotes = true;
     options.extension.alerts = true;
+    options.extension.math_dollars = true; // $x$, $$x$$ → rendered by KaTeX in the browser
+    options.extension.math_code = true; // ```math blocks
     // Single user rendering their own files: raw HTML (div, iframe, img) is wanted.
     options.render.r#unsafe = true;
     options
+}
+
+/// `- [ ] text` or `- [x] text` → option with inline-rendered text.
+fn parse_quiz_option(line: &str) -> Option<QuizOption> {
+    let rest = line.trim_start().strip_prefix(['-', '*'])?.trim_start();
+    let (mark, text) = rest.strip_prefix('[')?.split_once(']')?;
+    let correct = match mark {
+        " " => false,
+        "x" | "X" => true,
+        _ => return None,
+    };
+    Some(QuizOption { html: render_inline(text.trim()), correct })
+}
+
+/// Renders one line of Markdown without the surrounding paragraph.
+fn render_inline(text: &str) -> String {
+    let html = markdown_to_html(text, &markdown_options());
+    let html = html.trim();
+    html.strip_prefix("<p>")
+        .and_then(|inner| inner.strip_suffix("</p>"))
+        .unwrap_or(html)
+        .to_string()
 }
 
 /// Lines `[from, to)` are all blank (1-based).
@@ -187,6 +227,20 @@ impl CellBuilder {
             timeout_seconds: info.timeout_seconds,
             stdin: None,
         });
+    }
+
+    fn push_quiz(&mut self, text: &str) {
+        let mut question = Vec::new();
+        let mut options = Vec::new();
+        for line in text.lines() {
+            match parse_quiz_option(line) {
+                Some(option) => options.push(option),
+                None => question.push(line),
+            }
+        }
+        let question = markdown_to_html(&question.join("\n"), &markdown_options());
+        let id = self.unique_id(&("quiz", text));
+        self.cells.push(Cell::Quiz { id, question, options });
     }
 
     fn last_code_accepts_stdin(&self) -> bool {
@@ -286,6 +340,23 @@ mod tests {
     fn identical_cells_get_distinct_ids() {
         let cells = parse("```cpp\nx\n```\n\n```cpp\nx\n```\n", runnable);
         assert_ne!(cells[0].id(), cells[1].id());
+    }
+
+    #[test]
+    fn quiz_block_becomes_quiz_cell() {
+        let cells = parse("```quiz\nQual é **O(log n)**?\n- [ ] busca linear\n- [x] busca `binária`\n```\n", runnable);
+        let Cell::Quiz { question, options, .. } = &cells[0] else { panic!("expected quiz") };
+        assert!(question.contains("<strong>O(log n)</strong>"));
+        assert_eq!(options.len(), 2);
+        assert!(!options[0].correct);
+        assert!(options[1].correct);
+        assert_eq!(options[1].html, "busca <code>binária</code>");
+    }
+
+    #[test]
+    fn math_is_marked_for_the_browser() {
+        let cells = parse("Área $\\pi r^2$.\n", runnable);
+        assert!(matches!(&cells[0], Cell::Markdown { html, .. } if html.contains("data-math-style=\"inline\"")));
     }
 
     #[test]

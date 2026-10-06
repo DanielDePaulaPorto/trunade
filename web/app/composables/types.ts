@@ -15,7 +15,14 @@ export interface CodeCell {
   stdin: string | null
 }
 
-export type Cell = MarkdownCell | CodeCell
+export interface QuizCell {
+  kind: 'quiz'
+  id: string
+  question: string
+  options: { html: string; correct: boolean }[]
+}
+
+export type Cell = MarkdownCell | CodeCell | QuizCell
 
 export interface Snapshot {
   fileName: string

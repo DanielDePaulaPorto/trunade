@@ -1,13 +1,39 @@
 <script setup lang="ts">
-import { Terminal } from '@xterm/xterm'
+import { Terminal, type ITheme } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
-import { TERMINAL_THEMES } from '~/composables/palette'
 
 const MIN_ROWS = 2
 const MAX_ROWS = 24
+const BASE_FONT_PX = 15
+const SHOW_CURSOR = '\x1b[?25h'
+const HIDE_CURSOR = '\x1b[?25l'
+
+/** Always a black terminal, whatever the page theme. */
+const THEME: ITheme = {
+  background: '#000000',
+  foreground: '#e8e8e8',
+  cursor: '#e8e8e8',
+  selectionBackground: '#3a3a3a',
+  black: '#000000',
+  red: '#ff5f56',
+  green: '#a6e22e',
+  yellow: '#e6db74',
+  blue: '#66d9ef',
+  magenta: '#f92672',
+  cyan: '#4fd6be',
+  white: '#e8e8e8',
+  brightBlack: '#75715e',
+  brightRed: '#ff8178',
+  brightGreen: '#c4f060',
+  brightYellow: '#f4ea9a',
+  brightBlue: '#9ae7f7',
+  brightMagenta: '#fc6a9f',
+  brightCyan: '#86ead9',
+  brightWhite: '#ffffff',
+}
 
 const emit = defineEmits<{ input: [data: string] }>()
-const { theme } = useTheme()
+const { fontScale } = usePreferences()
 
 const container = ref<HTMLElement>()
 let terminal: Terminal | null = null
@@ -22,13 +48,14 @@ onMounted(() => {
     disableStdin: true,
     cursorBlink: true,
     scrollback: 5000,
-    fontSize: 15,
-    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
-    theme: TERMINAL_THEMES[theme.value],
+    fontSize: fontSize(),
+    fontFamily: '"JetBrains Mono Variable", ui-monospace, Menlo, monospace',
+    theme: THEME,
   })
   fit = new FitAddon()
   terminal.loadAddon(fit)
   terminal.open(container.value!)
+  terminal.write(HIDE_CURSOR)
   terminal.onData((data) => {
     if (interactive) emit('input', data)
   })
@@ -38,14 +65,20 @@ onMounted(() => {
   fitWidth()
 })
 
-watch(theme, (value) => {
-  if (terminal) terminal.options.theme = TERMINAL_THEMES[value]
+watch(fontScale, () => {
+  if (!terminal) return
+  terminal.options.fontSize = fontSize()
+  fitWidth()
 })
 
 onBeforeUnmount(() => {
   resizeObserver?.disconnect()
   terminal?.dispose()
 })
+
+function fontSize() {
+  return Math.round(BASE_FONT_PX * fontScale.value)
+}
 
 function fitWidth() {
   const cols = fit?.proposeDimensions()?.cols
@@ -68,9 +101,6 @@ function reset() {
   setInteractive(false)
 }
 
-const SHOW_CURSOR = '\x1b[?25h'
-const HIDE_CURSOR = '\x1b[?25l'
-
 function setInteractive(value: boolean) {
   interactive = value
   if (!terminal) return
@@ -79,6 +109,7 @@ function setInteractive(value: boolean) {
   terminal.options.convertEol = !value
   terminal.options.disableStdin = !value
   if (value) terminal.focus()
+  else terminal.blur() // give the keys back to page navigation
 }
 
 function write(text: string) {
