@@ -1,16 +1,18 @@
 <script setup lang="ts">
 import { EditorView, basicSetup } from 'codemirror'
 import { keymap } from '@codemirror/view'
-import { Prec, type Extension } from '@codemirror/state'
+import { Compartment, Prec, type Extension } from '@codemirror/state'
 import { cpp } from '@codemirror/lang-cpp'
 import { python } from '@codemirror/lang-python'
-import { monokai } from '~/composables/monokai'
+import { MONOKAI } from '~/composables/monokai'
 
 const props = defineProps<{ language: string }>()
 const model = defineModel<string>({ required: true })
 const emit = defineEmits<{ run: [] }>()
 
 const container = ref<HTMLElement>()
+const { codeTheme } = usePreferences()
+const colors = new Compartment()
 let view: EditorView | null = null
 
 const LANGUAGES: Record<string, () => Extension> = {
@@ -24,7 +26,7 @@ onMounted(() => {
     doc: model.value,
     extensions: [
       basicSetup,
-      monokai,
+      colors.of(MONOKAI[codeTheme.value]),
       LANGUAGES[props.language]?.() ?? [],
       Prec.highest(
         keymap.of([
@@ -46,6 +48,8 @@ watch(model, (value) => {
     view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: value } })
   }
 })
+
+watch(codeTheme, (value) => view?.dispatch({ effects: colors.reconfigure(MONOKAI[value]) }))
 
 onBeforeUnmount(() => view?.destroy())
 </script>

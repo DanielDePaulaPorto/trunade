@@ -57,11 +57,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       </header>
       <p v-if="snapshot?.error" class="banner">{{ snapshot.error }}</p>
       <p v-if="lastError" class="banner" @click="lastError = null">{{ lastError }}</p>
-      <template v-for="cell in snapshot?.cells ?? []" :key="cell.id">
-        <MarkdownCell v-if="cell.kind === 'markdown'" :html="cell.html" />
-        <CodeCell v-else-if="cell.kind === 'code'" :cell="cell" />
-        <QuizCell v-else :cell="cell" />
-      </template>
+      <CellView v-for="cell in snapshot?.cells ?? []" :key="cell.id" :cell="cell" />
     </main>
 
     <Transition name="slide">

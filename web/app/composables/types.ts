@@ -22,7 +22,13 @@ export interface QuizCell {
   options: { html: string; correct: boolean }[]
 }
 
-export type Cell = MarkdownCell | CodeCell | QuizCell
+export interface StepsCell {
+  kind: 'steps'
+  id: string
+  steps: { title: string; cells: Cell[] }[]
+}
+
+export type Cell = MarkdownCell | CodeCell | QuizCell | StepsCell
 
 export interface Snapshot {
   fileName: string

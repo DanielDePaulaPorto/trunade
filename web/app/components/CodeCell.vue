@@ -15,6 +15,7 @@ const compileMs = ref<number | null>(null)
 const runMs = ref<number | null>(null)
 const hasOutput = ref(false)
 const terminal = ref<InstanceType<typeof TerminalOutput>>()
+const runButton = ref<HTMLButtonElement>()
 let runId: string | null = null
 let endsWithNewline = true
 
@@ -22,6 +23,13 @@ const modified = computed(
   () => source.value !== props.cell.source || stdin.value !== props.cell.stdin,
 )
 const busy = computed(() => status.value === 'compiling' || status.value === 'running')
+
+/** Run with a spark at the click, or at the ▶ button when started from the keyboard. */
+function runWithSpark(event?: MouseEvent) {
+  const origin = event ?? runButton.value
+  if (origin) spark(origin)
+  run()
+}
 
 function run() {
   if (busy.value) stop()
@@ -130,14 +138,15 @@ onBeforeUnmount(() => {
           <AppIcon name="flag" />{{ cell.flags.join(' ') }}
         </span>
         <span class="spacer" />
-        <span v-if="busy" class="chip" :title="t(status === 'compiling' ? 'compiling' : 'running')">
+        <span v-if="busy" class="chip">
           <AppIcon name="spinner" class="spin" />
+          <span class="shiny">{{ t(status === 'compiling' ? 'compiling' : 'running') }}</span>
         </span>
         <span v-if="compileMs != null" class="chip" :title="t('compileTime')">
-          <AppIcon name="hammer" />{{ seconds(compileMs) }}
+          <AppIcon name="hammer" /><CountUp :value="compileMs" :format="seconds" />
         </span>
         <span v-if="runMs != null" class="chip" :title="t('runTime')">
-          <AppIcon name="timer" />{{ seconds(runMs) }}
+          <AppIcon name="timer" /><CountUp :value="runMs" :format="seconds" />
         </span>
         <button class="tool" :title="t('openInEditor', { line: cell.line })" @click="openInEditor">
           <AppIcon name="pencil" />
@@ -151,11 +160,11 @@ onBeforeUnmount(() => {
         <button v-if="busy" class="tool stop" :title="t('stop')" @click="stop">
           <AppIcon name="stop" />
         </button>
-        <button v-else class="tool run" :title="t('run')" @click="run">
+        <button v-else ref="runButton" class="tool run" :title="t('run')" @click="runWithSpark">
           <AppIcon name="play" />
         </button>
       </header>
-      <CodeEditor v-model="source" :language="cell.fenceLanguage" @run="run" />
+      <CodeEditor v-model="source" :language="cell.fenceLanguage" @run="runWithSpark()" />
       <label v-if="stdin !== null" class="stdin" :title="t('stdin')">
         <AppIcon name="keyboard" class="stdin-icon" />
         <textarea v-model="stdin" :rows="Math.min(8, stdin.split('\n').length)" spellcheck="false" :aria-label="t('stdin')" />

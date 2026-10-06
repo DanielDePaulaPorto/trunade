@@ -52,6 +52,10 @@ export async function renderMermaid(root: HTMLElement, theme: Theme) {
  */
 export function fitIframes(root: HTMLElement) {
   for (const iframe of root.querySelectorAll('iframe')) {
+    if (iframe.dataset.width) {
+      scaleDeclaredWidth(iframe, Number(iframe.dataset.width))
+      continue
+    }
     const fit = () => {
       const page = sameOriginPage(iframe)
       if (!page) return
@@ -64,6 +68,28 @@ export function fitIframes(root: HTMLElement) {
     iframe.addEventListener('load', fit)
     if (iframe.contentDocument?.readyState === 'complete') fit()
   }
+}
+
+const DEFAULT_IFRAME_HEIGHT_PX = 500
+
+/**
+ * `<iframe data-width="1200">`: the page is laid out at the width it needs and
+ * scaled down to the column, which works for any site, measurable or not.
+ */
+function scaleDeclaredWidth(iframe: HTMLIFrameElement, width: number) {
+  const height = Number(iframe.getAttribute('height')) || DEFAULT_IFRAME_HEIGHT_PX
+  const frame = document.createElement('div')
+  frame.className = 'iframe-scaler'
+  iframe.replaceWith(frame)
+  frame.append(iframe)
+  Object.assign(iframe.style, { width: `${width}px`, height: `${height}px`, transformOrigin: '0 0' })
+  const fit = () => {
+    const scale = Math.min(1, frame.clientWidth / width)
+    iframe.style.transform = `scale(${scale})`
+    frame.style.height = `${height * scale}px`
+  }
+  new ResizeObserver(fit).observe(frame)
+  fit()
 }
 
 function sameOriginPage(iframe: HTMLIFrameElement): HTMLElement | null {

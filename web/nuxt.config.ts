@@ -5,6 +5,7 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   telemetry: false,
   css: [
+    '@fontsource-variable/atkinson-hyperlegible-next',
     '@fontsource-variable/jetbrains-mono',
     'katex/dist/katex.min.css',
     '@xterm/xterm/css/xterm.css',

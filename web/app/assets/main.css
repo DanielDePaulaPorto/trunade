@@ -17,15 +17,35 @@
   --border: #dde6e2;
   --danger: #c0392b;
   --overlay: rgba(10, 20, 17, 0.35);
-  --code-bg: #272822;
   --term-bg: #000000;
   --comet: #9dfbe6;
-  --font-text: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-text: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
   --font-title: var(--font-text);
   --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
   --radius: 10px;
   --ring: 3px;
   color-scheme: light;
+}
+
+/* Code colors follow their own preference (Monokai light or dark). */
+:root {
+  --code-bg: #fdfaf4;
+  --code-fg: #2c292d;
+  --code-muted: #8c8577;
+  --code-line: #e8e0d2;
+  --code-hover: rgba(0, 0, 0, 0.06);
+  --code-run: #3a8a12;
+  --code-stop: #d3245c;
+}
+
+:root[data-code-theme="dark"] {
+  --code-bg: #272822;
+  --code-fg: #f8f8f2;
+  --code-muted: #a59f85;
+  --code-line: #3e3d32;
+  --code-hover: rgba(255, 255, 255, 0.08);
+  --code-run: #a6e22e;
+  --code-stop: #f92672;
 }
 
 :root[data-theme="dark"] {
@@ -130,27 +150,48 @@ button {
   font-size: 0.8rem;
 }
 
-.skull-disc {
-  fill: var(--brand);
+.vortex-disc {
+  fill: #0c1513;
+}
+
+.vortex-ring {
+  fill: none;
+  transform-box: view-box;
+  transform-origin: 50px 50px;
+}
+
+.vortex-ring.outer {
+  stroke: var(--brand);
+  stroke-width: 5;
+  stroke-dasharray: 40 14;
+}
+
+.vortex-ring.inner {
+  stroke: #5ef2d0;
+  stroke-width: 2.5;
+  stroke-dasharray: 22 10;
+  opacity: 0.8;
 }
 
 .skull-bone {
-  fill: #ffffff;
+  fill: #e6f0ec;
 }
 
 .skull-eye {
   fill: transparent;
 }
 
-.skull-mark.running .skull-eye {
-  fill: var(--comet);
-  animation: blink 1.4s ease-in-out infinite;
+/* Full turns around the skull, never back and forth. */
+.skull-mark.running .vortex-ring.outer {
+  animation: spin 2.4s linear infinite;
 }
 
-@keyframes blink {
-  50% {
-    opacity: 0.1;
-  }
+.skull-mark.running .vortex-ring.inner {
+  animation: spin 1.6s linear infinite reverse;
+}
+
+.skull-mark.running .skull-eye {
+  fill: #5ef2d0;
 }
 
 /* ---------------------------------------------------------- document */
@@ -219,6 +260,17 @@ button {
   min-height: 4rem;
 }
 
+/* Wrapper for <iframe data-width>: the iframe keeps its own width and is scaled. */
+.iframe-scaler {
+  width: 100%;
+  overflow: hidden;
+  border-radius: var(--radius);
+}
+
+.iframe-scaler iframe {
+  max-width: none;
+}
+
 .markdown code {
   font-family: var(--font-mono);
   font-size: 0.88em;
@@ -229,7 +281,8 @@ button {
 
 .markdown pre {
   background: var(--code-bg);
-  color: #f8f8f2;
+  color: var(--code-fg);
+  border: 1px solid var(--code-line);
   padding: 1rem;
   border-radius: var(--radius);
   overflow-x: auto;
@@ -360,21 +413,21 @@ button {
   }
 }
 
-/* The toolbar sits on the Monokai background: its colors are fixed, not themed. */
+/* The toolbar sits on the code background, so it uses the code colors. */
 .cell-toolbar {
   display: flex;
   align-items: center;
   gap: 0.35rem;
   padding: 0.3rem 0.4rem 0.3rem 0.85rem;
   font-size: 0.78rem;
-  color: #a59f85;
-  border-bottom: 1px solid #3e3d32;
+  color: var(--code-muted);
+  border-bottom: 1px solid var(--code-line);
 }
 
 .language {
   font-family: var(--font-mono);
   font-weight: 600;
-  color: #f8f8f2;
+  color: var(--code-fg);
   margin-right: 0.25rem;
 }
 
@@ -407,8 +460,8 @@ button {
 }
 
 .tool:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.08);
-  color: #f8f8f2;
+  background: var(--code-hover);
+  color: var(--code-fg);
 }
 
 .tool:disabled {
@@ -422,11 +475,11 @@ button {
 }
 
 .cell-toolbar .run {
-  color: #a6e22e;
+  color: var(--code-run);
 }
 
 .cell-toolbar .stop {
-  color: #f92672;
+  color: var(--code-stop);
 }
 
 .spin {
@@ -461,7 +514,7 @@ button {
   gap: 0.6rem;
   align-items: flex-start;
   padding: 0.5rem 0.85rem;
-  border-top: 1px solid #3e3d32;
+  border-top: 1px solid var(--code-line);
   background: var(--term-bg);
   color: #75715e;
 }
@@ -484,7 +537,7 @@ button {
 
 .output {
   padding: 0.5rem 0.85rem;
-  border-top: 1px solid #3e3d32;
+  border-top: 1px solid var(--code-line);
   background: var(--term-bg);
 }
 
@@ -569,6 +622,11 @@ button {
 
 .quiz-option.chosen .quiz-mark.square {
   background: var(--brand);
+}
+
+/* After revealing, the student's own choice keeps a thicker outline. */
+.quiz.revealed .quiz-option.chosen {
+  border-width: 2px;
 }
 
 .quiz.revealed .quiz-option {
@@ -816,6 +874,244 @@ kbd {
   rotate: 90deg;
 }
 
+/* ------------------------------------------------------------- effects */
+
+.prelayer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: min(22rem, 100%);
+  translate: 100% 0;
+  animation: layer-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+}
+
+.prelayer-brand {
+  background: var(--brand);
+}
+
+.prelayer-vortex {
+  background: #0c1513;
+  animation-delay: 0.07s;
+}
+
+.overlay > .settings {
+  translate: 100% 0;
+  animation: layer-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) 0.14s forwards;
+}
+
+.settings > * {
+  opacity: 0;
+  animation: item-in 0.35s ease forwards;
+  animation-delay: calc(0.3s + var(--i, 0) * 0.05s);
+}
+
+@keyframes layer-in {
+  to {
+    translate: 0 0;
+  }
+}
+
+@keyframes item-in {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.spark-burst {
+  position: fixed;
+  z-index: 50;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.spark-burst span {
+  position: absolute;
+  left: -1px;
+  top: -9px;
+  width: 2px;
+  height: 7px;
+  border-radius: 1px;
+  background: var(--brand);
+  transform-origin: 1px 9px;
+  rotate: var(--angle);
+  animation: spark 0.45s ease-out forwards;
+}
+
+@keyframes spark {
+  from {
+    translate: 0 0;
+    opacity: 1;
+  }
+  to {
+    translate: 0 -14px;
+    opacity: 0;
+    scale: 1 0.3;
+  }
+}
+
+/* A light sweep across the status text (idea from vue-bits ShinyText). */
+.shiny {
+  font-family: var(--font-text);
+  background: linear-gradient(110deg, var(--code-muted) 35%, var(--code-fg) 50%, var(--code-muted) 65%);
+  background-size: 250% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shine 1.8s linear infinite;
+}
+
+@keyframes shine {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: -150% 0;
+  }
+}
+
+/* ---------------------------------------------------------------- steps */
+
+.steps {
+  margin: 1.5rem 0;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.steps-track {
+  display: flex;
+  list-style: none;
+  margin: 0 0 0.5rem;
+  padding: 0;
+}
+
+.steps-track li {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  min-width: 0;
+  text-align: center;
+}
+
+/* The line linking each step to the next one. */
+.steps-track li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 1rem;
+  left: calc(50% + 1.2rem);
+  right: calc(-50% + 1.2rem);
+  height: 2px;
+  background: var(--border);
+  transition: background 0.3s;
+}
+
+.steps-track li.done::after {
+  background: var(--brand);
+}
+
+.steps-dot {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 2px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.3s, border-color 0.3s, color 0.3s;
+}
+
+.steps-track li.active .steps-dot {
+  border-color: var(--brand);
+  color: var(--brand);
+}
+
+.steps-track li.done .steps-dot {
+  border-color: var(--brand);
+  background: var(--brand);
+  color: var(--brand-contrast);
+}
+
+.steps-title {
+  font-size: 0.8rem;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.steps-track li.active .steps-title {
+  color: var(--text);
+  font-weight: 700;
+}
+
+.steps-panel {
+  animation: step-in 0.3s ease;
+}
+
+.steps-body.backward .steps-panel {
+  animation-name: step-in-back;
+}
+
+@keyframes step-in {
+  from {
+    opacity: 0;
+    transform: translateX(1.5rem);
+  }
+}
+
+@keyframes step-in-back {
+  from {
+    opacity: 0;
+    transform: translateX(-1.5rem);
+  }
+}
+
+.steps-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.steps-progress {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.steps-button {
+  padding: 0.45rem 1rem;
+  border: 0;
+  border-radius: 8px;
+  background: var(--brand);
+  color: var(--brand-contrast);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.steps-button.secondary {
+  background: var(--raised);
+  color: var(--text);
+}
+
+.steps-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* ---------------------------------------------------------- transitions */
 
 .slide-enter-active,
@@ -825,11 +1121,6 @@ kbd {
   transition: opacity 0.2s;
 }
 
-.slide-enter-active .settings,
-.slide-leave-active .settings {
-  transition: transform 0.25s ease;
-}
-
 .slide-enter-from,
 .slide-leave-to,
 .fade-enter-from,
@@ -837,7 +1128,10 @@ kbd {
   opacity: 0;
 }
 
-.slide-enter-from .settings,
+.slide-leave-active .settings {
+  transition: transform 0.25s ease;
+}
+
 .slide-leave-to .settings {
   transform: translateX(100%);
 }
@@ -848,5 +1142,18 @@ kbd {
   *::after {
     animation: none !important;
     transition: none !important;
+  }
+
+  /* Without the entrance animations, show their end state directly. */
+  .overlay > .settings {
+    translate: 0 0;
+  }
+
+  .settings > * {
+    opacity: 1;
+  }
+
+  .prelayer {
+    display: none;
   }
 }

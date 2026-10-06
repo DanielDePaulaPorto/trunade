@@ -1,15 +1,20 @@
 <script setup lang="ts">
-import type { Locale, ThemeMode } from '~/composables/usePreferences'
+import type { CodeThemeMode, Locale, ThemeMode } from '~/composables/usePreferences'
 import type { IconName } from '~/composables/icons'
 
 const emit = defineEmits<{ close: [] }>()
 const { t } = useI18n()
-const { themeMode, locale, fontScale, growFont, shrinkFont, resetFont } = usePreferences()
+const { themeMode, codeThemeMode, locale, fontScale, growFont, shrinkFont, resetFont } = usePreferences()
 
 const THEMES: { mode: ThemeMode; icon: IconName; label: 'themeAuto' | 'themeLight' | 'themeDark' }[] = [
   { mode: 'auto', icon: 'monitor', label: 'themeAuto' },
   { mode: 'light', icon: 'sun', label: 'themeLight' },
   { mode: 'dark', icon: 'moon', label: 'themeDark' },
+]
+const CODE_THEMES: { mode: CodeThemeMode; label: 'codeAuto' | 'codeLight' | 'codeDark' }[] = [
+  { mode: 'auto', label: 'codeAuto' },
+  { mode: 'light', label: 'codeLight' },
+  { mode: 'dark', label: 'codeDark' },
 ]
 const LOCALES: { value: Locale; label: string }[] = [
   { value: 'pt', label: 'Português' },
@@ -35,13 +40,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
 <template>
   <div class="overlay" @click.self="emit('close')">
+    <!-- Colored layers sweep in before the panel (idea from vue-bits StaggeredMenu). -->
+    <div class="prelayer prelayer-brand" aria-hidden="true" />
+    <div class="prelayer prelayer-vortex" aria-hidden="true" />
     <aside class="settings" :aria-label="t('settings')">
-      <header class="settings-header">
+      <header class="settings-header" style="--i: 1">
         <strong>{{ t('settings') }}</strong>
         <button class="tool" :title="t('close')" @click="emit('close')"><AppIcon name="close" /></button>
       </header>
 
-      <section>
+      <section style="--i: 2">
         <h3><AppIcon name="type" />{{ t('fontSize') }}</h3>
         <div class="stepper">
           <button class="tool" @click="shrinkFont"><AppIcon name="minus" /></button>
@@ -52,7 +60,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <p class="hint">{{ t('fontSizeHint') }}</p>
       </section>
 
-      <section>
+      <section style="--i: 3">
         <h3><AppIcon name="sun" />{{ t('theme') }}</h3>
         <div class="segmented">
           <button v-for="option in THEMES" :key="option.mode" :class="{ active: themeMode === option.mode }" @click="themeMode = option.mode">
@@ -61,7 +69,16 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         </div>
       </section>
 
-      <section>
+      <section style="--i: 4">
+        <h3><AppIcon name="code" />{{ t('codeColors') }}</h3>
+        <div class="segmented">
+          <button v-for="option in CODE_THEMES" :key="option.mode" :class="{ active: codeThemeMode === option.mode }" @click="codeThemeMode = option.mode">
+            {{ t(option.label) }}
+          </button>
+        </div>
+      </section>
+
+      <section style="--i: 5">
         <h3><AppIcon name="globe" />{{ t('language') }}</h3>
         <div class="segmented">
           <button v-for="option in LOCALES" :key="option.value" :class="{ active: locale === option.value }" @click="locale = option.value">
@@ -70,7 +87,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         </div>
       </section>
 
-      <section>
+      <section style="--i: 6">
         <h3><AppIcon name="keyboard" />{{ t('shortcuts') }}</h3>
         <dl class="shortcuts">
           <template v-for="shortcut in SHORTCUTS" :key="shortcut.label">

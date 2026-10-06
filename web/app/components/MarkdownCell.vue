@@ -8,6 +8,7 @@ async function enhance() {
   if (!root.value) return
   renderMath(root.value)
   fitIframes(root.value)
+  decryptHeadings(root.value)
   await renderMermaid(root.value, theme.value)
 }
 

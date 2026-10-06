@@ -1,51 +1,90 @@
 import { EditorView } from '@codemirror/view'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
 import { tags as t } from '@lezer/highlight'
+import type { Extension } from '@codemirror/state'
+import type { Theme } from './usePreferences'
 
-/** Classic Monokai, used for code in both page themes. */
-const COLORS = {
+interface Palette {
+  background: string
+  foreground: string
+  comment: string
+  keyword: string
+  string: string
+  number: string
+  function: string
+  type: string
+  variable: string
+  selection: string
+  activeLine: string
+  gutter: string
+}
+
+/** Classic Monokai. */
+const DARK: Palette = {
   background: '#272822',
   foreground: '#f8f8f2',
   comment: '#75715e',
-  pink: '#f92672',
-  yellow: '#e6db74',
-  purple: '#ae81ff',
-  green: '#a6e22e',
-  blue: '#66d9ef',
-  orange: '#fd971f',
+  keyword: '#f92672',
+  string: '#e6db74',
+  number: '#ae81ff',
+  function: '#a6e22e',
+  type: '#66d9ef',
+  variable: '#fd971f',
   selection: '#49483e',
   activeLine: '#3e3d32',
   gutter: '#90908a',
 }
 
-const theme = EditorView.theme(
-  {
-    '&': { backgroundColor: COLORS.background, color: COLORS.foreground },
-    '.cm-content': { caretColor: COLORS.foreground },
-    '.cm-cursor, .cm-dropCursor': { borderLeftColor: COLORS.foreground },
-    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, ::selection':
-      { backgroundColor: COLORS.selection },
-    '.cm-gutters': { backgroundColor: COLORS.background, color: COLORS.gutter, border: 'none' },
-    '.cm-activeLine': { backgroundColor: COLORS.activeLine },
-    '.cm-activeLineGutter': { backgroundColor: COLORS.activeLine, color: COLORS.foreground },
-    '.cm-matchingBracket': { backgroundColor: COLORS.selection, outline: `1px solid ${COLORS.gutter}` },
-    '.cm-foldPlaceholder': { backgroundColor: 'transparent', border: 'none', color: COLORS.comment },
-  },
-  { dark: true },
-)
+/** Same hue families, darkened to read on a light background. */
+const LIGHT: Palette = {
+  background: '#fdfaf4',
+  foreground: '#2c292d',
+  comment: '#8c8577',
+  keyword: '#d3245c',
+  string: '#9c6d00',
+  number: '#6d4fc4',
+  function: '#3a8a12',
+  type: '#1b7f9c',
+  variable: '#c25b00',
+  selection: '#eadfc8',
+  activeLine: '#f4eee2',
+  gutter: '#a59f85',
+}
 
-const highlight = HighlightStyle.define([
-  { tag: t.comment, color: COLORS.comment, fontStyle: 'italic' },
-  { tag: [t.keyword, t.operator, t.processingInstruction, t.modifier, t.controlKeyword], color: COLORS.pink },
-  { tag: [t.string, t.special(t.string), t.character], color: COLORS.yellow },
-  { tag: [t.number, t.bool, t.null, t.atom], color: COLORS.purple },
-  { tag: [t.function(t.variableName), t.function(t.propertyName), t.definition(t.function(t.variableName))], color: COLORS.green },
-  { tag: [t.typeName, t.className, t.standard(t.typeName), t.namespace], color: COLORS.blue, fontStyle: 'italic' },
-  { tag: [t.macroName, t.definition(t.typeName)], color: COLORS.green },
-  { tag: [t.propertyName, t.attributeName], color: COLORS.foreground },
-  { tag: t.escape, color: COLORS.purple },
-  { tag: t.special(t.variableName), color: COLORS.orange },
-  { tag: t.invalid, color: COLORS.foreground, backgroundColor: COLORS.pink },
-])
+function monokai(palette: Palette, dark: boolean): Extension {
+  const theme = EditorView.theme(
+    {
+      '&': { backgroundColor: palette.background, color: palette.foreground },
+      '.cm-content': { caretColor: palette.foreground },
+      '.cm-cursor, .cm-dropCursor': { borderLeftColor: palette.foreground },
+      '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, ::selection':
+        { backgroundColor: palette.selection },
+      '.cm-gutters': { backgroundColor: palette.background, color: palette.gutter, border: 'none' },
+      '.cm-activeLine': { backgroundColor: palette.activeLine },
+      '.cm-activeLineGutter': { backgroundColor: palette.activeLine, color: palette.foreground },
+      '.cm-matchingBracket': { backgroundColor: palette.selection, outline: `1px solid ${palette.gutter}` },
+      '.cm-foldPlaceholder': { backgroundColor: 'transparent', border: 'none', color: palette.comment },
+    },
+    { dark },
+  )
+  const highlight = HighlightStyle.define([
+    { tag: t.comment, color: palette.comment, fontStyle: 'italic' },
+    { tag: [t.keyword, t.operator, t.processingInstruction, t.modifier, t.controlKeyword], color: palette.keyword },
+    { tag: [t.string, t.special(t.string), t.character], color: palette.string },
+    { tag: [t.number, t.bool, t.null, t.atom, t.escape], color: palette.number },
+    {
+      tag: [t.function(t.variableName), t.function(t.propertyName), t.definition(t.function(t.variableName)), t.macroName],
+      color: palette.function,
+    },
+    { tag: [t.typeName, t.className, t.standard(t.typeName), t.namespace], color: palette.type, fontStyle: 'italic' },
+    { tag: [t.propertyName, t.attributeName], color: palette.foreground },
+    { tag: t.special(t.variableName), color: palette.variable },
+    { tag: t.invalid, color: palette.background, backgroundColor: palette.keyword },
+  ])
+  return [theme, syntaxHighlighting(highlight)]
+}
 
-export const monokai = [theme, syntaxHighlighting(highlight)]
+export const MONOKAI: Record<Theme, Extension> = {
+  dark: monokai(DARK, true),
+  light: monokai(LIGHT, false),
+}

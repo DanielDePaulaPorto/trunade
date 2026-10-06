@@ -14,6 +14,13 @@ pub struct QuizOption {
     pub correct: bool,
 }
 
+/// One step of an exercise: `<!-- step: Title -->` up to the next marker.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct Step {
+    pub title: String,
+    pub cells: Vec<Cell>,
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum Cell {
@@ -39,14 +46,45 @@ pub enum Cell {
         question: String,
         options: Vec<QuizOption>,
     },
+    /// Cells grouped by `<!-- step: … -->` markers, closed by `<!-- /steps -->`.
+    Steps {
+        id: String,
+        steps: Vec<Step>,
+    },
 }
 
 impl Cell {
     pub fn id(&self) -> &str {
         match self {
-            Cell::Markdown { id, .. } | Cell::Code { id, .. } | Cell::Quiz { id, .. } => id,
+            Cell::Markdown { id, .. }
+            | Cell::Code { id, .. }
+            | Cell::Quiz { id, .. }
+            | Cell::Steps { id, .. } => id,
         }
     }
+}
+
+/// Finds a cell by id, including cells inside steps.
+pub fn find_cell<'a>(cells: &'a [Cell], id: &str) -> Option<&'a Cell> {
+    cells.iter().find_map(|cell| match cell {
+        _ if cell.id() == id => Some(cell),
+        Cell::Steps { steps, .. } => steps.iter().find_map(|step| find_cell(&step.cells, id)),
+        _ => None,
+    })
+}
+
+enum StepMarker {
+    Start(String),
+    End,
+}
+
+fn parse_step_marker(html: &str) -> Option<StepMarker> {
+    let inner = html.trim().strip_prefix("<!--")?.strip_suffix("-->")?.trim();
+    if inner == "/steps" {
+        return Some(StepMarker::End);
+    }
+    let title = inner.strip_prefix("step:")?.trim();
+    Some(StepMarker::Start(title.to_string()))
 }
 
 /// Fence info string split into language and `{key=value ...}` attributes.
@@ -68,14 +106,23 @@ pub fn parse(markdown: &str, is_runnable: impl Fn(&str) -> bool) -> Vec<Cell> {
 
     for node in root.children() {
         let ast = node.data();
-        let NodeValue::CodeBlock(block) = &ast.value else {
-            continue;
-        };
-        if !block.fenced {
-            continue;
-        }
-        let info = parse_fence_info(&block.info);
         let (start, end) = (ast.sourcepos.start.line, ast.sourcepos.end.line);
+        let block = match &ast.value {
+            NodeValue::HtmlBlock(html) => {
+                if let Some(marker) = parse_step_marker(&html.literal) {
+                    builder.push_markdown(&lines, next_markdown_line, start);
+                    match marker {
+                        StepMarker::Start(title) => builder.start_step(title),
+                        StepMarker::End => builder.end_steps(),
+                    }
+                    next_markdown_line = end + 1;
+                }
+                continue;
+            }
+            NodeValue::CodeBlock(block) if block.fenced => block,
+            _ => continue,
+        };
+        let info = parse_fence_info(&block.info);
         let attaches_stdin = info.language == STDIN_FENCE
             && builder.last_code_accepts_stdin()
             && is_blank(&lines, next_markdown_line, start);
@@ -202,10 +249,31 @@ fn line_range<'a>(lines: &'a [&'a str], from: usize, to: usize) -> &'a [&'a str]
 #[derive(Default)]
 struct CellBuilder {
     cells: Vec<Cell>,
+    /// Open steps: new cells go into the last one until `<!-- /steps -->`.
+    steps: Option<Vec<Step>>,
     seen_ids: HashMap<u64, usize>,
 }
 
 impl CellBuilder {
+    fn target(&mut self) -> &mut Vec<Cell> {
+        match self.steps.as_mut().and_then(|steps| steps.last_mut()) {
+            Some(step) => &mut step.cells,
+            None => &mut self.cells,
+        }
+    }
+
+    fn start_step(&mut self, title: String) {
+        let step = Step { title, cells: vec![] };
+        self.steps.get_or_insert_with(Vec::new).push(step);
+    }
+
+    fn end_steps(&mut self) {
+        if let Some(steps) = self.steps.take() {
+            // id assigned in finish(), once the children have theirs
+            self.cells.push(Cell::Steps { id: String::new(), steps });
+        }
+    }
+
     fn push_markdown(&mut self, lines: &[&str], from: usize, to: usize) {
         let text = line_range(lines, from, to).join("\n");
         if text.trim().is_empty() {
@@ -213,11 +281,11 @@ impl CellBuilder {
         }
         let id = self.unique_id(&("markdown", &text));
         let html = markdown_to_html(&text, &markdown_options());
-        self.cells.push(Cell::Markdown { id, html });
+        self.target().push(Cell::Markdown { id, html });
     }
 
     fn push_code(&mut self, info: FenceInfo, line: usize, block: &NodeCodeBlock) {
-        self.cells.push(Cell::Code {
+        self.target().push(Cell::Code {
             id: String::new(), // assigned in finish(), once stdin is known
             fence_language: info.language,
             line,
@@ -240,35 +308,46 @@ impl CellBuilder {
         }
         let question = markdown_to_html(&question.join("\n"), &markdown_options());
         let id = self.unique_id(&("quiz", text));
-        self.cells.push(Cell::Quiz { id, question, options });
+        self.target().push(Cell::Quiz { id, question, options });
     }
 
-    fn last_code_accepts_stdin(&self) -> bool {
-        matches!(self.cells.last(), Some(Cell::Code { stdin: None, .. }))
+    fn last_code_accepts_stdin(&mut self) -> bool {
+        matches!(self.target().last(), Some(Cell::Code { stdin: None, .. }))
     }
 
     fn attach_stdin(&mut self, text: &str) {
-        if let Some(Cell::Code { stdin, .. }) = self.cells.last_mut() {
+        if let Some(Cell::Code { stdin, .. }) = self.target().last_mut() {
             *stdin = Some(text.to_string());
         }
     }
 
     fn finish(mut self) -> Vec<Cell> {
+        self.end_steps(); // a missing <!-- /steps --> closes at the end of the file
         let mut cells = std::mem::take(&mut self.cells);
-        for cell in &mut cells {
-            if let Cell::Code {
-                id,
-                fence_language,
-                source,
-                flags,
-                stdin,
-                ..
-            } = cell
-            {
-                *id = self.unique_id(&("code", &fence_language, &source, &flags, &stdin));
+        self.assign_ids(&mut cells);
+        cells
+    }
+
+    /// Code and steps ids depend on content known only after parsing.
+    fn assign_ids(&mut self, cells: &mut [Cell]) {
+        for cell in cells {
+            match cell {
+                Cell::Code { id, fence_language, source, flags, stdin, .. } => {
+                    *id = self.unique_id(&("code", &fence_language, &source, &flags, &stdin));
+                }
+                Cell::Steps { id, steps } => {
+                    for step in steps.iter_mut() {
+                        self.assign_ids(&mut step.cells);
+                    }
+                    let outline: Vec<(&str, Vec<&str>)> = steps
+                        .iter()
+                        .map(|step| (step.title.as_str(), step.cells.iter().map(Cell::id).collect()))
+                        .collect();
+                    *id = self.unique_id(&("steps", outline));
+                }
+                Cell::Markdown { .. } | Cell::Quiz { .. } => {}
             }
         }
-        cells
     }
 
     /// Content hash, so a cell keeps its id while other cells change.
@@ -357,6 +436,24 @@ mod tests {
     fn math_is_marked_for_the_browser() {
         let cells = parse("Área $\\pi r^2$.\n", runnable);
         assert!(matches!(&cells[0], Cell::Markdown { html, .. } if html.contains("data-math-style=\"inline\"")));
+    }
+
+    #[test]
+    fn step_markers_group_cells_and_keep_code_runnable() {
+        let lesson = "intro\n\n<!-- step: Enunciado -->\nSome dois números.\n\n<!-- step: Solução -->\n```cpp\nint main() {}\n```\n\n```stdin\n1 2\n```\n<!-- /steps -->\n\nfim\n";
+        let cells = parse(lesson, runnable);
+        assert_eq!(cells.len(), 3);
+        let Cell::Steps { steps, .. } = &cells[1] else { panic!("expected steps") };
+        assert_eq!(steps.iter().map(|s| s.title.as_str()).collect::<Vec<_>>(), ["Enunciado", "Solução"]);
+        let Cell::Code { id, stdin, .. } = &steps[1].cells[0] else { panic!("expected code") };
+        assert_eq!(stdin.as_deref(), Some("1 2\n"));
+        assert!(find_cell(&cells, id).is_some());
+    }
+
+    #[test]
+    fn unclosed_steps_end_with_the_file() {
+        let cells = parse("<!-- step: A -->\ntexto\n", runnable);
+        assert!(matches!(&cells[0], Cell::Steps { steps, .. } if steps[0].cells.len() == 1));
     }
 
     #[test]

@@ -22,6 +22,8 @@ export const ICONS = {
   check: '<path d="M20 6 9 17l-5-5"/>',
   globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
   type: '<path d="M4 7V4h16v3M9 20h6M12 4v16"/>',
+  code: '<path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/>',
+  x: '<path d="M18 6 6 18M6 6l12 12"/>',
   spinner: '<path d="M21 12a9 9 0 1 1-6.22-8.56"/>',
 } as const
 

@@ -22,6 +22,13 @@ function toggleReveal() {
   revealed.value = !revealed.value
 }
 
+/** Which mark the box shows: the student's choice, then the answer key once revealed. */
+function mark(index: number): 'check' | 'x' | null {
+  const correct = props.cell.options[index]!.correct
+  if (revealed.value) return correct ? 'check' : chosen.value[index] ? 'x' : null
+  return chosen.value[index] && multiple.value ? 'check' : null
+}
+
 function optionClass(index: number) {
   if (!revealed.value) return { chosen: chosen.value[index] }
   const correct = props.cell.options[index]!.correct
@@ -38,11 +45,11 @@ function optionClass(index: number) {
           class="quiz-option"
           :class="optionClass(index)"
           :role="multiple ? 'checkbox' : 'radio'"
-          :aria-checked="chosen[index]"
+          :aria-checked="revealed ? cell.options[index]!.correct : chosen[index]"
           @click="choose(index)"
         >
           <span class="quiz-mark" :class="{ square: multiple }">
-            <AppIcon v-if="revealed && cell.options[index]!.correct" name="check" />
+            <AppIcon v-if="mark(index)" :name="mark(index)!" />
           </span>
           <span v-html="option.html" />
         </button>

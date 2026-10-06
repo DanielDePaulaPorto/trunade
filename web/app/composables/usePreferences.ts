@@ -1,6 +1,8 @@
 export type ThemeMode = 'auto' | 'light' | 'dark'
 export type Theme = 'light' | 'dark'
 export type Locale = 'pt' | 'en'
+/** Code colors: follow the page theme, or force one Monokai variant. */
+export type CodeThemeMode = 'auto' | 'light' | 'dark'
 
 const STORAGE_KEY = 'trunade-preferences'
 const BASE_FONT_PX = 18
@@ -8,17 +10,22 @@ const FONT_SCALE = { min: 0.7, max: 2.5, step: 0.1 }
 
 interface Stored {
   themeMode: ThemeMode
+  codeThemeMode: CodeThemeMode
   locale: Locale
   fontScale: number
 }
 
 const stored = readStored()
 const themeMode = ref<ThemeMode>(stored.themeMode)
+const codeThemeMode = ref<CodeThemeMode>(stored.codeThemeMode)
 const locale = ref<Locale>(stored.locale)
 const fontScale = ref(stored.fontScale)
 const systemPrefersDark = ref(false)
 const theme = computed<Theme>(() =>
   themeMode.value === 'auto' ? (systemPrefersDark.value ? 'dark' : 'light') : themeMode.value,
+)
+const codeTheme = computed<Theme>(() =>
+  codeThemeMode.value === 'auto' ? theme.value : codeThemeMode.value,
 )
 let initialized = false
 
@@ -35,14 +42,17 @@ export function usePreferences() {
     watchEffect(() => {
       const root = document.documentElement
       root.dataset.theme = theme.value
+      root.dataset.codeTheme = codeTheme.value
       root.lang = locale.value === 'pt' ? 'pt-BR' : 'en'
       root.style.fontSize = `${BASE_FONT_PX * fontScale.value}px`
     })
-    watch([themeMode, locale, fontScale], store)
+    watch([themeMode, codeThemeMode, locale, fontScale], store)
   }
   return {
     themeMode,
     theme,
+    codeThemeMode,
+    codeTheme,
     locale,
     fontScale,
     setFontScale,
@@ -65,7 +75,7 @@ function cycleTheme() {
 
 function defaults(): Stored {
   const browserLocale = import.meta.client ? navigator.language : 'pt'
-  return { themeMode: 'auto', locale: browserLocale.startsWith('pt') ? 'pt' : 'en', fontScale: 1 }
+  return { themeMode: 'auto', codeThemeMode: 'auto', locale: browserLocale.startsWith('pt') ? 'pt' : 'en', fontScale: 1 }
 }
 
 // Storage can be unavailable (private windows, blocked site data): use defaults.
@@ -81,6 +91,7 @@ function store() {
   try {
     const value: Stored = {
       themeMode: themeMode.value,
+      codeThemeMode: codeThemeMode.value,
       locale: locale.value,
       fontScale: fontScale.value,
     }

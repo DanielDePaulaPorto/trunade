@@ -49,7 +49,9 @@ export function topicTree(): Topic[] {
   const [sectionTag, subTag] = single ? ['H2', 'H3'] : ['H1', 'H2']
   const tree: Topic[] = []
   for (const element of all) {
-    const topic = { element, text: element.textContent?.trim() ?? '', children: [] }
+    // A title may be mid-animation (decrypt effect): prefer its stored text.
+    const text = (element.dataset.text ?? element.textContent ?? '').trim()
+    const topic = { element, text, children: [] }
     if (element.tagName === sectionTag) tree.push(topic)
     else if (element.tagName === subTag) tree.at(-1)?.children.push(topic)
   }

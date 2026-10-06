@@ -45,6 +45,13 @@ const MESSAGES = {
     shortcutRun: 'executar o bloco (dentro do código)',
     shortcutLeave: 'sair do código ou do terminal',
     keySpace: 'Espaço',
+    codeColors: 'Cores do código',
+    codeAuto: 'Seguir o tema',
+    codeLight: 'Monokai claro',
+    codeDark: 'Monokai escuro',
+    nextStep: 'Próximo',
+    previousStep: 'Anterior',
+    stepProgress: 'Passo {current} de {total}',
   },
   en: {
     connected: 'connected',
@@ -90,6 +97,13 @@ const MESSAGES = {
     shortcutRun: 'run the block (inside the code)',
     shortcutLeave: 'leave the code or terminal',
     keySpace: 'Space',
+    codeColors: 'Code colors',
+    codeAuto: 'Follow the theme',
+    codeLight: 'Monokai light',
+    codeDark: 'Monokai dark',
+    nextStep: 'Next',
+    previousStep: 'Back',
+    stepProgress: 'Step {current} of {total}',
   },
 } satisfies Record<Locale, Record<string, string>>
 

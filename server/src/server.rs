@@ -246,10 +246,7 @@ fn build_request(
     terminal_size: TerminalSize,
 ) -> Result<RunRequest, String> {
     let snapshot = state.snapshot.borrow();
-    let cell = snapshot
-        .cells
-        .iter()
-        .find(|cell| cell.id() == cell_id)
+    let cell = document::find_cell(&snapshot.cells, cell_id)
         .ok_or("this block changed in the file; reload it")?;
     let Cell::Code { fence_language, flags, timeout_seconds, .. } = cell else {
         return Err("not a code block".to_string());
