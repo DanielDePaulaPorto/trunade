@@ -1,0 +1,34 @@
+// Copie estas tasks para ~/.config/zed/tasks.json.
+// O caminho do Python aponta para o venv de TrunadeCode/kernel.
+[
+  {
+    // Diagnóstico: quais variáveis chegam quando o foco está no preview?
+    "label": "Trunade: probe",
+    "command": "echo",
+    "args": ["FILE=${ZED_FILE:none}", "ROW=${ZED_ROW:none}", "ROOT=${ZED_WORKTREE_ROOT:none}"],
+    "reveal": "always"
+  },
+  {
+    // Roda no terminal o bloco C++ sob o cursor (stdin interativo).
+    // Sem arquivo/linha (ex.: preview), cai no menu de blocos.
+    "label": "Trunade: run block",
+    "command": "/Users/porto/Developer/ProjetosPessoais/Trunade!/TrunadeCode/kernel/.venv/bin/python",
+    "args": ["-m", "trunade.terminal", "run", "${ZED_FILE:}", "${ZED_ROW:}"],
+    "cwd": "${ZED_WORKTREE_ROOT:}",
+    "save": "current",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": true,
+    "reveal": "always"
+  },
+  {
+    // Menu numerado com os blocos C++ do arquivo (ou do .md mais recente).
+    "label": "Trunade: pick block",
+    "command": "/Users/porto/Developer/ProjetosPessoais/Trunade!/TrunadeCode/kernel/.venv/bin/python",
+    "args": ["-m", "trunade.terminal", "pick", "${ZED_FILE:}"],
+    "cwd": "${ZED_WORKTREE_ROOT:}",
+    "save": "current",
+    "use_new_terminal": false,
+    "allow_concurrent_runs": true,
+    "reveal": "always"
+  }
+]

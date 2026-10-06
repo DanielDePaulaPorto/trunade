@@ -1,0 +1,29 @@
+{
+  "Trunade! C++ cell": {
+    "prefix": "cpp",
+    "body": [
+      "```cpp",
+      "#include <bits/stdc++.h>",
+      "using namespace std;",
+      "",
+      "int main() {",
+      "    $0",
+      "}",
+      "```"
+    ],
+    "description": "C++ program block runnable with repl: run"
+  },
+  "Trunade! C++ cell (iostream)": {
+    "prefix": "cppio",
+    "body": [
+      "```cpp",
+      "#include <iostream>",
+      "",
+      "int main() {",
+      "    $0",
+      "}",
+      "```"
+    ],
+    "description": "C++ program block with only <iostream>"
+  }
+}

@@ -1,0 +1,7 @@
+id = "trunade"
+name = "Trunade!"
+version = "0.1.0"
+schema_version = 1
+authors = ["Daniel Porto <danielpporto@gmail.com>"]
+description = "Snippets for C++ lesson cells run by the Trunade! Jupyter kernel"
+snippets = ["./snippets/markdown.json"]
