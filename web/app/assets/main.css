@@ -1,0 +1,279 @@
+/* System fonts only: the page must work offline in the classroom. */
+:root {
+  --bg: #fbfaf7;
+  --surface: #ffffff;
+  --text: #1f2328;
+  --muted: #6b7077;
+  --border: #e3e1dc;
+  --accent: #c2410c;
+  --accent-text: #ffffff;
+  --code-bg: #f1efe9;
+  --run: #15803d;
+  --stop: #b91c1c;
+  --banner-bg: #fdecea;
+  --banner-text: #8a1c14;
+  --font-text: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --radius: 10px;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #15171c;
+    --surface: #1b1e24;
+    --text: #e6e6e3;
+    --muted: #9aa0a8;
+    --border: #2c3038;
+    --accent: #fb923c;
+    --accent-text: #1b1e24;
+    --code-bg: #23272f;
+    --run: #4ade80;
+    --stop: #f87171;
+    --banner-bg: #3b1d1b;
+    --banner-text: #fca5a5;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 18px;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-text);
+  line-height: 1.6;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  font-size: 0.85rem;
+}
+
+.brand {
+  color: var(--accent);
+}
+
+.file {
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.connection {
+  color: var(--stop);
+}
+
+.connection.online {
+  color: var(--muted);
+}
+
+.document {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 1.5rem 16px 6rem;
+}
+
+.banner {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius);
+  background: var(--banner-bg);
+  color: var(--banner-text);
+  cursor: pointer;
+}
+
+/* ------------------------------------------------------------- markdown */
+
+.markdown h1,
+.markdown h2,
+.markdown h3 {
+  line-height: 1.25;
+  margin: 2rem 0 0.75rem;
+}
+
+.markdown h1 {
+  font-size: 2.1rem;
+}
+
+.markdown h2 {
+  font-size: 1.6rem;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.3rem;
+}
+
+.markdown a {
+  color: var(--accent);
+}
+
+.markdown img,
+.markdown iframe,
+.markdown video {
+  max-width: 100%;
+  border-radius: var(--radius);
+}
+
+.markdown iframe {
+  border: 1px solid var(--border);
+}
+
+.markdown code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  background: var(--code-bg);
+  padding: 0.1em 0.35em;
+  border-radius: 4px;
+}
+
+.markdown pre {
+  background: var(--code-bg);
+  padding: 1rem;
+  border-radius: var(--radius);
+  overflow-x: auto;
+}
+
+.markdown pre code {
+  background: none;
+  padding: 0;
+}
+
+.markdown table {
+  border-collapse: collapse;
+}
+
+.markdown th,
+.markdown td {
+  border: 1px solid var(--border);
+  padding: 0.4rem 0.75rem;
+}
+
+.markdown blockquote {
+  margin: 1rem 0;
+  padding-left: 1rem;
+  border-left: 4px solid var(--border);
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------ code cell */
+
+.code-cell {
+  margin: 1.25rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.code-cell.busy {
+  border-color: var(--accent);
+}
+
+.cell-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.5rem 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.language {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  color: var(--text);
+}
+
+.flags {
+  font-family: var(--font-mono);
+}
+
+.cell-toolbar button {
+  font: inherit;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.cell-toolbar .link {
+  background: none;
+  color: var(--muted);
+  text-decoration: underline dotted;
+  padding: 0;
+}
+
+.cell-toolbar .secondary {
+  background: var(--code-bg);
+  color: var(--text);
+  padding: 0.2rem 0.6rem;
+}
+
+.cell-toolbar .run,
+.cell-toolbar .stop {
+  width: 2.2rem;
+  height: 2rem;
+  font-size: 1rem;
+  color: var(--accent-text);
+}
+
+.cell-toolbar .run {
+  background: var(--run);
+}
+
+.cell-toolbar .stop {
+  background: var(--stop);
+}
+
+.code-editor .cm-editor {
+  font-size: 16px;
+}
+
+.code-editor .cm-scroller {
+  font-family: var(--font-mono);
+}
+
+.stdin {
+  display: block;
+  padding: 0.5rem 0.85rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.stdin textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.25rem;
+  padding: 0.4rem 0.5rem;
+  font: 15px var(--font-mono);
+  color: var(--text);
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.output {
+  padding: 0.5rem 0.75rem;
+  background: #1b1e24;
+}
+
+.output .xterm-viewport {
+  background-color: #1b1e24 !important;
+}
