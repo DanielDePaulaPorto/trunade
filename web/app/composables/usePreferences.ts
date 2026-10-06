@@ -3,6 +3,8 @@ export type Theme = 'light' | 'dark'
 export type Locale = 'pt' | 'en'
 /** Code colors: follow the page theme, or force one Monokai variant. */
 export type CodeThemeMode = 'auto' | 'light' | 'dark'
+/** Text column: narrow (comfortable reading) or the whole window. */
+export type LayoutWidth = 'narrow' | 'wide'
 
 const STORAGE_KEY = 'trunade-preferences'
 const BASE_FONT_PX = 18
@@ -13,6 +15,7 @@ interface Stored {
   codeThemeMode: CodeThemeMode
   locale: Locale
   fontScale: number
+  layoutWidth: LayoutWidth
 }
 
 const stored = readStored()
@@ -20,6 +23,7 @@ const themeMode = ref<ThemeMode>(stored.themeMode)
 const codeThemeMode = ref<CodeThemeMode>(stored.codeThemeMode)
 const locale = ref<Locale>(stored.locale)
 const fontScale = ref(stored.fontScale)
+const layoutWidth = ref<LayoutWidth>(stored.layoutWidth)
 const systemPrefersDark = ref(false)
 const theme = computed<Theme>(() =>
   themeMode.value === 'auto' ? (systemPrefersDark.value ? 'dark' : 'light') : themeMode.value,
@@ -43,10 +47,11 @@ export function usePreferences() {
       const root = document.documentElement
       root.dataset.theme = theme.value
       root.dataset.codeTheme = codeTheme.value
+      root.dataset.layout = layoutWidth.value
       root.lang = locale.value === 'pt' ? 'pt-BR' : 'en'
       root.style.fontSize = `${BASE_FONT_PX * fontScale.value}px`
     })
-    watch([themeMode, codeThemeMode, locale, fontScale], store)
+    watch([themeMode, codeThemeMode, locale, fontScale, layoutWidth], store)
   }
   return {
     themeMode,
@@ -55,6 +60,8 @@ export function usePreferences() {
     codeTheme,
     locale,
     fontScale,
+    layoutWidth,
+    toggleLayoutWidth,
     setFontScale,
     growFont: () => setFontScale(fontScale.value + FONT_SCALE.step),
     shrinkFont: () => setFontScale(fontScale.value - FONT_SCALE.step),
@@ -68,6 +75,10 @@ function setFontScale(value: number) {
   fontScale.value = Math.round(clamped * 10) / 10
 }
 
+function toggleLayoutWidth() {
+  layoutWidth.value = layoutWidth.value === 'narrow' ? 'wide' : 'narrow'
+}
+
 function cycleTheme() {
   const order: ThemeMode[] = ['auto', 'light', 'dark']
   themeMode.value = order[(order.indexOf(themeMode.value) + 1) % order.length]!
@@ -75,7 +86,7 @@ function cycleTheme() {
 
 function defaults(): Stored {
   const browserLocale = import.meta.client ? navigator.language : 'pt'
-  return { themeMode: 'auto', codeThemeMode: 'auto', locale: browserLocale.startsWith('pt') ? 'pt' : 'en', fontScale: 1 }
+  return { themeMode: 'auto', codeThemeMode: 'auto', locale: browserLocale.startsWith('pt') ? 'pt' : 'en', fontScale: 1, layoutWidth: 'narrow' }
 }
 
 // Storage can be unavailable (private windows, blocked site data): use defaults.
@@ -94,6 +105,7 @@ function store() {
       codeThemeMode: codeThemeMode.value,
       locale: locale.value,
       fontScale: fontScale.value,
+      layoutWidth: layoutWidth.value,
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(value))
   } catch {

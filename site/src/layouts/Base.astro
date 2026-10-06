@@ -1,0 +1,45 @@
+---
+import '@fontsource-variable/atkinson-hyperlegible-next'
+import '@fontsource-variable/jetbrains-mono'
+import '../styles/global.css'
+
+interface Props {
+  title?: string
+  description?: string
+}
+
+const {
+  title,
+  description = 'Aulas de programação em Markdown, com blocos de código que compilam e rodam no navegador.',
+} = Astro.props
+const fullTitle = title ? `${title} · Trunade!` : 'Trunade!'
+---
+
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>{fullTitle}</title>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/">
+        <img src="/favicon.svg" alt="" width="32" height="32" />
+        <span>Trunade!</span>
+      </a>
+      <nav>
+        <a href="/#por-que">Por que não o Jupyter?</a>
+        <a href="/docs/">Documentação</a>
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="footer">
+      <p>Trunade! — feito para a sala de aula.</p>
+    </footer>
+  </body>
+</html>

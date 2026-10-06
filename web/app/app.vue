@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const { snapshot, connected, lastError, activeRuns } = useConnection()
-const { growFont, shrinkFont, resetFont, cycleTheme } = usePreferences()
+const { growFont, shrinkFont, resetFont, cycleTheme, toggleLayoutWidth } = usePreferences()
 const { t } = useI18n()
 
 const settingsOpen = ref(false)
@@ -21,7 +21,8 @@ const SHORTCUTS: Record<string, (event: KeyboardEvent) => void> = {
   '-': shrinkFont,
   '0': resetFont,
   d: cycleTheme,
-  s: () => (settingsOpen.value = true),
+  w: toggleLayoutWidth,
+  o: () => (settingsOpen.value = true),
 }
 
 /** Keys typed into code, stdin or a running program are not shortcuts. */

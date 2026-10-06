@@ -1,0 +1,57 @@
+---
+import Base from '../layouts/Base.astro'
+
+const features = [
+  { title: 'Markdown puro', text: 'A aula é um .md: diff legível no git, abre em qualquer editor e não guarda saída.' },
+  { title: 'Compilador de verdade', text: 'Cada bloco é um programa completo, compilado com o g++ que o aluno usa na prova.' },
+  { title: 'Terminal interativo', text: 'cin interativo num terminal real, ou entrada fixa num bloco stdin versionado com a aula.' },
+  { title: 'Feito para projetar', text: 'Tema claro, fonte ajustável, largura do texto, índice com T e rolagem por seção com espaço.' },
+  { title: 'Recursos de aula', text: 'Fórmulas (KaTeX), diagramas (Mermaid), perguntas, exercícios em passos e páginas embutidas.' },
+  { title: 'Offline', text: 'Um binário, sem CDN. Funciona na sala sem internet.' },
+]
+
+const comparison = [
+  ['Arquivo da aula', 'Markdown puro, sem saídas nem metadados.', '.ipynb em JSON, com saídas misturadas ao texto.'],
+  ['O que é um bloco', 'Um programa completo, com main().', 'Uma célula que continua o estado das anteriores.'],
+  ['Compilador', 'O real (g++-16 por padrão), com suas flags.', 'O do kernel (em C++, código interpretado).'],
+  ['Erros de execução', 'Código de saída, sinais, tempo limite e limite de saída na tela.', 'Dependem do kernel; laço infinito trava a célula.'],
+  ['Entrada padrão', 'Interativa num terminal, ou fixa num bloco stdin.', 'Limitada; em C++ geralmente sem cin interativo.'],
+  ['Instalação', 'Um binário, offline.', 'Python, Jupyter e um kernel de C++.'],
+]
+---
+
+<Base>
+  <section class="hero">
+    <div>
+      <h1>Aulas de programação que <em>rodam</em>.</h1>
+      <p>Escreva a aula em Markdown. Cada bloco de código vira uma caixa com ▶, compilada de verdade, com a saída num terminal logo abaixo.</p>
+      <code class="command">trunade aula.md</code>
+    </div>
+    <img class="hero-mark" src="/favicon.svg" alt="Caveira no vórtice, a marca do Trunade!" />
+  </section>
+
+  <ul class="features">
+    {features.map((feature) => (
+      <li>
+        <strong>{feature.title}</strong>
+        {feature.text}
+      </li>
+    ))}
+  </ul>
+
+  <h2 id="por-que">Por que não o Jupyter?</h2>
+  <p>O Jupyter é ótimo para análise de dados, onde cada célula continua o estado da anterior. Uma aula de programação em C++ pede outra coisa.</p>
+  <table>
+    <thead>
+      <tr><th></th><th>Trunade!</th><th>Jupyter</th></tr>
+    </thead>
+    <tbody>
+      {comparison.map(([topic, trunade, jupyter]) => (
+        <tr><th>{topic}</th><td>{trunade}</td><td>{jupyter}</td></tr>
+      ))}
+    </tbody>
+  </table>
+  <p>Use o Jupyter quando o estado entre células for o ponto. Use o Trunade! quando cada exemplo for um programa.</p>
+
+  <p><a class="button" href="/docs/">Começar</a></p>
+</Base>

@@ -202,6 +202,11 @@ button {
   padding: 1.25rem 16px 8rem;
 }
 
+:root[data-layout='wide'] .document {
+  max-width: none;
+  padding-inline: max(16px, 3vw);
+}
+
 .banner {
   padding: 0.75rem 1rem;
   border-radius: var(--radius);
@@ -876,34 +881,15 @@ kbd {
 
 /* ------------------------------------------------------------- effects */
 
-.prelayer {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: min(22rem, 100%);
-  translate: 100% 0;
-  animation: layer-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-}
-
-.prelayer-brand {
-  background: var(--brand);
-}
-
-.prelayer-vortex {
-  background: #0c1513;
-  animation-delay: 0.07s;
-}
-
 .overlay > .settings {
   translate: 100% 0;
-  animation: layer-in 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) 0.14s forwards;
+  animation: layer-in 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .settings > * {
   opacity: 0;
   animation: item-in 0.35s ease forwards;
-  animation-delay: calc(0.3s + var(--i, 0) * 0.05s);
+  animation-delay: calc(0.15s + var(--i, 0) * 0.05s);
 }
 
 @keyframes layer-in {
@@ -1151,9 +1137,5 @@ kbd {
 
   .settings > * {
     opacity: 1;
-  }
-
-  .prelayer {
-    display: none;
   }
 }

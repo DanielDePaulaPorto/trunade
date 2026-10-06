@@ -64,6 +64,10 @@ export function fitIframes(root: HTMLElement) {
       // Later size changes (menus, late content) only adjust the height:
       // rescaling would resize the page again and loop.
       watchContent(page, () => fitHeight(iframe, page))
+      watchWidth(iframe, () => {
+        scaleToWidth(iframe, page)
+        fitHeight(iframe, page)
+      })
     }
     iframe.addEventListener('load', fit)
     if (iframe.contentDocument?.readyState === 'complete') fit()
@@ -115,6 +119,16 @@ function fitHeight(iframe: HTMLIFrameElement, page: HTMLElement) {
   if (Math.abs(iframe.clientHeight - height) > HEIGHT_TOLERANCE_PX) {
     iframe.style.height = `${height}px`
   }
+}
+
+/** Column width changes (text width, window) rescale; height changes do not. */
+function watchWidth(iframe: HTMLIFrameElement, onChange: () => void) {
+  let width = iframe.clientWidth
+  new ResizeObserver(() => {
+    if (iframe.clientWidth === width) return
+    width = iframe.clientWidth
+    onChange()
+  }).observe(iframe)
 }
 
 function watchContent(page: HTMLElement, onChange: () => void) {
