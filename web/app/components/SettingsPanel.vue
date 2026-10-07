@@ -37,7 +37,8 @@ const SHORTCUTS = computed(() => [
 ] as const)
 
 function onKey(event: KeyboardEvent) {
-  if (event.key === 'Escape') emit('close')
+  if (event.metaKey || event.ctrlKey || event.altKey) return
+  if (event.key === 'Escape' || event.key === 'o') emit('close')
 }
 onMounted(() => window.addEventListener('keydown', onKey))
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey))

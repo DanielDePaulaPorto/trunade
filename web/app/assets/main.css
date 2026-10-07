@@ -145,7 +145,7 @@ em {
   backdrop-filter: blur(6px);
   color: var(--muted);
   cursor: pointer;
-  opacity: 0.55;
+  opacity: 0.12;
   transition: opacity 0.2s, color 0.2s;
 }
 
@@ -398,24 +398,29 @@ em {
 .code-cell {
   position: relative;
   margin: 1.25rem 0;
-  padding: 1px;
+  padding: var(--ring);
   border-radius: var(--radius);
-  background: var(--border);
+  background: transparent;
   overflow: hidden;
-  transition: background 0.3s, padding 0.2s;
+  transition: background 0.3s;
 }
 
+/* The ring is always reserved, so running never changes the cell's size. */
 .code-cell.busy {
-  padding: var(--ring);
   background: var(--brand);
 }
 
 .cell-body {
   position: relative;
   z-index: 1;
-  border-radius: calc(var(--radius) - 1px);
+  border-radius: calc(var(--radius) - var(--ring));
+  outline: 1px solid var(--border);
   background: var(--code-bg);
   overflow: hidden;
+}
+
+.code-cell.busy .cell-body {
+  outline-color: transparent;
 }
 
 .star {
