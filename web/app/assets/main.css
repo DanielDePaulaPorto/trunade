@@ -257,6 +257,29 @@ em {
   padding-inline: max(16px, 3vw);
 }
 
+.end-mark {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin: 4rem 0 0;
+}
+
+.end-mark::before,
+.end-mark::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.end-mark stop {
+  stop-color: var(--brand);
+}
+
+:root[data-theme="dark"] .end-mark stop {
+  stop-color: var(--glow);
+}
+
 .banner {
   padding: 0.75rem 1rem;
   border-radius: var(--radius);

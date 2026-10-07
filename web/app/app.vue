@@ -59,6 +59,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       <p v-if="snapshot?.error" class="banner">{{ snapshot.error }}</p>
       <p v-if="lastError" class="banner" @click="lastError = null">{{ lastError }}</p>
       <CellView v-for="cell in snapshot?.cells ?? []" :key="cell.id" :cell="cell" />
+      <EndMark v-if="snapshot?.cells.length" />
     </main>
 
     <Transition name="slide">
