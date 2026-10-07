@@ -22,7 +22,14 @@ const SHORTCUTS: Record<string, (event: KeyboardEvent) => void> = {
   '0': resetFont,
   d: cycleTheme,
   w: toggleLayoutWidth,
+  f: toggleFullscreen,
   o: () => (settingsOpen.value = true),
+}
+
+/** Fullscreen for projecting; the browser's own Esc also leaves it. */
+function toggleFullscreen() {
+  if (document.fullscreenElement) document.exitFullscreen()
+  else document.documentElement.requestFullscreen().catch(() => {})
 }
 
 /** Keys typed into code, stdin or a running program are not shortcuts. */

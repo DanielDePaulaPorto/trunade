@@ -31,6 +31,7 @@ const SHORTCUTS = computed(() => [
   { keys: ['+', '−', '0'], label: 'shortcutFont' },
   { keys: ['D'], label: 'shortcutTheme' },
   { keys: ['W'], label: 'shortcutWidth' },
+  { keys: ['F'], label: 'shortcutFullscreen' },
   { keys: ['O'], label: 'shortcutSettings' },
   { keys: ['⇧ Enter'], label: 'shortcutRun' },
   { keys: ['Esc'], label: 'shortcutLeave' },
