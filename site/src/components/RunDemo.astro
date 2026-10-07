@@ -1,0 +1,250 @@
+---
+/*
+ * A scripted imitation of a lesson page: one code cell with ▶ and its
+ * terminal. Nothing is compiled here; the output is what g++ would print.
+ */
+import Symbol from './Symbol.astro'
+
+const CODE = `<span class="k">#include</span> <span class="s">&lt;iostream&gt;</span>
+<span class="k">#include</span> <span class="s">&lt;string&gt;</span>
+
+<span class="t">int</span> <span class="f">main</span>() {
+    std::<span class="t">string</span> nome;
+    std::cout <span class="k">&lt;&lt;</span> <span class="s">"Qual o seu nome? "</span>;
+    std::cin <span class="k">&gt;&gt;</span> nome;
+    std::cout <span class="k">&lt;&lt;</span> <span class="s">"Olá, "</span> <span class="k">&lt;&lt;</span> nome <span class="k">&lt;&lt;</span> <span class="s">"!\\n"</span>;
+}`
+---
+
+<div class="demo" data-demo>
+  <div class="demo-bar">
+    <Symbol id="demo" size={30} class="demo-symbol" />
+    <span class="demo-file">aula-02.md</span>
+    <span class="demo-url">localhost:4747</span>
+  </div>
+
+  <div class="demo-page">
+    <p class="demo-heading">Lendo do teclado</p>
+    <div class="cell">
+      <div class="cell-bar">
+        <span class="cell-lang">cpp</span>
+        <span class="cell-status" data-status aria-live="polite"></span>
+        <button class="cell-run" type="button" data-run aria-label="Executar">▶</button>
+      </div>
+      <pre class="cell-code"><code set:html={CODE} /></pre>
+      <div class="terminal" data-terminal hidden>
+        <span data-output></span><input data-input class="terminal-input" aria-label="Entrada do programa" autocomplete="off" spellcheck="false" maxlength="24" />
+        <p class="terminal-exit" data-exit hidden></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const COMPILE_MS = 900
+
+  for (const demo of document.querySelectorAll<HTMLElement>('[data-demo]')) {
+    const symbol = demo.querySelector<SVGElement>('.trn')!
+    const run = demo.querySelector<HTMLButtonElement>('[data-run]')!
+    const status = demo.querySelector<HTMLElement>('[data-status]')!
+    const terminal = demo.querySelector<HTMLElement>('[data-terminal]')!
+    const output = demo.querySelector<HTMLElement>('[data-output]')!
+    const input = demo.querySelector<HTMLInputElement>('[data-input]')!
+    const exit = demo.querySelector<HTMLElement>('[data-exit]')!
+    let started = 0
+
+    const setRunning = (running: boolean) => {
+      symbol.classList.toggle('is-running', running)
+      if (!running && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        symbol.classList.add('is-reset')
+        symbol.querySelector('.trn-rotor')!.addEventListener(
+          'animationend',
+          () => symbol.classList.remove('is-reset'),
+          { once: true },
+        )
+      }
+      run.textContent = running ? '■' : '▶'
+      run.setAttribute('aria-label', running ? 'Parar' : 'Executar')
+      run.classList.toggle('stop', running)
+    }
+
+    const finish = (message: string) => {
+      input.hidden = true
+      exit.textContent = message
+      exit.hidden = false
+      status.textContent = `${((performance.now() - started) / 1000).toFixed(2).replace('.', ',')} s`
+      setRunning(false)
+    }
+
+    const start = () => {
+      started = performance.now()
+      setRunning(true)
+      terminal.hidden = false
+      output.textContent = ''
+      exit.hidden = true
+      input.hidden = true
+      input.value = ''
+      status.textContent = 'compilando'
+      setTimeout(() => {
+        if (!symbol.classList.contains('is-running')) return
+        status.textContent = 'rodando'
+        output.textContent = 'Qual o seu nome? '
+        input.hidden = false
+        input.focus({ preventScroll: true })
+      }, COMPILE_MS)
+    }
+
+    run.addEventListener('click', () => {
+      if (symbol.classList.contains('is-running')) {
+        output.textContent += '^C'
+        finish('■ interrompido')
+      } else {
+        start()
+      }
+    })
+
+    input.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return
+      const name = input.value.trim().split(/\s+/)[0] || 'turma'
+      output.textContent += `${input.value}\nOlá, ${name}!\n`
+      finish('saiu com código 0')
+    })
+  }
+</script>
+
+<style>
+  .demo {
+    overflow: hidden;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-lg);
+    background: var(--bg);
+  }
+
+  .demo-bar {
+    display: flex;
+    gap: var(--space-8);
+    align-items: center;
+    padding: 10px var(--space-16);
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+    font-size: 13px;
+  }
+
+  .demo-file {
+    font-weight: 700;
+  }
+
+  .demo-url {
+    margin-left: auto;
+    color: var(--muted);
+  }
+
+  .demo-page {
+    padding: var(--space-16) var(--space-24) var(--space-24);
+  }
+
+  .demo-heading {
+    margin: 0 0 var(--space-16);
+    font: 700 1.3rem/1.2 var(--font-display);
+  }
+
+  .cell {
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    background: var(--code-bg);
+    color: var(--code-ink);
+  }
+
+  .cell-bar {
+    display: flex;
+    gap: var(--space-8);
+    align-items: center;
+    padding: 6px 8px 6px 14px;
+    border-bottom: 1px solid #3e3d32;
+    font-size: 12px;
+  }
+
+  .cell-lang {
+    font-weight: 700;
+  }
+
+  .cell-status {
+    margin-left: auto;
+    color: #a59f85;
+  }
+
+  .cell-run {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--code-function);
+    font: 700 15px/1 var(--font-mono);
+    cursor: pointer;
+  }
+
+  .cell-run:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .cell-run.stop {
+    color: var(--code-keyword);
+  }
+
+  .cell-code {
+    margin: 0;
+    padding: 12px 14px;
+    border-radius: 0;
+    background: none;
+    font-size: 13.5px;
+  }
+
+  .cell-code :global(.k) {
+    color: var(--code-keyword);
+  }
+
+  .cell-code :global(.s) {
+    color: var(--code-string);
+  }
+
+  .cell-code :global(.t) {
+    color: var(--code-type);
+  }
+
+  .cell-code :global(.f) {
+    color: var(--code-function);
+  }
+
+  .terminal {
+    padding: 12px 14px;
+    background: var(--terminal-bg);
+    color: var(--terminal-ink);
+    font-size: 13.5px;
+    white-space: pre-wrap;
+  }
+
+  .terminal-input {
+    width: 14ch;
+    padding: 0;
+    border: 0;
+    outline: none;
+    background: transparent;
+    color: var(--glow);
+    font: inherit;
+    caret-color: var(--glow);
+  }
+
+  .terminal-input:focus-visible {
+    outline: none;
+    border-bottom: 2px solid var(--glow);
+  }
+
+  .terminal-exit {
+    margin: 8px 0 0;
+    color: #a6b8b2;
+    font-size: 12px;
+  }
+</style>

@@ -2,10 +2,155 @@
 import Base from './Base.astro'
 
 const { frontmatter } = Astro.props
+const PAGES = [
+  { href: '/docs/', title: 'Visão geral' },
+  { href: '/docs/instalacao/', title: 'Instalação' },
+  { href: '/docs/aulas/', title: 'Escrevendo aulas' },
+  { href: '/docs/recursos/', title: 'Recursos de aula' },
+  { href: '/docs/sala/', title: 'Na sala' },
+  { href: '/docs/configuracao/', title: 'Configuração' },
+]
+const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`
+const index = PAGES.findIndex((page) => page.href === path)
+const previous = PAGES[index - 1]
+const next = PAGES[index + 1]
 ---
 
-<Base title={frontmatter.title}>
-  <article class="docs">
-    <slot />
-  </article>
+<Base title={frontmatter.title} description={frontmatter.description}>
+  <div class="wrap docs">
+    <nav class="sidebar" aria-label="Documentação">
+      <p class="label">Documentação</p>
+      <ol>
+        {PAGES.map((page) => (
+          <li><a href={page.href} aria-current={page.href === path ? 'page' : undefined}>{page.title}</a></li>
+        ))}
+      </ol>
+    </nav>
+    <article class="prose">
+      <slot />
+      <nav class="pager" aria-label="Páginas da documentação">
+        {previous ? <a href={previous.href}><span class="label">Anterior</span>{previous.title}</a> : <span />}
+        {next && <a class="next" href={next.href}><span class="label">Próxima</span>{next.title}</a>}
+      </nav>
+    </article>
+  </div>
 </Base>
+
+<style>
+  .docs {
+    display: grid;
+    gap: var(--space-48);
+    padding-top: var(--space-24);
+  }
+
+  .docs > * {
+    min-width: 0;
+  }
+
+  @media (min-width: 900px) {
+    .docs {
+      grid-template-columns: 220px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      position: sticky;
+      top: var(--space-24);
+      align-self: start;
+    }
+  }
+
+  .sidebar ol {
+    margin: var(--space-16) 0 0;
+    padding: 0;
+    list-style: none;
+    border-left: 1px solid var(--line);
+  }
+
+  .sidebar a {
+    display: block;
+    margin-left: -1px;
+    padding: 6px var(--space-16);
+    border-left: 3px solid transparent;
+    color: var(--muted);
+    font-size: 15px;
+    text-decoration: none;
+  }
+
+  .sidebar a:hover {
+    color: var(--ink);
+  }
+
+  .sidebar a[aria-current='page'] {
+    border-left-color: var(--malachite);
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .prose {
+    max-width: var(--prose);
+  }
+
+  .prose :global(h1) {
+    margin: 0 0 var(--space-24);
+    font-size: clamp(2rem, 4.5vw, 2.75rem);
+  }
+
+  .prose :global(h2) {
+    margin: var(--space-48) 0 var(--space-16);
+    font-size: 1.6rem;
+  }
+
+  .prose :global(h3) {
+    margin: var(--space-24) 0 var(--space-8);
+  }
+
+  .prose :global(li) {
+    margin: 6px 0;
+  }
+
+  .prose :global(table) {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .prose :global(blockquote) {
+    margin: var(--space-24) 0;
+    padding: var(--space-8) var(--space-16);
+    border-left: 3px solid var(--bronze);
+    background: var(--surface);
+  }
+
+  .prose :global(blockquote p) {
+    margin: var(--space-8) 0;
+  }
+
+  .pager {
+    display: flex;
+    gap: var(--space-16);
+    justify-content: space-between;
+    margin-top: var(--space-96);
+    padding-top: var(--space-24);
+    border-top: 1px solid var(--line);
+  }
+
+  .pager a {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 12px var(--space-16);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .pager a:hover {
+    border-color: var(--malachite);
+  }
+
+  .pager .next {
+    margin-left: auto;
+    text-align: right;
+  }
+</style>

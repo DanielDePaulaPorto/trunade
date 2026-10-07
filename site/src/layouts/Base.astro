@@ -1,7 +1,7 @@
 ---
-import '@fontsource-variable/atkinson-hyperlegible-next'
 import '@fontsource-variable/jetbrains-mono'
 import '../styles/global.css'
+import Logo from '../components/Logo.astro'
 
 interface Props {
   title?: string
@@ -10,9 +10,15 @@ interface Props {
 
 const {
   title,
-  description = 'Aulas de programação em Markdown, com blocos de código que compilam e rodam no navegador.',
+  description = 'Aulas de programação em Markdown, com blocos de código que compilam de verdade e rodam no navegador. Funciona sem internet.',
 } = Astro.props
-const fullTitle = title ? `${title} · Trunade!` : 'Trunade!'
+const fullTitle = title ? `${title} · Trunade!` : 'Trunade! — aulas de programação que rodam'
+const path = Astro.url.pathname
+const nav = [
+  { href: '/#recursos', label: 'Recursos' },
+  { href: '/#jupyter', label: 'vs. Jupyter' },
+  { href: '/docs/', label: 'Documentação' },
+]
 ---
 
 <!doctype html>
@@ -21,25 +27,166 @@ const fullTitle = title ? `${title} · Trunade!` : 'Trunade!'
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="alternate icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <title>{fullTitle}</title>
+    <script is:inline>
+      // Before first paint: stored choice, else the system theme.
+      try {
+        const stored = localStorage.getItem('trunade-site-theme')
+        const dark = stored ? stored === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      } catch {
+        document.documentElement.dataset.theme = 'light'
+      }
+    </script>
   </head>
   <body>
-    <header class="topbar">
-      <a class="brand" href="/">
-        <img src="/favicon.svg" alt="" width="32" height="32" />
-        <span>Trunade!</span>
-      </a>
-      <nav>
-        <a href="/#por-que">Por que não o Jupyter?</a>
-        <a href="/docs/">Documentação</a>
+    <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+    <header class="topbar wrap">
+      <a class="home" href="/" aria-label="Trunade!, início"><Logo height={34} /></a>
+      <nav aria-label="Principal">
+        {nav.map((item) => (
+          <a href={item.href} aria-current={path.startsWith(item.href) && item.href !== '/' ? 'page' : undefined}>{item.label}</a>
+        ))}
+        <button class="theme-toggle" type="button" aria-label="Alternar tema claro e escuro">
+          <span class="when-light">escuro</span><span class="when-dark">claro</span>
+        </button>
       </nav>
     </header>
-    <main>
+
+    <main id="conteudo">
       <slot />
     </main>
+
     <footer class="footer">
-      <p>Trunade! — feito para a sala de aula.</p>
+      <div class="wrap footer-inner">
+        <img src="/favicon.svg" alt="" width="28" height="28" />
+        <p>Funciona sem internet, como a sua sala.</p>
+        <p class="footer-links">
+          <a href="/docs/">Documentação</a>
+          <a href="/docs/instalacao/">Instalação</a>
+        </p>
+      </div>
     </footer>
+
+    <script>
+      document.querySelector('.theme-toggle')?.addEventListener('click', () => {
+        const root = document.documentElement
+        const next = root.dataset.theme === 'dark' ? 'light' : 'dark'
+        root.dataset.theme = next
+        try {
+          localStorage.setItem('trunade-site-theme', next)
+        } catch {
+          // keep working without persistence
+        }
+      })
+    </script>
   </body>
 </html>
+
+<style>
+  .skip {
+    position: absolute;
+    left: -9999px;
+  }
+
+  .skip:focus {
+    left: var(--space-16);
+    top: var(--space-16);
+    z-index: 10;
+    padding: var(--space-8) var(--space-16);
+    background: var(--bg);
+  }
+
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-16);
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--space-24);
+    padding-bottom: var(--space-24);
+  }
+
+  .home {
+    display: inline-flex;
+  }
+
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-8) var(--space-24);
+    align-items: center;
+  }
+
+  nav a {
+    color: var(--muted);
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+  }
+
+  nav a:hover,
+  nav a[aria-current='page'] {
+    color: var(--ink);
+  }
+
+  nav a[aria-current='page'] {
+    text-decoration: underline;
+    text-decoration-color: var(--malachite);
+    text-decoration-thickness: 3px;
+  }
+
+  .theme-toggle {
+    padding: 6px 12px;
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius-md);
+    background: transparent;
+    color: var(--ink);
+    font: 700 13px/1 var(--font-mono);
+    cursor: pointer;
+  }
+
+  .theme-toggle::before {
+    content: '$ tema ';
+    color: var(--muted);
+  }
+
+  .when-dark,
+  :global([data-theme='dark']) .when-light {
+    display: none;
+  }
+
+  :global([data-theme='dark']) .when-dark {
+    display: inline;
+  }
+
+  .footer {
+    margin-top: var(--space-96);
+    padding: var(--space-48) 0;
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .footer-inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-16) var(--space-24);
+    align-items: center;
+  }
+
+  .footer p {
+    margin: 0;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: var(--space-24);
+    margin-left: auto !important;
+  }
+</style>

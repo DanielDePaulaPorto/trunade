@@ -86,7 +86,7 @@ function cycleTheme() {
 
 function defaults(): Stored {
   const browserLocale = import.meta.client ? navigator.language : 'pt'
-  return { themeMode: 'auto', codeThemeMode: 'auto', locale: browserLocale.startsWith('pt') ? 'pt' : 'en', fontScale: 1, layoutWidth: 'narrow' }
+  return { themeMode: 'auto', codeThemeMode: 'dark', locale: browserLocale.startsWith('pt') ? 'pt' : 'en', fontScale: 1, layoutWidth: 'narrow' }
 }
 
 // Storage can be unavailable (private windows, blocked site data): use defaults.

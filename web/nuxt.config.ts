@@ -5,7 +5,6 @@ export default defineNuxtConfig({
   devtools: { enabled: false },
   telemetry: false,
   css: [
-    '@fontsource-variable/atkinson-hyperlegible-next',
     '@fontsource-variable/jetbrains-mono',
     'katex/dist/katex.min.css',
     '@xterm/xterm/css/xterm.css',
@@ -15,7 +14,11 @@ export default defineNuxtConfig({
     head: {
       title: 'Trunade!',
       meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
-      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'alternate icon', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
+      ],
     },
   },
   runtimeConfig: {

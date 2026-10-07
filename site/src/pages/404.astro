@@ -1,0 +1,40 @@
+---
+import Base from '../layouts/Base.astro'
+import Symbol from '../components/Symbol.astro'
+---
+
+<Base title="Página não encontrada">
+  <section class="wrap lost">
+    <Symbol id="lost" size={120} class="is-reset" />
+    <p class="label">404</p>
+    <h1>Esta página voltou para a mão.</h1>
+    <p>O endereço não existe mais, ou nunca existiu. Comece de novo:</p>
+    <p class="links">
+      <a class="button" href="/">Início</a>
+      <a class="button ghost" href="/docs/">Documentação</a>
+    </p>
+  </section>
+</Base>
+
+<style>
+  .lost {
+    display: grid;
+    justify-items: center;
+    padding-top: var(--space-96);
+    text-align: center;
+  }
+
+  h1 {
+    max-width: 18ch;
+    margin: var(--space-8) 0 var(--space-16);
+  }
+
+  p {
+    color: var(--muted);
+  }
+
+  .links {
+    display: flex;
+    gap: var(--space-16);
+  }
+</style>

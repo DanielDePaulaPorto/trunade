@@ -26,7 +26,6 @@ export const ICONS = {
   wide: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="m7 12 3-3M7 12l3 3M7 12h10M17 12l-3-3M17 12l-3 3"/>',
   code: '<path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/>',
   x: '<path d="M18 6 6 18M6 6l12 12"/>',
-  spinner: '<path d="M21 12a9 9 0 1 1-6.22-8.56"/>',
 } as const
 
 export type IconName = keyof typeof ICONS

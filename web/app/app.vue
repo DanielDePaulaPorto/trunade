@@ -52,8 +52,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
 
     <main class="document">
       <header class="masthead">
-        <SkullMark :running="activeRuns > 0" :size="34" />
-        <span class="wordmark">Trunade!</span>
+        <TrunadeSymbol :running="activeRuns > 0" :size="40" />
+        <TrunadeName />
         <span class="file">{{ snapshot?.fileName }}</span>
       </header>
       <p v-if="snapshot?.error" class="banner">{{ snapshot.error }}</p>

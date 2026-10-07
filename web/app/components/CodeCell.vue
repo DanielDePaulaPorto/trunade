@@ -139,7 +139,6 @@ onBeforeUnmount(() => {
         </span>
         <span class="spacer" />
         <span v-if="busy" class="chip">
-          <AppIcon name="spinner" class="spin" />
           <span class="shiny">{{ t(status === 'compiling' ? 'compiling' : 'running') }}</span>
         </span>
         <span v-if="compileMs != null" class="chip" :title="t('compileTime')">

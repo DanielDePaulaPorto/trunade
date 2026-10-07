@@ -1,0 +1,30 @@
+---
+/* The horizontal logo in curves; the theme picks the file (brand: never retype the name). */
+interface Props {
+  height?: number
+}
+
+const { height = 32 } = Astro.props
+const width = Math.round((height * 244.44) / 64)
+---
+
+<span class="logo" style={`--h:${height}px`}>
+  <img class="logo-light" src="/brand/trunade-logo.svg" alt="Trunade!" width={width} height={height} />
+  <img class="logo-dark" src="/brand/trunade-logo-escuro.svg" alt="Trunade!" width={width} height={height} />
+</span>
+
+<style>
+  .logo {
+    display: inline-flex;
+    height: var(--h);
+  }
+
+  .logo-dark,
+  :global([data-theme='dark']) .logo-light {
+    display: none;
+  }
+
+  :global([data-theme='dark']) .logo-dark {
+    display: block;
+  }
+</style>
