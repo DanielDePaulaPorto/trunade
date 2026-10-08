@@ -2,27 +2,23 @@
 import '@fontsource-variable/jetbrains-mono'
 import '../styles/global.css'
 import Logo from '../components/Logo.astro'
+import { CHROME, counterpart, langFromPath, localize } from '../i18n'
 
 interface Props {
   title?: string
   description?: string
 }
 
-const {
-  title,
-  description = 'Aulas de programação em Markdown, com blocos de código que compilam de verdade e rodam no navegador. Funciona sem internet.',
-} = Astro.props
-const fullTitle = title ? `${title} · Trunade!` : 'Trunade! — aulas de programação que rodam'
 const path = Astro.url.pathname
-const nav = [
-  { href: '/#recursos', label: 'Recursos' },
-  { href: '/#jupyter', label: 'vs. Jupyter' },
-  { href: '/docs/', label: 'Documentação' },
-]
+const lang = langFromPath(path)
+const text = CHROME[lang]
+const { title, description = text.description } = Astro.props
+const fullTitle = title ? `${title} · Trunade!` : text.homeTitle
+const docsHref = localize('/docs/', lang)
 ---
 
 <!doctype html>
-<html lang="pt-BR">
+<html lang={lang === 'pt' ? 'pt-BR' : 'en'}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -32,6 +28,7 @@ const nav = [
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="alternate icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="alternate" hreflang={lang === 'pt' ? 'en' : 'pt-BR'} href={counterpart(path)} />
     <title>{fullTitle}</title>
     <script is:inline>
       // Before first paint: stored choice, else the system theme.
@@ -45,15 +42,14 @@ const nav = [
     </script>
   </head>
   <body>
-    <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+    <a class="skip" href="#conteudo">{text.skip}</a>
     <header class="topbar wrap">
-      <a class="home" href="/" aria-label="Trunade!, início"><Logo height={34} /></a>
-      <nav aria-label="Principal">
-        {nav.map((item) => (
-          <a href={item.href} aria-current={path.startsWith(item.href) && item.href !== '/' ? 'page' : undefined}>{item.label}</a>
-        ))}
-        <button class="theme-toggle" type="button" aria-label="Alternar tema claro e escuro">
-          <span class="when-light">escuro</span><span class="when-dark">claro</span>
+      <a class="home" href={localize('/', lang)} aria-label="Trunade!"><Logo height={30} /></a>
+      <nav>
+        <a href={docsHref} aria-current={path.startsWith(docsHref) ? 'page' : undefined}>{text.docs}</a>
+        <a href={counterpart(path)} hreflang={lang === 'pt' ? 'en' : 'pt-BR'} aria-label={text.otherLangLabel}>{text.otherLang}</a>
+        <button class="theme-toggle" type="button" aria-label={text.themeLabel}>
+          <span class="when-light">{text.themeDark}</span><span class="when-dark">{text.themeLight}</span>
         </button>
       </nav>
     </header>
@@ -64,12 +60,8 @@ const nav = [
 
     <footer class="footer">
       <div class="wrap footer-inner">
-        <img src="/favicon.svg" alt="" width="28" height="28" />
-        <p>Funciona sem internet, como a sua sala.</p>
-        <p class="footer-links">
-          <a href="/docs/">Documentação</a>
-          <a href="/docs/instalacao/">Instalação</a>
-        </p>
+        <img src="/favicon.svg" alt="" width="22" height="22" />
+        <p>{text.footer}</p>
       </div>
     </footer>
 
@@ -118,42 +110,30 @@ const nav = [
 
   nav {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-8) var(--space-24);
+    gap: var(--space-24);
     align-items: center;
   }
 
-  nav a {
-    color: var(--muted);
-    font-weight: 700;
-    font-size: 14px;
-    text-decoration: none;
-  }
-
-  nav a:hover,
-  nav a[aria-current='page'] {
-    color: var(--ink);
-  }
-
-  nav a[aria-current='page'] {
-    text-decoration: underline;
-    text-decoration-color: var(--malachite);
-    text-decoration-thickness: 3px;
-  }
-
+  nav a,
   .theme-toggle {
-    padding: 6px 12px;
-    border: 1px solid var(--line-strong);
-    border-radius: var(--radius-md);
-    background: transparent;
-    color: var(--ink);
-    font: 700 13px/1 var(--font-mono);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font: 400 14px/1 var(--font-mono);
+    text-decoration: none;
     cursor: pointer;
   }
 
+  nav a:hover,
+  .theme-toggle:hover,
+  nav a[aria-current='page'] {
+    color: var(--ink);
+  }
+
   .theme-toggle::before {
-    content: '$ tema ';
-    color: var(--muted);
+    content: '$ ';
+    color: var(--malachite-text);
   }
 
   .when-dark,
@@ -170,23 +150,16 @@ const nav = [
     padding: var(--space-48) 0;
     border-top: 1px solid var(--line);
     color: var(--muted);
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .footer-inner {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-16) var(--space-24);
+    gap: var(--space-16);
     align-items: center;
   }
 
   .footer p {
     margin: 0;
-  }
-
-  .footer-links {
-    display: flex;
-    gap: var(--space-24);
-    margin-left: auto !important;
   }
 </style>

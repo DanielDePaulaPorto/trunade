@@ -4,36 +4,54 @@
  * terminal. Nothing is compiled here; the output is what g++ would print.
  */
 import Symbol from './Symbol.astro'
+import type { Lang } from '../i18n'
+
+const { lang } = Astro.props as { lang: Lang }
+
+const TEXT = {
+  pt: {
+    file: 'aula-02.md', heading: 'Lendo do teclado', variable: 'nome',
+    question: 'Qual o seu nome? ', greeting: 'Olá, ', fallback: 'turma',
+    compiling: 'compilando', running: 'rodando', exited: 'saiu com código 0', stopped: '■ interrompido',
+    run: 'Executar', stop: 'Parar', input: 'Entrada do programa',
+  },
+  en: {
+    file: 'lesson-02.md', heading: 'Reading from the keyboard', variable: 'name',
+    question: "What's your name? ", greeting: 'Hello, ', fallback: 'class',
+    compiling: 'compiling', running: 'running', exited: 'exited with code 0', stopped: '■ stopped',
+    run: 'Run', stop: 'Stop', input: 'Program input',
+  },
+}[lang]
 
 const CODE = `<span class="k">#include</span> <span class="s">&lt;iostream&gt;</span>
 <span class="k">#include</span> <span class="s">&lt;string&gt;</span>
 
 <span class="t">int</span> <span class="f">main</span>() {
-    std::<span class="t">string</span> nome;
-    std::cout <span class="k">&lt;&lt;</span> <span class="s">"Qual o seu nome? "</span>;
-    std::cin <span class="k">&gt;&gt;</span> nome;
-    std::cout <span class="k">&lt;&lt;</span> <span class="s">"Olá, "</span> <span class="k">&lt;&lt;</span> nome <span class="k">&lt;&lt;</span> <span class="s">"!\\n"</span>;
+    std::<span class="t">string</span> ${TEXT.variable};
+    std::cout <span class="k">&lt;&lt;</span> <span class="s">"${TEXT.question.replace("'", '&#39;')}"</span>;
+    std::cin <span class="k">&gt;&gt;</span> ${TEXT.variable};
+    std::cout <span class="k">&lt;&lt;</span> <span class="s">"${TEXT.greeting}"</span> <span class="k">&lt;&lt;</span> ${TEXT.variable} <span class="k">&lt;&lt;</span> <span class="s">"!\\n"</span>;
 }`
 ---
 
-<div class="demo" data-demo>
+<div class="demo" data-demo data-text={JSON.stringify(TEXT)}>
   <div class="demo-bar">
     <Symbol id="demo" size={30} class="demo-symbol" />
-    <span class="demo-file">aula-02.md</span>
+    <span class="demo-file">{TEXT.file}</span>
     <span class="demo-url">localhost:4747</span>
   </div>
 
   <div class="demo-page">
-    <p class="demo-heading">Lendo do teclado</p>
+    <p class="demo-heading">{TEXT.heading}</p>
     <div class="cell">
       <div class="cell-bar">
         <span class="cell-lang">cpp</span>
         <span class="cell-status" data-status aria-live="polite"></span>
-        <button class="cell-run" type="button" data-run aria-label="Executar">▶</button>
+        <button class="cell-run" type="button" data-run aria-label={TEXT.run}>▶</button>
       </div>
       <pre class="cell-code"><code set:html={CODE} /></pre>
       <div class="terminal" data-terminal hidden>
-        <span data-output></span><input data-input class="terminal-input" aria-label="Entrada do programa" autocomplete="off" spellcheck="false" maxlength="24" />
+        <span data-output></span><input data-input class="terminal-input" aria-label={TEXT.input} autocomplete="off" spellcheck="false" maxlength="24" />
         <p class="terminal-exit" data-exit hidden></p>
       </div>
     </div>
@@ -51,6 +69,7 @@ const CODE = `<span class="k">#include</span> <span class="s">&lt;iostream&gt;</
     const output = demo.querySelector<HTMLElement>('[data-output]')!
     const input = demo.querySelector<HTMLInputElement>('[data-input]')!
     const exit = demo.querySelector<HTMLElement>('[data-exit]')!
+    const text = JSON.parse(demo.dataset.text!)
     let started = 0
 
     const setRunning = (running: boolean) => {
@@ -64,7 +83,7 @@ const CODE = `<span class="k">#include</span> <span class="s">&lt;iostream&gt;</
         )
       }
       run.textContent = running ? '■' : '▶'
-      run.setAttribute('aria-label', running ? 'Parar' : 'Executar')
+      run.setAttribute('aria-label', running ? text.stop : text.run)
       run.classList.toggle('stop', running)
     }
 
@@ -84,11 +103,11 @@ const CODE = `<span class="k">#include</span> <span class="s">&lt;iostream&gt;</
       exit.hidden = true
       input.hidden = true
       input.value = ''
-      status.textContent = 'compilando'
+      status.textContent = text.compiling
       setTimeout(() => {
         if (!symbol.classList.contains('is-running')) return
-        status.textContent = 'rodando'
-        output.textContent = 'Qual o seu nome? '
+        status.textContent = text.running
+        output.textContent = text.question
         input.hidden = false
         input.focus({ preventScroll: true })
       }, COMPILE_MS)
@@ -97,7 +116,7 @@ const CODE = `<span class="k">#include</span> <span class="s">&lt;iostream&gt;</
     run.addEventListener('click', () => {
       if (symbol.classList.contains('is-running')) {
         output.textContent += '^C'
-        finish('■ interrompido')
+        finish(text.stopped)
       } else {
         start()
       }
@@ -105,9 +124,9 @@ const CODE = `<span class="k">#include</span> <span class="s">&lt;iostream&gt;</
 
     input.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter') return
-      const name = input.value.trim().split(/\s+/)[0] || 'turma'
-      output.textContent += `${input.value}\nOlá, ${name}!\n`
-      finish('saiu com código 0')
+      const name = input.value.trim().split(/\s+/)[0] || text.fallback
+      output.textContent += `${input.value}\n${text.greeting}${name}!\n`
+      finish(text.exited)
     })
   }
 </script>

@@ -1,0 +1,400 @@
+---
+import Base from '../layouts/Base.astro'
+import RunDemo from './RunDemo.astro'
+import { localize, type Lang } from '../i18n'
+
+const { lang } = Astro.props as { lang: Lang }
+
+const TEXT = {
+  pt: {
+    eyebrow: 'Aulas de programação em Markdown',
+    title: 'Aulas que compilam.',
+    lead: 'Escreva a aula em Markdown. Cada bloco de código ganha um ▶ que compila com o g++ de verdade e mostra a saída num terminal, ali mesmo, no telão.',
+    copy: 'copiar',
+    copied: 'copiado',
+    start: 'Começar',
+    hint: 'Aperte ▶ e digite seu nome no terminal.',
+    sourceTitle: 'A aula é um arquivo.',
+    sourceLead: 'Markdown comum, no seu editor. Salvou, a página atualiza.',
+    file: 'aula-02.md',
+    heading: '## Lendo do teclado',
+    prose: 'Use `std::cin` para ler da entrada padrão.',
+    points: [
+      ['Programa completo', 'Cada bloco tem o seu main() e é compilado do zero, como na prova.'],
+      ['Entrada de verdade', 'Bloco stdin junto com a aula, ou cin interativo no terminal.'],
+      ['Erro é conteúdo', 'Erro de compilação inteiro, sinais, tempo limite e código de saída.'],
+    ],
+    featuresTitle: 'O que vem pronto.',
+    features: [
+      ['C++, C e Python', 'Outras linguagens por configuração, com o compilador e as flags que você quiser.'],
+      ['Fórmulas e diagramas', 'LaTeX e Mermaid renderizados localmente.'],
+      ['Perguntas e passos', 'Blocos quiz e exercícios com enunciado, dica e solução que roda.'],
+      ['Feito para o telão', 'Índice com T, espaço para a próxima seção, fonte e largura no teclado, tela cheia com F.'],
+      ['Edite sem medo', 'Mude o código durante a aula; o arquivo não muda.'],
+      ['Offline', 'Um binário local, sem CDN, sem conta, sem nuvem.'],
+    ],
+    jupyterTitle: 'E o Jupyter?',
+    jupyterLead: 'Ótimo quando o estado entre células é o ponto: dados, gráficos, exploração. Uma aula de C++ pede outra coisa.',
+    columns: ['', 'Trunade!', 'Jupyter'],
+    rows: [
+      ['Bloco', 'programa completo, com main()', 'célula que continua o estado anterior'],
+      ['Compilador', 'o real, com as suas flags', 'o do kernel (C++ interpretado)'],
+      ['Entrada', 'terminal interativo ou stdin fixo', 'limitada'],
+      ['Arquivo', 'Markdown puro', 'JSON com saídas embutidas'],
+    ],
+    installTitle: 'Instale e rode.',
+    installComment: '# g++-16 no macOS',
+    lesson: 'aula.md',
+    guide: 'Guia de instalação',
+  },
+  en: {
+    eyebrow: 'Programming lessons in Markdown',
+    title: 'Lessons that compile.',
+    lead: 'Write the lesson in Markdown. Every code block gets a ▶ that compiles with the real g++ and shows the output in a terminal, right there, on the projector.',
+    copy: 'copy',
+    copied: 'copied',
+    start: 'Get started',
+    hint: 'Press ▶ and type your name in the terminal.',
+    sourceTitle: 'The lesson is a file.',
+    sourceLead: 'Plain Markdown, in your editor. Save it and the page updates.',
+    file: 'lesson-02.md',
+    heading: '## Reading from the keyboard',
+    prose: 'Use `std::cin` to read from standard input.',
+    points: [
+      ['Whole programs', 'Each block has its own main() and is compiled from scratch, like in an exam.'],
+      ['Real input', 'A stdin block shipped with the lesson, or interactive cin in the terminal.'],
+      ['Errors are content', 'Full compiler errors, signals, time limits and exit codes.'],
+    ],
+    featuresTitle: 'What comes built in.',
+    features: [
+      ['C++, C and Python', 'Other languages through configuration, with any compiler and flags.'],
+      ['Math and diagrams', 'LaTeX and Mermaid rendered locally.'],
+      ['Questions and steps', 'Quiz blocks and exercises with statement, hint and a solution that runs.'],
+      ['Made for the projector', 'T for the outline, space for the next section, font and width from the keyboard, F for full screen.'],
+      ['Edit fearlessly', 'Change code during class; the file stays the same.'],
+      ['Offline', 'One local binary. No CDN, no account, no cloud.'],
+    ],
+    jupyterTitle: 'What about Jupyter?',
+    jupyterLead: 'Great when state across cells is the point: data, plots, exploration. A C++ lesson asks for something else.',
+    columns: ['', 'Trunade!', 'Jupyter'],
+    rows: [
+      ['Block', 'a whole program, with main()', 'a cell that continues earlier state'],
+      ['Compiler', 'the real one, with your flags', "the kernel's (C++ interpreted)"],
+      ['Input', 'interactive terminal or fixed stdin', 'limited'],
+      ['File', 'plain Markdown', 'JSON with embedded outputs'],
+    ],
+    installTitle: 'Install and run.',
+    installComment: '# g++-16 on macOS',
+    lesson: 'lesson.md',
+    guide: 'Installation guide',
+  },
+}[lang]
+---
+
+<Base>
+  <section class="wrap hero">
+    <div class="hero-copy">
+      <p class="label">{TEXT.eyebrow}</p>
+      <h1>{TEXT.title}</h1>
+      <p class="lead">{TEXT.lead}</p>
+      <div class="command" data-copy={`trunade ${TEXT.lesson}`} data-copied={TEXT.copied}>
+        <code><span class="prompt">$</span> trunade {TEXT.lesson}</code>
+        <button type="button" class="copy">{TEXT.copy}</button>
+      </div>
+      <p><a class="button" href={localize('/docs/', lang)}>{TEXT.start} →</a></p>
+    </div>
+    <div class="hero-demo">
+      <RunDemo lang={lang} />
+      <p class="hint">{TEXT.hint}</p>
+    </div>
+  </section>
+
+  <section class="wrap section">
+    <h2>{TEXT.sourceTitle}</h2>
+    <p class="section-lead">{TEXT.sourceLead}</p>
+    <div class="split">
+      <div class="file">
+        <span class="file-name">{TEXT.file}</span>
+        <pre><code><span class="md-h">{TEXT.heading}</span>
+
+{TEXT.prose}
+
+<span class="md-f">```cpp</span>
+#include &lt;iostream&gt;
+int main() {'{'}
+    int a, b;
+    std::cin &gt;&gt; a &gt;&gt; b;
+    std::cout &lt;&lt; a + b &lt;&lt; "\n";
+{'}'}
+<span class="md-f">```</span>
+
+<span class="md-f">```stdin</span>
+2 40
+<span class="md-f">```</span></code></pre>
+      </div>
+      <dl class="points">
+        {TEXT.points.map(([term, text]) => (
+          <div>
+            <dt>{term}</dt>
+            <dd>{text}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+  </section>
+
+  <section class="wrap section">
+    <h2>{TEXT.featuresTitle}</h2>
+    <dl class="features">
+      {TEXT.features.map(([term, text]) => (
+        <div>
+          <dt>{term}</dt>
+          <dd>{text}</dd>
+        </div>
+      ))}
+    </dl>
+  </section>
+
+  <section class="wrap section">
+    <h2>{TEXT.jupyterTitle}</h2>
+    <p class="section-lead">{TEXT.jupyterLead}</p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>{TEXT.columns.map((column) => <th scope="col">{column}</th>)}</tr>
+        </thead>
+        <tbody>
+          {TEXT.rows.map(([topic, trunade, jupyter]) => (
+            <tr><th scope="row">{topic}</th><td>{trunade}</td><td class="muted">{jupyter}</td></tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="wrap section">
+    <h2>{TEXT.installTitle}</h2>
+    <pre class="install"><code><span class="prompt">$</span> brew install gcc        <span class="comment">{TEXT.installComment}</span>
+<span class="prompt">$</span> TrunadeCode/install.sh
+<span class="prompt">$</span> trunade {TEXT.lesson}</code></pre>
+    <p><a href={localize('/docs/instalacao/', lang)}>{TEXT.guide} →</a></p>
+  </section>
+</Base>
+
+<script>
+  for (const box of document.querySelectorAll<HTMLElement>('[data-copy]')) {
+    const button = box.querySelector('button')!
+    const label = button.textContent
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(box.dataset.copy!)
+        button.textContent = box.dataset.copied!
+      } catch {
+        return
+      }
+      setTimeout(() => (button.textContent = label), 1600)
+    })
+  }
+</script>
+
+<style>
+  .hero {
+    display: grid;
+    gap: var(--space-48);
+    align-items: center;
+    padding-top: var(--space-48);
+    padding-bottom: var(--space-48);
+  }
+
+  .hero > *,
+  .split > * {
+    min-width: 0;
+  }
+
+  @media (min-width: 960px) {
+    .hero {
+      grid-template-columns: 5fr 6fr;
+    }
+  }
+
+  .hero h1 {
+    margin: var(--space-16) 0 var(--space-24);
+  }
+
+  .lead {
+    max-width: 48ch;
+    margin: 0 0 var(--space-24);
+    color: var(--muted);
+  }
+
+  .command {
+    display: inline-flex;
+    max-width: 100%;
+    align-items: center;
+    gap: var(--space-16);
+    margin-bottom: var(--space-24);
+    padding: 10px 10px 10px 18px;
+    border-radius: var(--radius-md);
+    background: var(--terminal-bg);
+    color: var(--terminal-ink);
+  }
+
+  .command code {
+    padding: 0;
+    background: none;
+    font-weight: 400;
+  }
+
+  .prompt {
+    color: var(--glow);
+  }
+
+  .copy {
+    padding: 6px 10px;
+    border: 1px solid #3a4a44;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: #a6b8b2;
+    font: 12px/1 var(--font-mono);
+    cursor: pointer;
+  }
+
+  .copy:hover {
+    color: var(--terminal-ink);
+  }
+
+  .hint {
+    margin: var(--space-8) 0 0;
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .section {
+    padding-top: var(--space-96);
+  }
+
+  .section h2 {
+    margin: 0 0 var(--space-8);
+  }
+
+  .section-lead {
+    max-width: var(--prose);
+    margin: 0 0 var(--space-48);
+    color: var(--muted);
+  }
+
+  .section h2 + .features {
+    margin-top: var(--space-48);
+  }
+
+  .split {
+    display: grid;
+    gap: var(--space-48);
+    align-items: start;
+  }
+
+  @media (min-width: 860px) {
+    .split {
+      grid-template-columns: 3fr 2fr;
+    }
+  }
+
+  .file {
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+  }
+
+  .file-name {
+    display: block;
+    padding: 10px var(--space-16);
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .file pre {
+    margin: 0;
+    border-radius: 0;
+    font-size: 14px;
+  }
+
+  .md-h {
+    color: var(--malachite-text);
+    font-weight: 700;
+  }
+
+  .md-f {
+    color: var(--muted);
+  }
+
+  dl {
+    margin: 0;
+  }
+
+  dt {
+    font-weight: 700;
+  }
+
+  dd {
+    margin: 4px 0 0;
+    color: var(--muted);
+  }
+
+  .points {
+    display: grid;
+    gap: var(--space-24);
+  }
+
+  .points > div,
+  .features > div {
+    padding-top: var(--space-16);
+    border-top: 1px solid var(--line);
+  }
+
+  .features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(300px, 100%), 1fr));
+    gap: var(--space-24) var(--space-48);
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 560px;
+  }
+
+  thead th:nth-child(2) {
+    color: var(--malachite-text);
+  }
+
+  tbody th {
+    width: 18%;
+    font-weight: 700;
+  }
+
+  .muted {
+    color: var(--muted);
+  }
+
+  .install {
+    max-width: 100%;
+    width: fit-content;
+    margin: var(--space-24) 0;
+    background: var(--terminal-bg);
+    color: var(--terminal-ink);
+  }
+
+  .install code {
+    padding: 0;
+    background: none;
+    font-weight: 400;
+  }
+
+  .comment {
+    color: #a6b8b2;
+  }
+</style>

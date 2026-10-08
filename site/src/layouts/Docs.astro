@@ -1,15 +1,15 @@
 ---
 import Base from './Base.astro'
+import { langFromPath, localize } from '../i18n'
 
 const { frontmatter } = Astro.props
-const PAGES = [
-  { href: '/docs/', title: 'Visão geral' },
-  { href: '/docs/instalacao/', title: 'Instalação' },
-  { href: '/docs/aulas/', title: 'Escrevendo aulas' },
-  { href: '/docs/recursos/', title: 'Recursos de aula' },
-  { href: '/docs/sala/', title: 'Na sala' },
-  { href: '/docs/configuracao/', title: 'Configuração' },
-]
+const lang = langFromPath(Astro.url.pathname)
+const TITLES = {
+  pt: { docs: 'Documentação', previous: 'Anterior', next: 'Próxima', pages: ['Visão geral', 'Instalação', 'Escrevendo aulas', 'Recursos de aula', 'Na sala', 'Configuração'] },
+  en: { docs: 'Docs', previous: 'Previous', next: 'Next', pages: ['Overview', 'Installation', 'Writing lessons', 'Lesson features', 'In class', 'Configuration'] },
+}[lang]
+const SLUGS = ['/docs/', '/docs/instalacao/', '/docs/aulas/', '/docs/recursos/', '/docs/sala/', '/docs/configuracao/']
+const PAGES = SLUGS.map((slug, i) => ({ href: localize(slug, lang), title: TITLES.pages[i] }))
 const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`
 const index = PAGES.findIndex((page) => page.href === path)
 const previous = PAGES[index - 1]
@@ -18,8 +18,8 @@ const next = PAGES[index + 1]
 
 <Base title={frontmatter.title} description={frontmatter.description}>
   <div class="wrap docs">
-    <nav class="sidebar" aria-label="Documentação">
-      <p class="label">Documentação</p>
+    <nav class="sidebar" aria-label={TITLES.docs}>
+      <p class="label">{TITLES.docs}</p>
       <ol>
         {PAGES.map((page) => (
           <li><a href={page.href} aria-current={page.href === path ? 'page' : undefined}>{page.title}</a></li>
@@ -28,9 +28,9 @@ const next = PAGES[index + 1]
     </nav>
     <article class="prose">
       <slot />
-      <nav class="pager" aria-label="Páginas da documentação">
-        {previous ? <a href={previous.href}><span class="label">Anterior</span>{previous.title}</a> : <span />}
-        {next && <a class="next" href={next.href}><span class="label">Próxima</span>{next.title}</a>}
+      <nav class="pager" aria-label={TITLES.docs}>
+        {previous ? <a href={previous.href}><span class="label">{TITLES.previous}</span>{previous.title}</a> : <span />}
+        {next && <a class="next" href={next.href}><span class="label">{TITLES.next}</span>{next.title}</a>}
       </nav>
     </article>
   </div>
