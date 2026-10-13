@@ -59,3 +59,18 @@ source = "main.rs"
 compile = ["rustc", "-O", "{flags}", "{source}", "-o", "{binary}"]
 run = ["{binary}"]
 ```
+
+## Page preferences
+
+What you pick in the ☰ panel (fonts, theme, code colors, width, size, language) is saved by Trunade! in `~/.config/trunade/preferences.toml`. It applies to every lesson. You can edit it by hand; unknown values are ignored.
+
+```toml
+theme = "light"            # auto | light | dark
+code_theme = "dark"        # auto | light | dark
+locale = "en"              # pt | en
+font_scale = 1.2
+text_width = "narrow"      # narrow | wide
+title_font = "gloock"      # gloock | ibm-plex-mono | fraunces | cormorant-garamond | young-serif
+body_font = "inter"        # jetbrains-mono | fira-code | inter | open-sans
+code_font = "fira-code"    # jetbrains-mono | fira-code
+```

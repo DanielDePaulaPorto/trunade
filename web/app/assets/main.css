@@ -2,7 +2,8 @@
  * Trunade! — tokens from the brand book (design/identidade/tokens.css).
  * Malachite is the brand; small text uses --brand-text. Glow means "a program
  * is running" and only appears on dark surfaces. Everything is monospaced:
- * JetBrains Mono for text and code, IBM Plex Mono 700 for titles.
+ * Fonts are a preference (composables/fonts.ts): Gloock titles and
+ * JetBrains Mono text and code by default.
  * Everything is sized in rem: the font-size preference scales the page.
  */
 @font-face {
@@ -32,8 +33,10 @@
   --term-bg: #000000;
   --comet: #9dfbe6;
   --font-text: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --font-title: "IBM Plex Mono", var(--font-text);
-  --font-mono: var(--font-text);
+  /* Defaults; the font preferences override these on the root element. */
+  --font-title: "Gloock", ui-serif, Georgia, serif;
+  --title-weight: 400;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
   --radius: 8px;
   --radius-lg: 14px;
   --ring: 3px;
@@ -292,6 +295,7 @@ em {
 .markdown h2,
 .markdown h3 {
   font-family: var(--font-title);
+  font-weight: var(--title-weight);
   line-height: 1.2;
   text-wrap: balance;
   margin: 2.2rem 0 0.75rem;
@@ -831,6 +835,42 @@ em {
   background: var(--surface);
   color: var(--text);
   outline: 1px solid var(--border-strong);
+}
+
+.font-group + .font-group {
+  margin-top: 0.75rem;
+}
+
+.font-group-label {
+  margin: 0 0 0.35rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.font-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.font-options button {
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.font-options button:hover {
+  color: var(--text);
+}
+
+.font-options button.active {
+  border-color: var(--brand);
+  color: var(--text);
+  outline: 1px solid var(--brand);
 }
 
 .shortcuts {

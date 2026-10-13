@@ -33,9 +33,10 @@ O ☰ no canto abre o painel com:
 - **Tema.** Automático (segue o sistema), claro ou escuro.
 - **Largura do texto.** Estreita, mais confortável para ler, ou a página inteira, para código largo.
 - **Cores do código.** Monokai escuro (padrão), Monokai claro, ou seguir o tema da página.
+- **Fontes.** Títulos: Gloock (padrão), IBM Plex Mono, Fraunces, Cormorant Garamond, Young Serif. Texto: JetBrains Mono (padrão), Fira Code, Inter, Open Sans. Código: JetBrains Mono (padrão) ou Fira Code.
 - **Idioma.** Português ou inglês.
 
-As escolhas ficam salvas no navegador.
+As escolhas ficam em `~/.config/trunade/preferences.toml` e valem para todas as aulas, em qualquer porta. O arquivo pode ser editado à mão.
 
 ## O símbolo no canto
 

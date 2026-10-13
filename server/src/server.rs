@@ -19,6 +19,7 @@ use tokio::sync::{mpsc, watch};
 use crate::config::{Config, expand};
 use crate::document::{self, Cell};
 use crate::executor::{Control, Executor, Outcome, RunEvent, RunRequest, Stream, TerminalSize};
+use crate::preferences::{self, Preferences};
 
 const WATCH_DEBOUNCE: Duration = Duration::from_millis(150);
 
@@ -41,6 +42,9 @@ pub struct AppState {
     pub executor: Arc<dyn Executor>,
     pub snapshot: watch::Receiver<Snapshot>,
     pub allowed_origins: Vec<String>,
+    /// Shared by every open page; a change in one tab reaches the others.
+    pub preferences: watch::Sender<Preferences>,
+    pub preferences_path: Option<PathBuf>,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -116,6 +120,7 @@ enum ClientMessage {
     Stop { run_id: String },
     #[serde(rename_all = "camelCase")]
     OpenEditor { line: usize },
+    SavePreferences { preferences: Preferences },
 }
 
 #[derive(Debug, Serialize)]
@@ -123,6 +128,9 @@ enum ClientMessage {
 enum ServerMessage {
     Document {
         snapshot: Snapshot,
+    },
+    Preferences {
+        preferences: Preferences,
     },
     #[serde(rename_all = "camelCase")]
     Compiling { run_id: String },
@@ -167,6 +175,7 @@ fn origin_allowed(headers: &HeaderMap, allowed: &[String]) -> bool {
 async fn session(mut socket: WebSocket, state: Arc<AppState>) {
     let (outbox, mut outgoing) = mpsc::unbounded_channel::<ServerMessage>();
     let document_updates = tokio::spawn(forward_documents(state.snapshot.clone(), outbox.clone()));
+    let preference_updates = tokio::spawn(forward_preferences(state.preferences.subscribe(), outbox.clone()));
     let runs: Runs = Arc::default();
 
     loop {
@@ -192,6 +201,7 @@ async fn session(mut socket: WebSocket, state: Arc<AppState>) {
         let _ = control.send(Control::Stop);
     }
     document_updates.abort();
+    preference_updates.abort();
 }
 
 async fn forward_documents(mut snapshots: watch::Receiver<Snapshot>, outbox: Outbox) {
@@ -202,6 +212,29 @@ async fn forward_documents(mut snapshots: watch::Receiver<Snapshot>, outbox: Out
             return;
         }
     }
+}
+
+async fn forward_preferences(mut updates: watch::Receiver<Preferences>, outbox: Outbox) {
+    loop {
+        let preferences = updates.borrow_and_update().clone();
+        send(&outbox, ServerMessage::Preferences { preferences });
+        if updates.changed().await.is_err() {
+            return;
+        }
+    }
+}
+
+fn save_preferences(state: &AppState, outbox: &Outbox, new: Preferences) {
+    if let Some(path) = &state.preferences_path {
+        if let Err(error) = preferences::save(path, &new) {
+            send(outbox, ServerMessage::Error { message: format!("{error:#}") });
+        }
+    }
+    state.preferences.send_if_modified(|current| {
+        let changed = *current != new;
+        *current = new;
+        changed
+    });
 }
 
 fn handle_client_message(message: ClientMessage, state: &AppState, outbox: &Outbox, runs: &Runs) {
@@ -228,6 +261,7 @@ fn handle_client_message(message: ClientMessage, state: &AppState, outbox: &Outb
             control_run(runs, &run_id, Control::Resize(TerminalSize { cols, rows }))
         }
         ClientMessage::Stop { run_id } => control_run(runs, &run_id, Control::Stop),
+        ClientMessage::SavePreferences { preferences } => save_preferences(state, outbox, preferences),
         ClientMessage::OpenEditor { line } => {
             if let Err(message) = open_editor(&state.config, &state.document_path, line) {
                 send(outbox, ServerMessage::Error { message });

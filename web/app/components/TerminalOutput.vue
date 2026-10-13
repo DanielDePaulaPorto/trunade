@@ -33,7 +33,7 @@ const THEME: ITheme = {
 }
 
 const emit = defineEmits<{ input: [data: string] }>()
-const { fontScale } = usePreferences()
+const { fontScale, codeFontFamily } = usePreferences()
 
 const container = ref<HTMLElement>()
 let terminal: Terminal | null = null
@@ -49,7 +49,7 @@ onMounted(() => {
     cursorBlink: true,
     scrollback: 5000,
     fontSize: fontSize(),
-    fontFamily: '"JetBrains Mono Variable", ui-monospace, Menlo, monospace',
+    fontFamily: codeFontFamily.value,
     theme: THEME,
   })
   fit = new FitAddon()
@@ -68,6 +68,14 @@ onMounted(() => {
 watch(fontScale, () => {
   if (!terminal) return
   terminal.options.fontSize = fontSize()
+  fitWidth()
+})
+
+// xterm measures the glyphs when the family is set: wait for the web font first.
+watch(codeFontFamily, async (family) => {
+  await document.fonts.load(`${fontSize()}px ${family}`).catch(() => {})
+  if (!terminal) return
+  terminal.options.fontFamily = family
   fitWidth()
 })
 

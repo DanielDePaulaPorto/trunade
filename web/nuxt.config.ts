@@ -6,6 +6,13 @@ export default defineNuxtConfig({
   telemetry: false,
   css: [
     '@fontsource-variable/jetbrains-mono',
+    '@fontsource-variable/fira-code',
+    '@fontsource-variable/inter',
+    '@fontsource-variable/open-sans',
+    '@fontsource/gloock',
+    '@fontsource/young-serif',
+    '@fontsource-variable/fraunces',
+    '@fontsource-variable/cormorant-garamond',
     'katex/dist/katex.min.css',
     '@xterm/xterm/css/xterm.css',
     '~/assets/main.css',

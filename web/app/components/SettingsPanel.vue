@@ -1,10 +1,23 @@
 <script setup lang="ts">
 import type { CodeThemeMode, LayoutWidth, Locale, ThemeMode } from '~/composables/usePreferences'
 import type { IconName } from '~/composables/icons'
+import { BODY_FONTS, CODE_FONTS, TITLE_FONTS, type FontChoice } from '~/composables/fonts'
 
 const emit = defineEmits<{ close: [] }>()
 const { t } = useI18n()
-const { themeMode, codeThemeMode, layoutWidth, locale, fontScale, growFont, shrinkFont, resetFont } = usePreferences()
+const { themeMode, codeThemeMode, layoutWidth, locale, fontScale, titleFont, bodyFont, codeFont, growFont, shrinkFont, resetFont } =
+  usePreferences()
+
+interface FontGroup {
+  label: 'fontTitles' | 'fontBody' | 'fontCode'
+  fonts: Record<string, FontChoice>
+  model: Ref<string>
+}
+const FONT_GROUPS: FontGroup[] = [
+  { label: 'fontTitles', fonts: TITLE_FONTS, model: titleFont as Ref<string> },
+  { label: 'fontBody', fonts: BODY_FONTS, model: bodyFont as Ref<string> },
+  { label: 'fontCode', fonts: CODE_FONTS, model: codeFont as Ref<string> },
+]
 
 const THEMES: { mode: ThemeMode; icon: IconName; label: 'themeAuto' | 'themeLight' | 'themeDark' }[] = [
   { mode: 'auto', icon: 'monitor', label: 'themeAuto' },
@@ -65,6 +78,25 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       </section>
 
       <section style="--i: 3">
+        <h3><AppIcon name="font" />{{ t('fonts') }}</h3>
+        <div v-for="group in FONT_GROUPS" :key="group.label" class="font-group">
+          <p class="font-group-label">{{ t(group.label) }}</p>
+          <div class="font-options">
+            <button
+              v-for="(font, id) in group.fonts"
+              :key="id"
+              :class="{ active: group.model.value === id }"
+              :style="{ fontFamily: font.family, fontWeight: font.weight }"
+              @click="group.model.value = id"
+            >
+              {{ font.label }}
+            </button>
+          </div>
+        </div>
+        <p class="hint">{{ t('preferencesSaved') }}</p>
+      </section>
+
+      <section style="--i: 4">
         <h3><AppIcon name="sun" />{{ t('theme') }}</h3>
         <div class="segmented">
           <button v-for="option in THEMES" :key="option.mode" :class="{ active: themeMode === option.mode }" @click="themeMode = option.mode">
@@ -73,7 +105,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         </div>
       </section>
 
-      <section style="--i: 4">
+      <section style="--i: 5">
         <h3><AppIcon name="wide" />{{ t('textWidth') }}</h3>
         <div class="segmented">
           <button v-for="option in WIDTHS" :key="option.value" :class="{ active: layoutWidth === option.value }" @click="layoutWidth = option.value">
@@ -82,7 +114,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         </div>
       </section>
 
-      <section style="--i: 5">
+      <section style="--i: 6">
         <h3><AppIcon name="code" />{{ t('codeColors') }}</h3>
         <div class="segmented">
           <button v-for="option in CODE_THEMES" :key="option.mode" :class="{ active: codeThemeMode === option.mode }" @click="codeThemeMode = option.mode">
@@ -91,7 +123,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         </div>
       </section>
 
-      <section style="--i: 6">
+      <section style="--i: 7">
         <h3><AppIcon name="globe" />{{ t('language') }}</h3>
         <div class="segmented">
           <button v-for="option in LOCALES" :key="option.value" :class="{ active: locale === option.value }" @click="locale = option.value">
@@ -100,7 +132,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         </div>
       </section>
 
-      <section style="--i: 7">
+      <section style="--i: 8">
         <h3><AppIcon name="keyboard" />{{ t('shortcuts') }}</h3>
         <dl class="shortcuts">
           <template v-for="shortcut in SHORTCUTS" :key="shortcut.label">

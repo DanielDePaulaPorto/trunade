@@ -33,9 +33,10 @@ The ☰ in the corner opens the panel with:
 - **Theme.** Automatic (follows the system), light or dark.
 - **Text width.** Narrow, more comfortable to read, or full page, for wide code.
 - **Code colors.** Monokai dark (default), Monokai light, or follow the page theme.
+- **Fonts.** Titles: Gloock (default), IBM Plex Mono, Fraunces, Cormorant Garamond, Young Serif. Text: JetBrains Mono (default), Fira Code, Inter, Open Sans. Code: JetBrains Mono (default) or Fira Code.
 - **Language.** Portuguese or English.
 
-Choices are saved in the browser.
+Choices are saved in `~/.config/trunade/preferences.toml` and apply to every lesson, on any port. You can edit the file by hand.
 
 ## The symbol in the corner
 

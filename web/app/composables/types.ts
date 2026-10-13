@@ -1,3 +1,5 @@
+import type { PreferencesFile } from './usePreferences'
+
 export interface MarkdownCell {
   kind: 'markdown'
   id: string
@@ -61,5 +63,6 @@ export type RunMessage =
 
 export type ServerMessage =
   | { type: 'document'; snapshot: Snapshot }
+  | { type: 'preferences'; preferences: PreferencesFile }
   | { type: 'error'; message: string }
   | RunMessage

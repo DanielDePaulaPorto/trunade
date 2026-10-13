@@ -21,6 +21,7 @@ export const ICONS = {
   chevronRight: '<path d="m9 18 6-6-6-6"/>',
   check: '<path d="M20 6 9 17l-5-5"/>',
   globe: '<circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  font: '<path d="M3 19 8 5l5 14"/><path d="M5 14h6"/><circle cx="17.5" cy="15.5" r="3.5"/><path d="M21 12v7"/>',
   type: '<path d="M4 7V4h16v3M9 20h6M12 4v16"/>',
   narrow: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/>',
   wide: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="m7 12 3-3M7 12l3 3M7 12h10M17 12l-3-3M17 12l-3 3"/>',

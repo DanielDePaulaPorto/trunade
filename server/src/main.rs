@@ -1,6 +1,7 @@
 mod config;
 mod document;
 mod executor;
+mod preferences;
 mod server;
 
 use std::path::PathBuf;
@@ -51,6 +52,8 @@ async fn main() -> Result<()> {
     let url = format!("http://localhost:{port}/");
 
     let (snapshots, snapshot) = watch::channel(load_snapshot(&document, &config));
+    let preferences_path = preferences::default_path();
+    let saved_preferences = preferences_path.as_deref().map(preferences::load).unwrap_or_default();
     let _watcher = watch_document(document.clone(), config.clone(), snapshots)?;
     let executor = Arc::new(LocalExecutor::new(config.compile_timeout, config.output_limit_bytes));
     let state = Arc::new(AppState {
@@ -59,6 +62,8 @@ async fn main() -> Result<()> {
         document_path: document.clone(),
         executor,
         snapshot,
+        preferences: watch::Sender::new(saved_preferences),
+        preferences_path,
     });
 
     println!("Trunade! serving {} at {url}", document.display());

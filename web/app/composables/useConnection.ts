@@ -1,4 +1,5 @@
 import type { RunMessage, ServerMessage, Snapshot } from './types'
+import type { PreferencesFile } from './usePreferences'
 
 type RunListener = (message: RunMessage) => void
 
@@ -8,6 +9,7 @@ const snapshot = ref<Snapshot | null>(null)
 const connected = ref(false)
 const lastError = ref<string | null>(null)
 const activeRuns = ref(0)
+const serverPreferences = ref<PreferencesFile | null>(null)
 const runListeners = new Map<string, RunListener>()
 let socket: WebSocket | null = null
 
@@ -16,7 +18,7 @@ export function useConnection() {
   if (!socket && import.meta.client) {
     connect()
   }
-  return { snapshot, connected, lastError, activeRuns, send, onRun, offRun }
+  return { snapshot, connected, lastError, activeRuns, serverPreferences, send, onRun, offRun }
 }
 
 function connect() {
@@ -36,6 +38,9 @@ function dispatch(message: ServerMessage) {
   switch (message.type) {
     case 'document':
       snapshot.value = message.snapshot
+      break
+    case 'preferences':
+      serverPreferences.value = message.preferences
       break
     case 'error':
       lastError.value = message.message

@@ -94,12 +94,16 @@ impl Config {
     }
 }
 
+/// `~/.config/trunade`: user-wide config and the page's saved preferences.
+pub fn user_config_dir() -> Option<PathBuf> {
+    std::env::var_os("HOME").map(|home| PathBuf::from(home).join(".config/trunade"))
+}
+
 fn config_candidates(document: &Path, explicit: Option<&Path>) -> Vec<PathBuf> {
     if let Some(path) = explicit {
         return vec![path.to_path_buf()];
     }
-    let user_config = std::env::var_os("HOME")
-        .map(|home| PathBuf::from(home).join(".config/trunade/config.toml"));
+    let user_config = user_config_dir().map(|dir| dir.join("config.toml"));
     let beside_document = document.parent().map(|dir| dir.join(CONFIG_FILE_NAME));
     user_config.into_iter().chain(beside_document).collect()
 }
