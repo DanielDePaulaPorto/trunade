@@ -14,6 +14,7 @@ use notify_debouncer_full::notify::RecursiveMode;
 use notify_debouncer_full::{DebounceEventResult, Debouncer, RecommendedCache, new_debouncer};
 use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};
+use serde_json::{Value, json};
 use tokio::sync::{mpsc, watch};
 
 use crate::config::{Config, expand};
@@ -21,8 +22,11 @@ use crate::document::{self, Cell};
 use crate::executor::{Control, Executor, Outcome, RunEvent, RunRequest, Stream, TerminalSize};
 use crate::judge::{TestCase, Verdict};
 use crate::preferences::{self, Preferences};
+use crate::usage_log::{PAGE_EVENTS, UsageLog};
 
 const WATCH_DEBOUNCE: Duration = Duration::from_millis(150);
+/// Enough compiler output to find the first error line for the usage log.
+const COMPILER_LOG_BYTES: usize = 64 * 1024;
 
 #[derive(RustEmbed)]
 #[folder = "../web/.output/public"]
@@ -46,6 +50,7 @@ pub struct AppState {
     /// Shared by every open page; a change in one tab reaches the others.
     pub preferences: watch::Sender<Preferences>,
     pub preferences_path: Option<PathBuf>,
+    pub log: Arc<UsageLog>,
 }
 
 pub fn router(state: Arc<AppState>) -> Router {
@@ -54,6 +59,18 @@ pub fn router(state: Arc<AppState>) -> Router {
         .route("/api/document", get(current_document))
         .fallback(static_file)
         .with_state(state)
+}
+
+/// Code blocks in the document, steps included.
+pub fn count_code_cells(cells: &[Cell]) -> usize {
+    cells
+        .iter()
+        .map(|cell| match cell {
+            Cell::Code { .. } => 1,
+            Cell::Steps { steps, .. } => steps.iter().map(|step| count_code_cells(&step.cells)).sum(),
+            _ => 0,
+        })
+        .sum()
 }
 
 pub fn load_snapshot(path: &Path, config: &Config) -> Snapshot {
@@ -80,6 +97,7 @@ pub fn watch_document(
     path: PathBuf,
     config: Config,
     snapshots: watch::Sender<Snapshot>,
+    log: Arc<UsageLog>,
 ) -> Result<Debouncer<notify_debouncer_full::notify::RecommendedWatcher, RecommendedCache>> {
     let directory = path.parent().map(Path::to_path_buf).unwrap_or_default();
     let file_name = path.file_name().map(|name| name.to_os_string());
@@ -90,7 +108,9 @@ pub fn watch_document(
             changed.file_name().map(|name| name.to_os_string()) == file_name
         });
         if touched {
-            snapshots.send_replace(load_snapshot(&path, &config));
+            let snapshot = load_snapshot(&path, &config);
+            log.record("document", json!({ "codeBlocks": count_code_cells(&snapshot.cells) }));
+            snapshots.send_replace(snapshot);
         }
     })?;
     debouncer.watch(&directory, RecursiveMode::NonRecursive)?;
@@ -124,6 +144,12 @@ enum ClientMessage {
     #[serde(rename_all = "camelCase")]
     OpenEditor { line: usize },
     SavePreferences { preferences: Preferences },
+    /// Something that happened in the page, for the usage log (`PAGE_EVENTS`).
+    Log {
+        event: String,
+        #[serde(default)]
+        data: Value,
+    },
 }
 
 #[derive(Debug, Serialize)]
@@ -188,6 +214,7 @@ async fn session(mut socket: WebSocket, state: Arc<AppState>) {
     let document_updates = tokio::spawn(forward_documents(state.snapshot.clone(), outbox.clone()));
     let preference_updates = tokio::spawn(forward_preferences(state.preferences.subscribe(), outbox.clone()));
     let runs: Runs = Arc::default();
+    state.log.record("connect", json!({}));
 
     loop {
         tokio::select! {
@@ -213,6 +240,7 @@ async fn session(mut socket: WebSocket, state: Arc<AppState>) {
     }
     document_updates.abort();
     preference_updates.abort();
+    state.log.record("disconnect", json!({}));
 }
 
 async fn forward_documents(mut snapshots: watch::Receiver<Snapshot>, outbox: Outbox) {
@@ -252,8 +280,10 @@ fn handle_client_message(message: ClientMessage, state: &AppState, outbox: &Outb
     match message {
         ClientMessage::Run { run_id, cell_id, source, cases, cols, rows } => {
             let size = TerminalSize { cols, rows };
+            let cell = logged_cell(state, &cell_id);
+            state.log.record("run", run_details(state, &cell_id, &source, &cases, &cell));
             match build_request(state, &cell_id, source, cases, size) {
-                Ok(request) => start_run(state, run_id, request, outbox, runs),
+                Ok(request) => start_run(state, run_id, request, cell, outbox, runs),
                 Err(message) => send(
                     outbox,
                     ServerMessage::Finished {
@@ -273,6 +303,11 @@ fn handle_client_message(message: ClientMessage, state: &AppState, outbox: &Outb
         }
         ClientMessage::Stop { run_id } => control_run(runs, &run_id, Control::Stop),
         ClientMessage::SavePreferences { preferences } => save_preferences(state, outbox, preferences),
+        ClientMessage::Log { event, data } => {
+            if PAGE_EVENTS.contains(&event.as_str()) {
+                state.log.record(&event, data);
+            }
+        }
         ClientMessage::OpenEditor { line } => {
             if let Err(message) = open_editor(&state.config, &state.document_path, line) {
                 send(outbox, ServerMessage::Error { message });
@@ -310,14 +345,55 @@ fn build_request(
     })
 }
 
-fn start_run(state: &AppState, run_id: String, request: RunRequest, outbox: &Outbox, runs: &Runs) {
+/// How the usage log names a block: id plus where it is in the file.
+fn logged_cell(state: &AppState, cell_id: &str) -> Value {
+    let snapshot = state.snapshot.borrow();
+    match document::find_cell(&snapshot.cells, cell_id) {
+        Some(Cell::Code { line, fence_language, .. }) => {
+            json!({ "cell": cell_id, "line": line, "language": fence_language })
+        }
+        _ => json!({ "cell": cell_id }),
+    }
+}
+
+/// Whether the teacher edited the block in the page before running it.
+fn run_details(state: &AppState, cell_id: &str, source: &str, cases: &[TestCase], cell: &Value) -> Value {
+    let snapshot = state.snapshot.borrow();
+    let edited = match document::find_cell(&snapshot.cells, cell_id) {
+        Some(Cell::Code { source: original, cases: original_cases, .. }) => {
+            original != source || original_cases != cases
+        }
+        _ => true,
+    };
+    with_fields(cell, json!({ "edited": edited, "cases": cases.len() }))
+}
+
+fn with_fields(base: &Value, extra: Value) -> Value {
+    let mut merged = base.as_object().cloned().unwrap_or_default();
+    if let Value::Object(extra) = extra {
+        merged.extend(extra);
+    }
+    Value::Object(merged)
+}
+
+fn start_run(
+    state: &AppState,
+    run_id: String,
+    request: RunRequest,
+    cell: Value,
+    outbox: &Outbox,
+    runs: &Runs,
+) {
     let mut handle = state.executor.start(request);
     runs.lock().unwrap().insert(run_id.clone(), handle.control);
     let outbox = outbox.clone();
     let runs = runs.clone();
+    let log = state.log.clone();
     tokio::spawn(async move {
+        let mut compiler_output = String::new();
         while let Some(event) = handle.events.recv().await {
             let finished = matches!(event, RunEvent::Finished { .. });
+            log_run_event(&log, &cell, &event, &mut compiler_output);
             send(&outbox, server_message(&run_id, event));
             if finished {
                 break;
@@ -325,6 +401,59 @@ fn start_run(state: &AppState, run_id: String, request: RunRequest, outbox: &Out
         }
         runs.lock().unwrap().remove(&run_id);
     });
+}
+
+fn log_run_event(log: &UsageLog, cell: &Value, event: &RunEvent, compiler_output: &mut String) {
+    match event {
+        RunEvent::Output { stream: Stream::Compiler, text } if compiler_output.len() < COMPILER_LOG_BYTES => {
+            compiler_output.push_str(text);
+        }
+        RunEvent::CaseFinished { case, outcome, run, verdict } => log.record(
+            "case",
+            with_fields(cell, json!({
+                "case": case,
+                "outcome": outcome,
+                "verdict": verdict,
+                "runMs": run.as_millis(),
+            })),
+        ),
+        RunEvent::Finished { outcome, compile, run } => log.record(
+            "finished",
+            with_fields(cell, json!({
+                "outcome": outcome,
+                "compileMs": compile.map(|duration| duration.as_millis()),
+                "runMs": run.map(|duration| duration.as_millis()),
+                "compileError": first_error_line(compiler_output),
+            })),
+        ),
+        _ => {}
+    }
+}
+
+/// `main.cpp:5:13: error: expected primary-expression…`, without colors.
+fn first_error_line(compiler_output: &str) -> Option<String> {
+    strip_ansi(compiler_output)
+        .lines()
+        .find(|line| line.contains("error"))
+        .map(|line| line.trim().to_string())
+}
+
+fn strip_ansi(text: &str) -> String {
+    let mut plain = String::with_capacity(text.len());
+    let mut chars = text.chars();
+    while let Some(c) = chars.next() {
+        if c == '\x1b' {
+            // CSI sequence: ESC [ parameters final-letter
+            for c in chars.by_ref() {
+                if c.is_ascii_alphabetic() {
+                    break;
+                }
+            }
+        } else {
+            plain.push(c);
+        }
+    }
+    plain
 }
 
 fn server_message(run_id: &str, event: RunEvent) -> ServerMessage {
@@ -440,6 +569,13 @@ mod tests {
         assert_eq!(percent_decode("img/a%20b.png"), "img/a b.png");
         assert_eq!(percent_decode("ol%C3%A1"), "olá");
         assert_eq!(percent_decode("100%"), "100%");
+    }
+
+    #[test]
+    fn first_compiler_error_without_colors() {
+        let output = "main.cpp: In function 'int main()':\n\x1b[01m\x1b[Kmain.cpp:5:13:\x1b[m\x1b[K \x1b[01;31m\x1b[Kerror: \x1b[m\x1b[Kexpected ';'\n";
+        assert_eq!(first_error_line(output).as_deref(), Some("main.cpp:5:13: error: expected ';'"));
+        assert_eq!(first_error_line("warning only\n"), None);
     }
 
     #[test]

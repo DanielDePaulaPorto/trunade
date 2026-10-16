@@ -67,8 +67,15 @@ async function exportPdf() {
   printLesson(snapshot.value?.fileName)
 }
 
-onMounted(() => window.addEventListener('keydown', onKey))
-onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
+let stopTracking = () => {}
+onMounted(() => {
+  window.addEventListener('keydown', onKey)
+  stopTracking = trackUsage()
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKey)
+  stopTracking()
+})
 </script>
 
 <template>

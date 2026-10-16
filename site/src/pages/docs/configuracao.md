@@ -74,3 +74,22 @@ title_font = "gloock"      # gloock | ibm-plex-mono | fraunces | cormorant-garam
 body_font = "inter"        # jetbrains-mono | fira-code | inter | open-sans
 code_font = "fira-code"    # jetbrains-mono | fira-code
 ```
+
+## Registro de uso
+
+Cada vez que o Trunade! abre uma aula, ele grava um registro local em `~/.local/share/trunade/logs/` (ou `$XDG_DATA_HOME/trunade/logs/`), um arquivo por sessão, em JSON Lines: `2026-10-16T14-02-33Z-aula14.jsonl`. O caminho aparece no terminal ao iniciar.
+
+O registro é anônimo e nunca sai da máquina. Ele guarda o que aconteceu na página, não quem estava na sala:
+
+| Evento | Campos |
+|---|---|
+| `start`, `document` | nome do `.md`, versão, número de blocos (`document` quando o arquivo muda) |
+| `connect`, `disconnect`, `visibility` | página aberta, fechada, em segundo plano |
+| `section` | título em que a página parou |
+| `run` | bloco (`cell`, `line`, `language`), se foi editado na página, número de casos |
+| `case` | resultado e veredito de cada caso de teste, tempo |
+| `finished` | resultado, tempos, primeira linha do erro de compilação |
+| `quiz` | pergunta, opções escolhidas, se acertou |
+| `step`, `zoom`, `print`, `runAll` | passo mostrado, bloco ampliado, PDF, rodar tudo |
+
+Todos os eventos têm `time` em UTC. Para apagar, basta apagar os arquivos.

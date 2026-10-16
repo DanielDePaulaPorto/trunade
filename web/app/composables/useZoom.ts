@@ -10,6 +10,7 @@ export function useZoom() {
 
 function zoomCell(id: string) {
   zoomedCell.value = id
+  logEvent('zoom', { cell: id })
 }
 
 function closeZoom() {

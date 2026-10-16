@@ -22,7 +22,14 @@ function choose(index: number) {
 
 function toggleReveal() {
   if (revealed.value) chosen.value = chosen.value.map(() => false)
+  else logAnswer()
   revealed.value = !revealed.value
+}
+
+function logAnswer() {
+  const chosenIndexes = chosen.value.flatMap((isChosen, index) => (isChosen ? [index] : []))
+  const correct = props.cell.options.every((option, index) => option.correct === chosen.value[index])
+  logEvent('quiz', { cell: props.cell.id, question: logText(props.cell.question), chosen: chosenIndexes, correct })
 }
 
 /** Which mark the box shows: the student's choice, then the answer key once revealed. */

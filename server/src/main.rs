@@ -4,6 +4,7 @@ mod executor;
 mod judge;
 mod preferences;
 mod server;
+mod usage_log;
 
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -16,6 +17,7 @@ use tokio::sync::watch;
 use crate::config::Config;
 use crate::executor::LocalExecutor;
 use crate::server::{AppState, load_snapshot, router, watch_document};
+use crate::usage_log::UsageLog;
 
 const DEFAULT_PORT: u16 = 4747;
 
@@ -55,7 +57,13 @@ async fn main() -> Result<()> {
     let (snapshots, snapshot) = watch::channel(load_snapshot(&document, &config));
     let preferences_path = preferences::default_path();
     let saved_preferences = preferences_path.as_deref().map(preferences::load).unwrap_or_default();
-    let _watcher = watch_document(document.clone(), config.clone(), snapshots)?;
+    let log = Arc::new(open_usage_log(&document));
+    log.record("start", serde_json::json!({
+        "document": document.file_name().map(|name| name.to_string_lossy()),
+        "version": env!("CARGO_PKG_VERSION"),
+        "codeBlocks": server::count_code_cells(&snapshot.borrow().cells),
+    }));
+    let _watcher = watch_document(document.clone(), config.clone(), snapshots, log.clone())?;
     let executor = Arc::new(LocalExecutor::new(config.compile_timeout, config.output_limit_bytes));
     let state = Arc::new(AppState {
         allowed_origins: allowed_origins(port, cli.dev_origin),
@@ -65,6 +73,7 @@ async fn main() -> Result<()> {
         snapshot,
         preferences: watch::Sender::new(saved_preferences),
         preferences_path,
+        log,
     });
 
     println!("Trunade! serving {} at {url}", document.display());
@@ -73,6 +82,21 @@ async fn main() -> Result<()> {
     }
     axum::serve(listener, router(state)).await?;
     Ok(())
+}
+
+/// Always on; without a writable data directory the lesson goes on unrecorded.
+fn open_usage_log(document: &std::path::Path) -> UsageLog {
+    let Some(dir) = usage_log::default_dir() else { return UsageLog::disabled() };
+    match UsageLog::create(&dir, document) {
+        Ok((log, path)) => {
+            println!("Usage log: {}", path.display());
+            log
+        }
+        Err(error) => {
+            eprintln!("warning: no usage log in {}: {error}", dir.display());
+            UsageLog::disabled()
+        }
+    }
 }
 
 async fn bind(port: u16) -> Result<TcpListener> {

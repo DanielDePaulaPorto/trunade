@@ -74,3 +74,22 @@ title_font = "gloock"      # gloock | ibm-plex-mono | fraunces | cormorant-garam
 body_font = "inter"        # jetbrains-mono | fira-code | inter | open-sans
 code_font = "fira-code"    # jetbrains-mono | fira-code
 ```
+
+## Usage log
+
+Every time Trunade! opens a lesson it writes a local log to `~/.local/share/trunade/logs/` (or `$XDG_DATA_HOME/trunade/logs/`), one file per session, in JSON Lines: `2026-10-16T14-02-33Z-aula14.jsonl`. The path is printed in the terminal at startup.
+
+The log is anonymous and never leaves the machine. It keeps what happened on the page, not who was in the room:
+
+| Event | Fields |
+|---|---|
+| `start`, `document` | `.md` name, version, number of blocks (`document` when the file changes) |
+| `connect`, `disconnect`, `visibility` | page opened, closed, in the background |
+| `section` | heading where the page stopped |
+| `run` | block (`cell`, `line`, `language`), whether it was edited on the page, number of cases |
+| `case` | outcome and verdict of each test case, time |
+| `finished` | outcome, times, first line of the compile error |
+| `quiz` | question, chosen options, whether it was right |
+| `step`, `zoom`, `print`, `runAll` | step shown, zoomed block, PDF, run all |
+
+Every event has a UTC `time`. To erase it, delete the files.

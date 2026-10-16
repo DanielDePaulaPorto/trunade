@@ -15,6 +15,7 @@ function go(index: number) {
   if (index < 0 || index > last.value || index === current.value) return
   direction.value = index > current.value ? 1 : -1
   current.value = index
+  logEvent('step', { cell: props.cell.id, step: index + 1, title: props.cell.steps[index]!.title })
 }
 </script>
 

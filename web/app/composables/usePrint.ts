@@ -13,6 +13,7 @@ export function usePrint() {
 async function printLesson(fileName?: string) {
   if (printing.value) return
   printing.value = true
+  logEvent('print')
   const title = document.title
   if (fileName) document.title = fileName.replace(/\.md$/i, '')
   await nextTick()
