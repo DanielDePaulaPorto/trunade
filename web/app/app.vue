@@ -4,6 +4,7 @@ const { growFont, shrinkFont, resetFont, cycleTheme, toggleLayoutWidth } = usePr
 const { t } = useI18n()
 const { printLesson } = usePrint()
 const { zoomedCell, toggleZoom, closeZoom } = useZoom()
+const { runAll } = useRunAll()
 
 const settingsOpen = ref(false)
 const topicsOpen = ref(false)
@@ -29,6 +30,7 @@ const SHORTCUTS: Record<string, (event: KeyboardEvent) => void> = {
   f: toggleFullscreen,
   o: () => (settingsOpen.value = true),
   z: toggleZoom,
+  r: runAll,
 }
 
 /** With a block zoomed, moving through the page makes no sense. */
@@ -58,6 +60,11 @@ function onKey(event: KeyboardEvent) {
   if (!action || (zoomedCell.value && !ZOOM_SHORTCUTS.has(event.key))) return
   event.preventDefault()
   action(event)
+}
+
+function runAllFromPanel() {
+  settingsOpen.value = false
+  runAll()
 }
 
 /** Close the panel first so it is not in the PDF. */
@@ -98,8 +105,9 @@ onBeforeUnmount(() => {
     </main>
 
     <Transition name="slide">
-      <SettingsPanel v-if="settingsOpen" @close="settingsOpen = false" @print="exportPdf" />
+      <SettingsPanel v-if="settingsOpen" @close="settingsOpen = false" @print="exportPdf" @run-all="runAllFromPanel" />
     </Transition>
+    <RunAllStatus />
     <Transition name="fade">
       <TopicsModal v-if="topicsOpen" @close="topicsOpen = false" />
     </Transition>

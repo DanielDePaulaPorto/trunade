@@ -11,6 +11,15 @@ const { printing } = usePrint()
 const direction = ref<1 | -1>(1)
 const last = computed(() => props.cell.steps.length - 1)
 
+const root = ref<HTMLElement>()
+
+/** "Run all" asks to show a block that may sit in a hidden step. */
+function revealChild(event: Event) {
+  const panels = [...(root.value?.querySelectorAll(':scope > .steps-body > .steps-panel') ?? [])]
+  const index = panels.findIndex((panel) => panel.contains(event.target as Node))
+  if (index >= 0) go(index)
+}
+
 function go(index: number) {
   if (index < 0 || index > last.value || index === current.value) return
   direction.value = index > current.value ? 1 : -1
@@ -20,7 +29,7 @@ function go(index: number) {
 </script>
 
 <template>
-  <section class="steps">
+  <section ref="root" class="steps" @trunade:reveal="revealChild">
     <ol class="steps-track">
       <li v-for="(step, index) in cell.steps" :key="index" :class="{ done: index < current, active: index === current }">
         <button class="steps-dot" :aria-current="index === current ? 'step' : undefined" @click="go(index)">

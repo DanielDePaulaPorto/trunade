@@ -19,6 +19,7 @@ The lesson page is built for the projector: white background in the light theme,
 | <kbd>W</kbd> | text width: narrow or full page |
 | <kbd>F</kbd> | full screen (<kbd>Esc</kbd> or <kbd>F</kbd> leaves) |
 | <kbd>Z</kbd> | zooms the code block in use (or the one nearest the middle of the screen) to fill the screen; <kbd>Esc</kbd> returns |
+| <kbd>R</kbd> | run all: every block with fixed input, in order |
 | <kbd>D</kbd> | theme: automatic, light, dark |
 | <kbd>⌘P</kbd> or <kbd>Ctrl+P</kbd> | export PDF |
 | <kbd>O</kbd> | settings (also under ☰) |
@@ -39,6 +40,10 @@ The ☰ in the corner opens the panel with:
 - **Language.** Portuguese or English.
 
 Choices are saved in `~/.config/trunade/preferences.toml` and apply to every lesson, on any port. You can edit the file by hand.
+
+## Run all
+
+In ☰, **Run all** (or <kbd>R</kbd>) runs in order every block with `stdin` or `expected`, to check the lesson before class or before exporting the PDF. Interactive blocks are skipped, since they would wait for someone to type. A bar at the bottom shows the progress and, at the end, how many passed and which failed (compilation, runtime error, output other than expected); clicking a line takes you to the block, opening its step if it is inside one.
 
 ## Export PDF
 

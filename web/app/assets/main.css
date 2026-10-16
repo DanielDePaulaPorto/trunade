@@ -1361,6 +1361,59 @@ kbd {
   background: var(--brand);
 }
 
+.settings .export-button + .hint {
+  margin-bottom: 0.9rem;
+}
+
+.run-all {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  z-index: 20;
+  translate: -50% 0;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.35rem 0.4rem 0.35rem 1rem;
+  font: 0.85rem var(--font-mono);
+  color: var(--text);
+  background: var(--raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.run-all-summary {
+  display: inline-flex;
+  gap: 0.8rem;
+}
+
+.run-all-ok,
+.run-all-failed {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-weight: 700;
+}
+
+.run-all-ok {
+  color: var(--brand-text);
+}
+
+.run-all-failed {
+  color: var(--code-stop);
+}
+
+.run-all-link {
+  padding: 0.1rem 0.45rem;
+  font: inherit;
+  color: var(--code-stop);
+  background: transparent;
+  border: 1px solid currentColor;
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
 .steps-print-title {
   margin: 1rem 0 0.25rem;
   font-weight: 700;
@@ -1383,6 +1436,7 @@ kbd {
   }
 
   .menu-button,
+  .run-all,
   .offline,
   .banner,
   .cell-toolbar button,

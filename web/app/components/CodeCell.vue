@@ -27,6 +27,7 @@ const runButton = ref<HTMLButtonElement>()
 let runId: string | null = null
 let endsWithNewline = true
 let casesStarted = 0
+let settle: ((passed: boolean) => void) | null = null
 
 const modified = computed(
   () => source.value !== props.cell.source || JSON.stringify(cases.value) !== JSON.stringify(props.cell.cases),
@@ -59,8 +60,16 @@ function runWithSpark(event?: MouseEvent) {
   run()
 }
 
+/** For "run all": resolves once this run finishes, true if everything passed. */
+function runAndWait() {
+  run()
+  return new Promise<boolean>((resolve) => (settle = resolve))
+}
+
 function run() {
   if (busy.value) stop()
+  settle?.(false)
+  settle = null
   runId = crypto.randomUUID()
   hasOutput.value = true
   compileMs.value = null
@@ -117,6 +126,8 @@ function handle(message: RunMessage) {
       runMs.value = message.runMs
       offRun(message.runId)
       runId = null
+      settle?.(passed(message.outcome))
+      settle = null
   }
 }
 
@@ -151,6 +162,11 @@ function writeVerdict(verdict: Verdict) {
 
 function quoted(line: string | null) {
   return line === null ? t('endOfOutput') : `«${line}»`
+}
+
+function passed(outcome: Outcome) {
+  const allCasesRan = casesStarted === cases.value.length
+  return outcome.kind === 'exited' && allCasesRan && caseResults.value.every((result) => result !== 'rejected')
 }
 
 function caseResult(index: number, outcome: Outcome, verdict: Verdict | null): CaseResult {
@@ -188,7 +204,12 @@ function openInEditor() {
   send({ type: 'openEditor', line: props.cell.line })
 }
 
+const { registerRunner, unregisterRunner } = useRunAll()
+registerRunner(props.cell.id, { runsAlone: () => cases.value.length > 0, run: runAndWait, line: props.cell.line })
+
 onBeforeUnmount(() => {
+  unregisterRunner(props.cell.id)
+  settle?.(false)
   stop()
   if (runId) offRun(runId)
 })

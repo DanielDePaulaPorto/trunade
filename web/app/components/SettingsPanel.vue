@@ -3,7 +3,7 @@ import type { CodeThemeMode, LayoutWidth, Locale, ThemeMode } from '~/composable
 import type { IconName } from '~/composables/icons'
 import { BODY_FONTS, CODE_FONTS, TITLE_FONTS, type FontChoice } from '~/composables/fonts'
 
-const emit = defineEmits<{ close: []; print: [] }>()
+const emit = defineEmits<{ close: []; print: []; runAll: [] }>()
 const { t } = useI18n()
 const { themeMode, codeThemeMode, layoutWidth, locale, fontScale, titleFont, bodyFont, codeFont, growFont, shrinkFont, resetFont } =
   usePreferences()
@@ -46,6 +46,7 @@ const SHORTCUTS = computed(() => [
   { keys: ['W'], label: 'shortcutWidth' },
   { keys: ['F'], label: 'shortcutFullscreen' },
   { keys: ['Z'], label: 'shortcutZoom' },
+  { keys: ['R'], label: 'shortcutRunAll' },
   { keys: ['O'], label: 'shortcutSettings' },
   { keys: ['⇧ Enter'], label: 'shortcutRun' },
   { keys: ['Esc'], label: 'shortcutLeave' },
@@ -68,6 +69,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
       </header>
 
       <section style="--i: 2">
+        <button class="export-button" @click="emit('runAll')"><AppIcon name="play" />{{ t('runAll') }}</button>
+        <p class="hint">{{ t('runAllHint') }}</p>
         <button class="export-button" @click="emit('print')"><AppIcon name="printer" />{{ t('exportPdf') }}</button>
         <p class="hint">{{ t('exportPdfHint') }}</p>
       </section>
