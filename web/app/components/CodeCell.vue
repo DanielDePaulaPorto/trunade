@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import type { CodeCell, Outcome, RunMessage, TestCase, Verdict } from '~/composables/types'
 import TerminalOutput from './TerminalOutput.vue'
+import { zoomScale } from '~/composables/useZoom'
 
 const props = defineProps<{ cell: CodeCell }>()
 const { send, onRun, offRun } = useConnection()
 const { t } = useI18n()
+const { zoomedCell, zoomCell, closeZoom } = useZoom()
+const zoomed = computed(() => zoomedCell.value === props.cell.id)
+const scale = computed(() => (zoomed.value ? zoomScale() : 1))
 
 type Status = 'idle' | 'compiling' | 'running' | 'done'
 /** ✓ only for an expected output matched by a program that exited with 0. */
@@ -191,7 +195,12 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <section class="code-cell" :class="{ busy }">
+  <section
+    class="code-cell"
+    :class="{ busy, zoomed }"
+    :data-cell-id="cell.id"
+    :style="zoomed ? { '--cell-scale': scale } : undefined"
+  >
     <!-- Two comets travel along the ring around the body while the cell runs. -->
     <div class="star star-bottom" aria-hidden="true" />
     <div class="star star-top" aria-hidden="true" />
@@ -216,6 +225,12 @@ onBeforeUnmount(() => {
         </button>
         <button v-if="modified" class="tool" :title="t('undoEdit')" @click="reset">
           <AppIcon name="undo" />
+        </button>
+        <button v-if="zoomed" class="tool" :title="t('zoomOut')" @click="closeZoom">
+          <AppIcon name="minimize" />
+        </button>
+        <button v-else class="tool" :title="t('zoomIn')" @click="zoomCell(cell.id)">
+          <AppIcon name="maximize" />
         </button>
         <button v-if="hasOutput && !busy" class="tool" :title="t('clearOutput')" @click="clearOutput">
           <AppIcon name="eraser" />
@@ -264,7 +279,7 @@ onBeforeUnmount(() => {
           <textarea v-model="testCase.expected" :rows="rows(testCase.expected)" spellcheck="false" :aria-label="t('expectedOutput')" />
         </label>
       </div>
-      <TerminalOutput v-show="hasOutput" ref="terminal" @input="input" />
+      <TerminalOutput v-show="hasOutput" ref="terminal" :scale="scale" @input="input" />
     </div>
   </section>
 </template>

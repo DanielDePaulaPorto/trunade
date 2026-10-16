@@ -18,6 +18,7 @@ The lesson page is built for the projector: white background in the light theme,
 | <kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd> | bigger, smaller, reset font |
 | <kbd>W</kbd> | text width: narrow or full page |
 | <kbd>F</kbd> | full screen (<kbd>Esc</kbd> or <kbd>F</kbd> leaves) |
+| <kbd>Z</kbd> | zooms the code block in use (or the one nearest the middle of the screen) to fill the screen; <kbd>Esc</kbd> returns |
 | <kbd>D</kbd> | theme: automatic, light, dark |
 | <kbd>⌘P</kbd> or <kbd>Ctrl+P</kbd> | export PDF |
 | <kbd>O</kbd> | settings (also under ☰) |

@@ -3,6 +3,7 @@ const { snapshot, connected, lastError, activeRuns } = useConnection()
 const { growFont, shrinkFont, resetFont, cycleTheme, toggleLayoutWidth } = usePreferences()
 const { t } = useI18n()
 const { printLesson } = usePrint()
+const { zoomedCell, toggleZoom, closeZoom } = useZoom()
 
 const settingsOpen = ref(false)
 const topicsOpen = ref(false)
@@ -27,7 +28,11 @@ const SHORTCUTS: Record<string, (event: KeyboardEvent) => void> = {
   w: toggleLayoutWidth,
   f: toggleFullscreen,
   o: () => (settingsOpen.value = true),
+  z: toggleZoom,
 }
+
+/** With a block zoomed, moving through the page makes no sense. */
+const ZOOM_SHORTCUTS = new Set(['z', 'f', 'd', '+', '=', '-', '0'])
 
 /** Fullscreen for projecting; the browser's own Esc also leaves it. */
 function toggleFullscreen() {
@@ -47,9 +52,10 @@ function onKey(event: KeyboardEvent) {
     return
   }
   if (event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return
+  if (zoomedCell.value && event.key === 'Escape') return closeZoom()
   if (settingsOpen.value || topicsOpen.value || isTyping(event.target)) return
   const action = SHORTCUTS[event.key]
-  if (!action) return
+  if (!action || (zoomedCell.value && !ZOOM_SHORTCUTS.has(event.key))) return
   event.preventDefault()
   action(event)
 }

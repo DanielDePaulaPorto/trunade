@@ -437,6 +437,45 @@ em {
   background: var(--brand);
 }
 
+.code-cell.zoomed {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  margin: 0;
+  padding: 2rem;
+  border-radius: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: safe center;
+  background: var(--bg);
+}
+
+.code-cell.zoomed.busy .cell-body {
+  outline: var(--ring) solid var(--brand);
+}
+
+.code-cell.zoomed .star {
+  display: none;
+}
+
+.code-cell.zoomed :is(.cell-toolbar, .hidden-code) {
+  font-size: calc(0.78rem * var(--cell-scale));
+}
+
+.code-cell.zoomed .code-editor .cm-editor {
+  font-size: calc(0.9rem * var(--cell-scale));
+}
+
+.code-cell.zoomed .stdin textarea {
+  font-size: calc(0.85rem * var(--cell-scale));
+}
+
+.code-cell.zoomed .tool {
+  width: calc(2rem * var(--cell-scale));
+  height: calc(2rem * var(--cell-scale));
+}
+
 .cell-body {
   position: relative;
   z-index: 1;
@@ -612,8 +651,8 @@ em {
 }
 
 .hidden-code .icon {
-  width: 0.8rem;
-  height: 0.8rem;
+  width: 1.1em;
+  height: 1.1em;
   transition: transform 0.15s;
 }
 

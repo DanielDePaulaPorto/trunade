@@ -18,6 +18,7 @@ A página da aula foi pensada para o telão: fundo branco no tema claro, nenhuma
 | <kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd> | aumentar, diminuir, restaurar a fonte |
 | <kbd>W</kbd> | largura do texto: estreita ou página inteira |
 | <kbd>F</kbd> | tela cheia (<kbd>Esc</kbd> ou <kbd>F</kbd> sai) |
+| <kbd>Z</kbd> | amplia o bloco de código em uso (ou o mais perto do meio da tela) até ocupar a tela; <kbd>Esc</kbd> volta |
 | <kbd>D</kbd> | tema: automático, claro, escuro |
 | <kbd>⌘P</kbd> ou <kbd>Ctrl+P</kbd> | exportar PDF |
 | <kbd>O</kbd> | configurações (também no ☰) |

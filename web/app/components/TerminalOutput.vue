@@ -34,6 +34,8 @@ const THEME: ITheme = {
   brightWhite: '#ffffff',
 }
 
+/** Font multiplier while the block is zoomed. */
+const props = withDefaults(defineProps<{ scale?: number }>(), { scale: 1 })
 const emit = defineEmits<{ input: [data: string] }>()
 const { fontScale, codeFontFamily } = usePreferences()
 const { printing } = usePrint()
@@ -68,7 +70,7 @@ onMounted(() => {
   fitWidth()
 })
 
-watch(fontScale, () => {
+watch([fontScale, () => props.scale], () => {
   if (!terminal) return
   terminal.options.fontSize = fontSize()
   fitWidth()
@@ -88,7 +90,7 @@ onBeforeUnmount(() => {
 })
 
 function fontSize() {
-  return printing.value ? PRINT_FONT_PX : Math.round(BASE_FONT_PX * fontScale.value)
+  return printing.value ? PRINT_FONT_PX : Math.round(BASE_FONT_PX * fontScale.value * props.scale)
 }
 
 /** On paper there is no scrolling: show every line, then go back to the screen size. */
