@@ -1,8 +1,9 @@
 //! Compiles and runs one cell. Events stream out while the program runs; the
 //! caller can send input, resize the terminal or stop it.
 //!
-//! With a fixed stdin the program runs on pipes under the configured timeout.
-//! Without one it runs on a pseudo-terminal so `cin` is interactive; there is
+//! With test cases (fixed stdin, maybe an expected output) the program is
+//! compiled once and runs on pipes once per case, under the configured timeout.
+//! Without cases it runs on a pseudo-terminal so `cin` is interactive; there is
 //! no timeout there (the program may be waiting for the user), only Stop.
 
 use std::io::{Read, Write};
@@ -18,6 +19,7 @@ use tokio::sync::{mpsc, oneshot};
 use tokio::time::sleep_until;
 
 use crate::config::{Language, expand};
+use crate::judge::{TestCase, Verdict, judge};
 
 const BINARY_NAME: &str = "program";
 const READ_BUFFER_BYTES: usize = 8192;
@@ -54,8 +56,17 @@ pub enum Outcome {
 #[derive(Debug, Clone, PartialEq)]
 pub enum RunEvent {
     Compiling,
-    Running { interactive: bool },
+    /// A case starts (index 0 for an interactive run).
+    Running { case: usize, interactive: bool },
     Output { stream: Stream, text: String },
+    /// `verdict` only when the case has an expected output and the program exited with 0.
+    CaseFinished {
+        case: usize,
+        outcome: Outcome,
+        run: Duration,
+        verdict: Option<Verdict>,
+    },
+    /// After the last case: its outcome, or why no case ran (compile error...).
     Finished {
         outcome: Outcome,
         compile: Option<Duration>,
@@ -81,7 +92,8 @@ pub struct RunRequest {
     pub language: Language,
     pub source: String,
     pub flags: Vec<String>,
-    pub stdin: Option<String>,
+    /// Empty: one interactive run on a pseudo-terminal.
+    pub cases: Vec<TestCase>,
     pub timeout: Duration,
     pub terminal_size: TerminalSize,
 }
@@ -116,6 +128,7 @@ impl Executor for LocalExecutor {
             output_limit: self.output_limit,
             events: event_sender,
             control: control_receiver,
+            stdout: String::new(),
         };
         tokio::spawn(job.run());
         RunHandle { events, control }
@@ -128,6 +141,8 @@ struct Job {
     output_limit: usize,
     events: mpsc::UnboundedSender<RunEvent>,
     control: mpsc::UnboundedReceiver<Control>,
+    /// Standard output of the current case, for the judge.
+    stdout: String,
 }
 
 /// How a child process ended, before it is mapped to an `Outcome`.
@@ -181,20 +196,50 @@ impl Job {
         }
 
         let command = expand(&language.run, &placeholders, &self.request.flags);
-        let interactive = self.request.stdin.is_none();
-        self.emit(RunEvent::Running { interactive });
+        let cases = self.request.cases.clone();
+        if cases.is_empty() {
+            return self.run_case(0, None, &command, workdir.path(), run_time).await;
+        }
+        let mut outcome = Outcome::Stopped;
+        for (index, case) in cases.iter().enumerate() {
+            outcome = self.run_case(index, Some(case), &command, workdir.path(), run_time).await;
+            if outcome == Outcome::Stopped {
+                break;
+            }
+        }
+        outcome
+    }
+
+    /// One run of the compiled program: piped with the case's input, or interactive.
+    async fn run_case(
+        &mut self,
+        index: usize,
+        case: Option<&TestCase>,
+        command: &[String],
+        workdir: &Path,
+        total_time: &mut Option<Duration>,
+    ) -> Outcome {
+        self.emit(RunEvent::Running { case: index, interactive: case.is_none() });
+        self.stdout.clear();
         let started = Instant::now();
-        let end = match self.request.stdin.clone() {
-            Some(stdin) => self.run_piped(&command, workdir.path(), &stdin).await,
-            None => self.run_on_terminal(&command, workdir.path()).await,
+        let end = match case {
+            Some(case) => self.run_piped(command, workdir, &case.stdin).await,
+            None => self.run_on_terminal(command, workdir).await,
         };
-        *run_time = Some(started.elapsed());
-        match end {
+        let elapsed = started.elapsed();
+        *total_time = Some(total_time.unwrap_or_default() + elapsed);
+        let outcome = match end {
             ProcessEnd::Exited(outcome) => outcome,
             ProcessEnd::TimedOut => Outcome::TimedOut { phase: Phase::Run },
             ProcessEnd::Stopped => Outcome::Stopped,
             ProcessEnd::OutputLimitExceeded => self.output_limit_outcome(),
-        }
+        };
+        let verdict = match (case.and_then(|case| case.expected.as_deref()), &outcome) {
+            (Some(expected), Outcome::Exited { code: 0 }) => Some(judge(expected, &self.stdout)),
+            _ => None,
+        };
+        self.emit(RunEvent::CaseFinished { case: index, outcome: outcome.clone(), run: elapsed, verdict });
+        outcome
     }
 
     async fn run_compiler(&mut self, command: &[String], workdir: &Path) -> ProcessEnd {
@@ -355,7 +400,10 @@ impl Job {
         Outcome::OutputLimitExceeded { limit: self.output_limit }
     }
 
-    fn emit_output(&self, stream: Stream, text: String) {
+    fn emit_output(&mut self, stream: Stream, text: String) {
+        if stream == Stream::Stdout {
+            self.stdout.push_str(&text);
+        }
         if !text.is_empty() {
             self.emit(RunEvent::Output { stream, text });
         }

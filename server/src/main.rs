@@ -1,6 +1,7 @@
 mod config;
 mod document;
 mod executor;
+mod judge;
 mod preferences;
 mod server;
 

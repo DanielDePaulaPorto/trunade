@@ -625,14 +625,48 @@ em {
   opacity: 0.55;
 }
 
+.case {
+  display: flex;
+  align-items: stretch;
+  border-top: 1px solid var(--code-line);
+  background: var(--term-bg);
+}
+
+.case-mark {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  flex: none;
+  font: 0.75rem var(--font-mono);
+  color: #75715e;
+  border-right: 1px solid var(--code-line);
+}
+
+.case-mark.accepted {
+  color: #a6e22e;
+}
+
+.case-mark.rejected {
+  color: #ff5f56;
+}
+
 .stdin {
   display: flex;
+  flex: 1;
+  min-width: 0;
   gap: 0.6rem;
   align-items: flex-start;
   padding: 0.5rem 0.85rem;
-  border-top: 1px solid var(--code-line);
-  background: var(--term-bg);
   color: #75715e;
+}
+
+.stdin.expected {
+  border-left: 1px dashed var(--code-line);
+}
+
+.stdin.expected textarea {
+  color: #a6e22e;
 }
 
 .stdin-icon {

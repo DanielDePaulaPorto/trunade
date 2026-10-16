@@ -19,6 +19,7 @@ use tokio::sync::{mpsc, watch};
 use crate::config::{Config, expand};
 use crate::document::{self, Cell};
 use crate::executor::{Control, Executor, Outcome, RunEvent, RunRequest, Stream, TerminalSize};
+use crate::judge::{TestCase, Verdict};
 use crate::preferences::{self, Preferences};
 
 const WATCH_DEBOUNCE: Duration = Duration::from_millis(150);
@@ -110,7 +111,7 @@ enum ClientMessage {
         run_id: String,
         cell_id: String,
         source: String,
-        stdin: Option<String>,
+        cases: Vec<TestCase>,
         cols: u16,
         rows: u16,
     },
@@ -137,9 +138,17 @@ enum ServerMessage {
     #[serde(rename_all = "camelCase")]
     Compiling { run_id: String },
     #[serde(rename_all = "camelCase")]
-    Running { run_id: String, interactive: bool },
+    Running { run_id: String, case: usize, interactive: bool },
     #[serde(rename_all = "camelCase")]
     Output { run_id: String, stream: Stream, text: String },
+    #[serde(rename_all = "camelCase")]
+    CaseFinished {
+        run_id: String,
+        case: usize,
+        outcome: Outcome,
+        run_ms: u128,
+        verdict: Option<Verdict>,
+    },
     #[serde(rename_all = "camelCase")]
     Finished {
         run_id: String,
@@ -241,9 +250,9 @@ fn save_preferences(state: &AppState, outbox: &Outbox, new: Preferences) {
 
 fn handle_client_message(message: ClientMessage, state: &AppState, outbox: &Outbox, runs: &Runs) {
     match message {
-        ClientMessage::Run { run_id, cell_id, source, stdin, cols, rows } => {
+        ClientMessage::Run { run_id, cell_id, source, cases, cols, rows } => {
             let size = TerminalSize { cols, rows };
-            match build_request(state, &cell_id, source, stdin, size) {
+            match build_request(state, &cell_id, source, cases, size) {
                 Ok(request) => start_run(state, run_id, request, outbox, runs),
                 Err(message) => send(
                     outbox,
@@ -272,13 +281,13 @@ fn handle_client_message(message: ClientMessage, state: &AppState, outbox: &Outb
     }
 }
 
-/// Language, flags and timeout come from the document; source and stdin come
-/// from the browser, which may hold unsaved edits.
+/// Language, flags, template and timeout come from the document; source and
+/// cases come from the browser, which may hold unsaved edits.
 fn build_request(
     state: &AppState,
     cell_id: &str,
     source: String,
-    stdin: Option<String>,
+    cases: Vec<TestCase>,
     terminal_size: TerminalSize,
 ) -> Result<RunRequest, String> {
     let snapshot = state.snapshot.borrow();
@@ -295,7 +304,7 @@ fn build_request(
         language: language.clone(),
         source: document::assemble(before, &source, after),
         flags: flags.clone(),
-        stdin,
+        cases,
         timeout: timeout_seconds.map(Duration::from_secs_f64).unwrap_or(state.config.timeout),
         terminal_size,
     })
@@ -322,8 +331,15 @@ fn server_message(run_id: &str, event: RunEvent) -> ServerMessage {
     let run_id = run_id.to_string();
     match event {
         RunEvent::Compiling => ServerMessage::Compiling { run_id },
-        RunEvent::Running { interactive } => ServerMessage::Running { run_id, interactive },
+        RunEvent::Running { case, interactive } => ServerMessage::Running { run_id, case, interactive },
         RunEvent::Output { stream, text } => ServerMessage::Output { run_id, stream, text },
+        RunEvent::CaseFinished { case, outcome, run, verdict } => ServerMessage::CaseFinished {
+            run_id,
+            case,
+            outcome,
+            run_ms: run.as_millis(),
+            verdict,
+        },
         RunEvent::Finished { outcome, compile, run } => ServerMessage::Finished {
             run_id,
             outcome,

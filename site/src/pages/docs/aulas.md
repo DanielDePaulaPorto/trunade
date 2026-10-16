@@ -79,6 +79,32 @@ int main() { int a, b; std::cin >> a >> b; std::cout << a + b << "\n"; }
 
 O programa roda com essa entrada, com tempo limite, e stdout e stderr aparecem separados.
 
+### Casos de teste e saída esperada
+
+Depois do `stdin`, um bloco `expected` diz o que o programa deveria imprimir. Vários pares `stdin`/`expected` em sequência viram vários casos: o programa é compilado uma vez e roda em cada um.
+
+````markdown
+```stdin
+4 6
+```
+
+```expected
+12
+```
+
+```stdin
+3 5
+```
+
+```expected
+15
+```
+````
+
+Cada caso ganha ✓ ou ✗ ao lado da entrada, e o terminal mostra a saída de cada um seguida do veredito, como num juiz: `✗ resposta errada na linha 1: esperado «16», saiu «15»`. Espaços no fim das linhas e linhas em branco no fim da saída não contam. Um programa que termina com erro (código diferente de zero, sinal, tempo limite) recebe ✗ sem comparar a saída.
+
+Um `expected` sem `stdin` antes roda com a entrada vazia. Um `stdin` sem `expected` só roda, sem veredito. Entrada e saída esperada também podem ser editadas na página.
+
 ### Interativa, na hora
 
 Sem bloco `stdin`, o programa roda num terminal de verdade: a turma digita a entrada no próprio terminal da página. Nesse modo não há tempo limite (o programa pode estar esperando alguém digitar). Use ■ para parar.

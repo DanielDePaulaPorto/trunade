@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { CodeCell, Outcome, RunMessage } from '~/composables/types'
+import type { CodeCell, Outcome, RunMessage, TestCase, Verdict } from '~/composables/types'
 import TerminalOutput from './TerminalOutput.vue'
 
 const props = defineProps<{ cell: CodeCell }>()
@@ -7,9 +7,13 @@ const { send, onRun, offRun } = useConnection()
 const { t } = useI18n()
 
 type Status = 'idle' | 'compiling' | 'running' | 'done'
+/** ✓ only for an expected output matched by a program that exited with 0. */
+type CaseResult = 'accepted' | 'rejected' | 'ran'
 
 const source = ref(props.cell.source)
-const stdin = ref(props.cell.stdin)
+const cases = ref<TestCase[]>(copyCases())
+const caseResults = ref<CaseResult[]>([])
+const judged = computed(() => cases.value.length > 1 || cases.value.some((c) => c.expected !== null))
 const status = ref<Status>('idle')
 const compileMs = ref<number | null>(null)
 const runMs = ref<number | null>(null)
@@ -18,10 +22,15 @@ const terminal = ref<InstanceType<typeof TerminalOutput>>()
 const runButton = ref<HTMLButtonElement>()
 let runId: string | null = null
 let endsWithNewline = true
+let casesStarted = 0
 
 const modified = computed(
-  () => source.value !== props.cell.source || stdin.value !== props.cell.stdin,
+  () => source.value !== props.cell.source || JSON.stringify(cases.value) !== JSON.stringify(props.cell.cases),
 )
+
+function copyCases() {
+  return props.cell.cases.map((testCase) => ({ ...testCase }))
+}
 const busy = computed(() => status.value === 'compiling' || status.value === 'running')
 
 // Template code hidden around the block; the gutter keeps the whole program's numbering.
@@ -53,10 +62,12 @@ function run() {
   compileMs.value = null
   runMs.value = null
   endsWithNewline = true
+  casesStarted = 0
+  caseResults.value = []
   status.value = 'compiling'
   terminal.value?.reset()
   onRun(runId, handle)
-  send({ type: 'run', runId, cellId: props.cell.id, source: source.value, stdin: stdin.value, ...terminal.value?.size() })
+  send({ type: 'run', runId, cellId: props.cell.id, source: source.value, cases: cases.value, ...terminal.value?.size() })
 }
 
 function stop() {
@@ -67,6 +78,7 @@ function clearOutput() {
   stop()
   terminal.value?.reset()
   hasOutput.value = false
+  caseResults.value = []
   status.value = 'idle'
 }
 
@@ -81,7 +93,14 @@ function handle(message: RunMessage) {
       break
     case 'running':
       status.value = 'running'
+      casesStarted++
+      if (cases.value.length > 1) writeCaseHeader(message.case)
       terminal.value?.setInteractive(message.interactive)
+      break
+    case 'caseFinished':
+      writeOutcome(message.outcome)
+      if (message.verdict) writeVerdict(message.verdict)
+      caseResults.value[message.case] = caseResult(message.case, message.outcome, message.verdict)
       break
     case 'output':
       write(message.stream === 'stderr' ? `\x1b[31m${message.text}\x1b[0m` : message.text)
@@ -89,7 +108,7 @@ function handle(message: RunMessage) {
     case 'finished':
       status.value = 'done'
       terminal.value?.setInteractive(false)
-      writeOutcome(message.outcome)
+      if (casesStarted === 0) writeOutcome(message.outcome) // compile error: no case ran
       compileMs.value = message.compileMs
       runMs.value = message.runMs
       offRun(message.runId)
@@ -110,6 +129,32 @@ function writeOutcome(outcome: Outcome) {
   write(`${endsWithNewline ? '' : '\r\n'}\x1b[${color}m[${note}]\x1b[0m`)
 }
 
+function writeCaseHeader(index: number) {
+  const separator = index === 0 ? '' : endsWithNewline ? '\r\n' : '\r\n\r\n'
+  write(`${separator}\x1b[2m── ${t('caseNumber', { n: index + 1 })} ──\x1b[0m\r\n`)
+}
+
+function writeVerdict(verdict: Verdict) {
+  const line = verdict.kind === 'accepted'
+    ? `\x1b[32m✓ ${t('accepted')}\x1b[0m`
+    : `\x1b[31m✗ ${t('wrongAnswer', {
+        line: verdict.line,
+        expected: quoted(verdict.expected),
+        actual: quoted(verdict.actual),
+      })}\x1b[0m`
+  write(`${endsWithNewline ? '' : '\r\n'}${line}\r\n`)
+}
+
+function quoted(line: string | null) {
+  return line === null ? t('endOfOutput') : `«${line}»`
+}
+
+function caseResult(index: number, outcome: Outcome, verdict: Verdict | null): CaseResult {
+  if (verdict) return verdict.kind === 'accepted' ? 'accepted' : 'rejected'
+  const clean = outcome.kind === 'exited' && outcome.code === 0
+  return clean && cases.value[index]?.expected === null ? 'ran' : 'rejected'
+}
+
 function describe(outcome: Outcome): string {
   switch (outcome.kind) {
     case 'exited': return outcome.code === 0 ? '' : t('exitCode', { code: outcome.code })
@@ -122,13 +167,17 @@ function describe(outcome: Outcome): string {
   }
 }
 
+function rows(text: string) {
+  return Math.max(1, Math.min(8, text.replace(/\n$/, '').split('\n').length))
+}
+
 function seconds(ms: number) {
   return `${(ms / 1000).toFixed(2)} s`
 }
 
 function reset() {
   source.value = props.cell.source
-  stdin.value = props.cell.stdin
+  cases.value = copyCases()
 }
 
 function openInEditor() {
@@ -200,10 +249,21 @@ onBeforeUnmount(() => {
       <button v-if="afterLines" class="hidden-code below" :aria-expanded="showAfter" @click="showAfter = !showAfter">
         <AppIcon name="chevronRight" />{{ hiddenLabel(afterLines, 'Below') }}
       </button>
-      <label v-if="stdin !== null" class="stdin" :title="t('stdin')">
-        <AppIcon name="keyboard" class="stdin-icon" />
-        <textarea v-model="stdin" :rows="Math.min(8, stdin.split('\n').length)" spellcheck="false" :aria-label="t('stdin')" />
-      </label>
+      <div v-for="(testCase, index) in cases" :key="index" class="case">
+        <span v-if="judged" class="case-mark" :class="caseResults[index]" :title="t('caseNumber', { n: index + 1 })">
+          <AppIcon v-if="caseResults[index] === 'accepted'" name="check" />
+          <AppIcon v-else-if="caseResults[index] === 'rejected'" name="x" />
+          <template v-else>{{ index + 1 }}</template>
+        </span>
+        <label class="stdin" :title="t('stdin')">
+          <AppIcon name="keyboard" class="stdin-icon" />
+          <textarea v-model="testCase.stdin" :rows="rows(testCase.stdin)" spellcheck="false" :aria-label="t('stdin')" />
+        </label>
+        <label v-if="testCase.expected !== null" class="stdin expected" :title="t('expectedOutput')">
+          <AppIcon name="equal" class="stdin-icon" />
+          <textarea v-model="testCase.expected" :rows="rows(testCase.expected)" spellcheck="false" :aria-label="t('expectedOutput')" />
+        </label>
+      </div>
       <TerminalOutput v-show="hasOutput" ref="terminal" @input="input" />
     </div>
   </section>

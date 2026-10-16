@@ -26,6 +26,7 @@ export const ICONS = {
   type: '<path d="M4 7V4h16v3M9 20h6M12 4v16"/>',
   narrow: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18"/>',
   wide: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="m7 12 3-3M7 12l3 3M7 12h10M17 12l-3-3M17 12l-3 3"/>',
+  equal: '<path d="M5 9h14M5 15h14"/>',
   code: '<path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/>',
   x: '<path d="M18 6 6 18M6 6l12 12"/>',
 } as const

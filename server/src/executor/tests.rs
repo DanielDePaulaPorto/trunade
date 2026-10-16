@@ -22,7 +22,9 @@ fn request(name: &str, source: &str, stdin: Option<&str>) -> RunRequest {
         language: language(name),
         source: source.to_string(),
         flags: vec![],
-        stdin: stdin.map(str::to_string),
+        cases: stdin
+            .map(|stdin| vec![TestCase { stdin: stdin.to_string(), expected: None }])
+            .unwrap_or_default(),
         timeout: Duration::from_secs(10),
         terminal_size: SIZE,
     }
@@ -177,7 +179,7 @@ async fn terminal_run_receives_interactive_input() {
     let mut handle = executor().start(request);
     loop {
         match handle.events.recv().await {
-            Some(RunEvent::Running { interactive }) => {
+            Some(RunEvent::Running { interactive, .. }) => {
                 assert!(interactive);
                 break;
             }
@@ -201,6 +203,63 @@ async fn terminal_run_can_be_stopped() {
     while !matches!(handle.events.recv().await, Some(RunEvent::Running { .. })) {}
     handle.control.send(Control::Stop).unwrap();
     assert_eq!(collect(handle).await.outcome, Outcome::Stopped);
+}
+
+#[tokio::test]
+async fn cases_compile_once_and_are_judged() {
+    let source = "#include <iostream>\nint main() { int n; std::cin >> n; std::cout << n * 2 << \"\\n\"; }\n";
+    let mut request = request("cpp", source, None);
+    if !has_command(&request.language) {
+        return;
+    }
+    request.cases = vec![
+        TestCase { stdin: "2\n".into(), expected: Some("4\n".into()) },
+        TestCase { stdin: "3\n".into(), expected: Some("7\n".into()) },
+        TestCase { stdin: "5\n".into(), expected: None },
+    ];
+    let mut handle = executor().start(request);
+    let mut compilations = 0;
+    let mut verdicts = vec![];
+    loop {
+        match handle.events.recv().await.expect("events ended without Finished") {
+            RunEvent::Compiling => compilations += 1,
+            RunEvent::CaseFinished { case, verdict, .. } => verdicts.push((case, verdict)),
+            RunEvent::Finished { outcome, .. } => {
+                assert_eq!(outcome, Outcome::Exited { code: 0 });
+                break;
+            }
+            _ => {}
+        }
+    }
+    assert_eq!(compilations, 1);
+    assert_eq!(
+        verdicts,
+        [
+            (0, Some(Verdict::Accepted)),
+            (1, Some(Verdict::WrongAnswer { line: 1, expected: Some("7".into()), actual: Some("6".into()) })),
+            (2, None),
+        ]
+    );
+}
+
+#[tokio::test]
+async fn crashing_case_has_no_verdict() {
+    let mut request = request("python", "raise SystemExit(1)\n", None);
+    if !has_command(&request.language) {
+        return;
+    }
+    request.cases = vec![TestCase { stdin: String::new(), expected: Some("1\n".into()) }];
+    let mut handle = executor().start(request);
+    loop {
+        match handle.events.recv().await.expect("events ended") {
+            RunEvent::CaseFinished { outcome, verdict, .. } => {
+                assert_eq!(outcome, Outcome::Exited { code: 1 });
+                assert_eq!(verdict, None);
+                break;
+            }
+            _ => {}
+        }
+    }
 }
 
 #[test]

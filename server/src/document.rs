@@ -5,7 +5,10 @@ use comrak::nodes::{NodeCodeBlock, NodeValue};
 use comrak::{Arena, Options, markdown_to_html, parse_document};
 use serde::Serialize;
 
+use crate::judge::TestCase;
+
 pub const STDIN_FENCE: &str = "stdin";
+pub const EXPECTED_FENCE: &str = "expected";
 pub const QUIZ_FENCE: &str = "quiz";
 
 #[derive(Debug, Clone, PartialEq, Serialize)]
@@ -38,7 +41,8 @@ pub enum Cell {
         source: String,
         flags: Vec<String>,
         timeout_seconds: Option<f64>,
-        stdin: Option<String>,
+        /// ```stdin / ```expected blocks right after the code. None: interactive run.
+        cases: Vec<TestCase>,
         /// Hidden template code around `source` (see `Template`).
         before: String,
         after: String,
@@ -140,7 +144,7 @@ pub fn assemble(before: &str, source: &str, after: &str) -> String {
 
 /// Splits `markdown` into Markdown and code cells. A fenced block becomes a code
 /// cell when `language_key` knows its language (returning the configured name,
-/// shared by aliases); a ```stdin block right after it becomes its stdin.
+/// shared by aliases); ```stdin and ```expected blocks right after it become its test cases.
 pub fn parse(markdown: &str, language_key: impl Fn(&str) -> Option<String>) -> Vec<Cell> {
     let arena = Arena::new();
     let root = parse_document(&arena, markdown, &markdown_options());
@@ -167,17 +171,18 @@ pub fn parse(markdown: &str, language_key: impl Fn(&str) -> Option<String>) -> V
             _ => continue,
         };
         let info = parse_fence_info(&block.info);
-        let attaches_stdin = info.language == STDIN_FENCE
-            && builder.last_code_accepts_stdin()
+        let attaches_case = matches!(info.language.as_str(), STDIN_FENCE | EXPECTED_FENCE)
+            && builder.last_is_code()
             && is_blank(&lines, next_markdown_line, start);
         let is_quiz = info.language == QUIZ_FENCE;
         let key = language_key(&info.language);
-        if !attaches_stdin && !is_quiz && key.is_none() {
+        if !attaches_case && !is_quiz && key.is_none() {
             continue;
         }
         builder.push_markdown(&lines, next_markdown_line, start);
         match key {
-            _ if attaches_stdin => builder.attach_stdin(&block.literal),
+            _ if attaches_case && info.language == STDIN_FENCE => builder.add_stdin(&block.literal),
+            _ if attaches_case => builder.add_expected(&block.literal),
             _ if is_quiz => builder.push_quiz(&block.literal),
             Some(key) if info.template => builder.set_template(key, &block.literal),
             Some(key) => builder.push_code(info, &key, start, block),
@@ -339,14 +344,14 @@ impl CellBuilder {
     fn push_code(&mut self, info: FenceInfo, language_key: &str, line: usize, block: &NodeCodeBlock) {
         let template = self.templates.get(language_key).cloned().unwrap_or_default();
         self.target().push(Cell::Code {
-            id: String::new(), // assigned in finish(), once stdin is known
+            id: String::new(), // assigned in finish(), once the cases are known
             fence_language: info.language,
             line,
             // The closing fence's newline is not part of the program; editors show it as an empty line.
             source: block.literal.strip_suffix('\n').unwrap_or(&block.literal).to_string(),
             flags: info.flags,
             timeout_seconds: info.timeout_seconds,
-            stdin: None,
+            cases: vec![],
             before: template.before,
             after: template.after,
         });
@@ -366,13 +371,30 @@ impl CellBuilder {
         self.target().push(Cell::Quiz { id, question, options });
     }
 
-    fn last_code_accepts_stdin(&mut self) -> bool {
-        matches!(self.target().last(), Some(Cell::Code { stdin: None, .. }))
+    fn last_is_code(&mut self) -> bool {
+        matches!(self.target().last(), Some(Cell::Code { .. }))
     }
 
-    fn attach_stdin(&mut self, text: &str) {
-        if let Some(Cell::Code { stdin, .. }) = self.target().last_mut() {
-            *stdin = Some(text.to_string());
+    fn last_cases(&mut self) -> Option<&mut Vec<TestCase>> {
+        match self.target().last_mut() {
+            Some(Cell::Code { cases, .. }) => Some(cases),
+            _ => None,
+        }
+    }
+
+    /// Every ```stdin starts a new case.
+    fn add_stdin(&mut self, text: &str) {
+        if let Some(cases) = self.last_cases() {
+            cases.push(TestCase { stdin: text.to_string(), expected: None });
+        }
+    }
+
+    /// Completes the last case, or starts one with empty input.
+    fn add_expected(&mut self, text: &str) {
+        let Some(cases) = self.last_cases() else { return };
+        match cases.last_mut() {
+            Some(case) if case.expected.is_none() => case.expected = Some(text.to_string()),
+            _ => cases.push(TestCase { stdin: String::new(), expected: Some(text.to_string()) }),
         }
     }
 
@@ -387,8 +409,8 @@ impl CellBuilder {
     fn assign_ids(&mut self, cells: &mut [Cell]) {
         for cell in cells {
             match cell {
-                Cell::Code { id, fence_language, source, flags, stdin, before, after, .. } => {
-                    let content = (&fence_language, &source, &flags, &stdin, &before, &after);
+                Cell::Code { id, fence_language, source, flags, cases, before, after, .. } => {
+                    let content = (&fence_language, &source, &flags, &cases, &before, &after);
                     *id = self.unique_id(&("code", content));
                 }
                 Cell::Steps { id, steps } => {
@@ -447,7 +469,7 @@ mod tests {
     #[test]
     fn code_cell_has_line_attributes_and_stdin() {
         let cells = parse(LESSON, runnable);
-        let Cell::Code { fence_language, line, source, flags, timeout_seconds, stdin, .. } = &cells[1]
+        let Cell::Code { fence_language, line, source, flags, timeout_seconds, cases, .. } = &cells[1]
         else {
             panic!("expected code cell");
         };
@@ -456,14 +478,30 @@ mod tests {
         assert_eq!(source, "int main() {}");
         assert_eq!(flags, &["-O2", "-g"]);
         assert_eq!(*timeout_seconds, Some(5.0));
-        assert_eq!(stdin.as_deref(), Some("2 40\n"));
+        assert_eq!(cases, &[TestCase { stdin: "2 40\n".into(), expected: None }]);
+    }
+
+    #[test]
+    fn stdin_and_expected_pairs_become_cases() {
+        let lesson = "```cpp\nx\n```\n\n```stdin\n12 18\n```\n```expected\n6\n```\n\n```stdin\n0 0\n```\n\n```expected\n0\n```\n\n```stdin\n7\n```\n";
+        let Cell::Code { cases, .. } = &parse(lesson, runnable)[0] else { panic!("expected code") };
+        let pairs: Vec<(&str, Option<&str>)> =
+            cases.iter().map(|case| (case.stdin.as_str(), case.expected.as_deref())).collect();
+        assert_eq!(pairs, [("12 18\n", Some("6\n")), ("0 0\n", Some("0\n")), ("7\n", None)]);
+    }
+
+    #[test]
+    fn expected_without_stdin_runs_with_empty_input() {
+        let lesson = "```python\nprint(1)\n```\n\n```expected\n1\n```\n";
+        let Cell::Code { cases, .. } = &parse(lesson, runnable)[0] else { panic!("expected code") };
+        assert_eq!(cases, &[TestCase { stdin: String::new(), expected: Some("1\n".into()) }]);
     }
 
     #[test]
     fn stdin_separated_by_text_stays_markdown() {
         let cells = parse("```cpp\nx\n```\n\npara\n\n```stdin\n1\n```\n", runnable);
-        let Cell::Code { stdin, .. } = code_cells(&cells)[0] else { unreachable!() };
-        assert!(stdin.is_none());
+        let Cell::Code { cases, .. } = code_cells(&cells)[0] else { unreachable!() };
+        assert!(cases.is_empty());
         assert!(matches!(cells.last(), Some(Cell::Markdown { html, .. }) if html.contains("<code")));
     }
 
@@ -505,8 +543,8 @@ mod tests {
         assert_eq!(cells.len(), 3);
         let Cell::Steps { steps, .. } = &cells[1] else { panic!("expected steps") };
         assert_eq!(steps.iter().map(|s| s.title.as_str()).collect::<Vec<_>>(), ["Enunciado", "Solução"]);
-        let Cell::Code { id, stdin, .. } = &steps[1].cells[0] else { panic!("expected code") };
-        assert_eq!(stdin.as_deref(), Some("1 2\n"));
+        let Cell::Code { id, cases, .. } = &steps[1].cells[0] else { panic!("expected code") };
+        assert_eq!(cases[0].stdin, "1 2\n");
         assert!(find_cell(&cells, id).is_some());
     }
 

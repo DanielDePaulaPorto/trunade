@@ -79,6 +79,32 @@ int main() { int a, b; std::cin >> a >> b; std::cout << a + b << "\n"; }
 
 The program runs with that input, under the time limit, with stdout and stderr shown separately.
 
+### Test cases and expected output
+
+After the `stdin`, an `expected` block says what the program should print. Several `stdin`/`expected` pairs in a row become several cases: the program is compiled once and runs on each.
+
+````markdown
+```stdin
+4 6
+```
+
+```expected
+12
+```
+
+```stdin
+3 5
+```
+
+```expected
+15
+```
+````
+
+Each case gets ✓ or ✗ next to its input, and the terminal shows each output followed by the verdict, like a judge: `✗ wrong answer on line 1: expected «16», got «15»`. Trailing spaces and trailing blank lines do not count. A program that ends with an error (nonzero exit code, signal, time limit) gets ✗ without comparing the output.
+
+An `expected` with no `stdin` before it runs with empty input. A `stdin` with no `expected` just runs, with no verdict. Input and expected output can also be edited on the page.
+
 ### Interactive, on the spot
 
 Without a `stdin` block, the program runs in a real terminal: the class types the input in the page's own terminal. There is no time limit in this mode (the program may be waiting for someone to type). Use ■ to stop it.
