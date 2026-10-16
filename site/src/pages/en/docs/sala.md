@@ -13,8 +13,8 @@ The lesson page is built for the projector: white background in the light theme,
 | Key | Action |
 |---|---|
 | <kbd>T</kbd> | section outline (<kbd>→</kbd> opens subsections) |
-| <kbd>Space</kbd> or <kbd>↓</kbd> | next section, with smooth scrolling |
-| <kbd>⇧ Space</kbd> or <kbd>↑</kbd> | previous section |
+| <kbd>Space</kbd>, <kbd>↓</kbd> or <kbd>Page Down</kbd> | next section, with smooth scrolling |
+| <kbd>⇧ Space</kbd>, <kbd>↑</kbd> or <kbd>Page Up</kbd> | previous section |
 | <kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd> | bigger, smaller, reset font |
 | <kbd>W</kbd> | text width: narrow or full page |
 | <kbd>F</kbd> | full screen (<kbd>Esc</kbd> or <kbd>F</kbd> leaves) |

@@ -16,6 +16,8 @@ const SHORTCUTS: Record<string, (event: KeyboardEvent) => void> = {
   ' ': (event) => scrollToAdjacentSection(event.shiftKey ? -1 : 1),
   ArrowDown: () => scrollToAdjacentSection(1),
   ArrowUp: () => scrollToAdjacentSection(-1),
+  PageDown: () => scrollToAdjacentSection(1),
+  PageUp: () => scrollToAdjacentSection(-1),
   '+': growFont,
   '=': growFont,
   '-': shrinkFont,

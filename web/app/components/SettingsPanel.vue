@@ -39,8 +39,8 @@ const LOCALES: { value: Locale; label: string }[] = [
 ]
 const SHORTCUTS = computed(() => [
   { keys: ['T'], label: 'shortcutTopics' },
-  { keys: [t('keySpace'), '↓'], label: 'shortcutNext' },
-  { keys: [`⇧ ${t('keySpace')}`, '↑'], label: 'shortcutPrevious' },
+  { keys: [t('keySpace'), '↓', 'PgDn'], label: 'shortcutNext' },
+  { keys: [`⇧ ${t('keySpace')}`, '↑', 'PgUp'], label: 'shortcutPrevious' },
   { keys: ['+', '−', '0'], label: 'shortcutFont' },
   { keys: ['D'], label: 'shortcutTheme' },
   { keys: ['W'], label: 'shortcutWidth' },

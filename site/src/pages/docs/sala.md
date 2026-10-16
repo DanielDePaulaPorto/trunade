@@ -13,8 +13,8 @@ A página da aula foi pensada para o telão: fundo branco no tema claro, nenhuma
 | Tecla | Ação |
 |---|---|
 | <kbd>T</kbd> | índice de seções (<kbd>→</kbd> abre as subseções) |
-| <kbd>Espaço</kbd> ou <kbd>↓</kbd> | próxima seção, com rolagem suave |
-| <kbd>⇧ Espaço</kbd> ou <kbd>↑</kbd> | seção anterior |
+| <kbd>Espaço</kbd>, <kbd>↓</kbd> ou <kbd>Page Down</kbd> | próxima seção, com rolagem suave |
+| <kbd>⇧ Espaço</kbd>, <kbd>↑</kbd> ou <kbd>Page Up</kbd> | seção anterior |
 | <kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd> | aumentar, diminuir, restaurar a fonte |
 | <kbd>W</kbd> | largura do texto: estreita ou página inteira |
 | <kbd>F</kbd> | tela cheia (<kbd>Esc</kbd> ou <kbd>F</kbd> sai) |
