@@ -15,6 +15,9 @@ export interface CodeCell {
   flags: string[]
   timeoutSeconds: number | null
   stdin: string | null
+  /** Hidden template code compiled around `source`. */
+  before: string
+  after: string
 }
 
 export interface QuizCell {

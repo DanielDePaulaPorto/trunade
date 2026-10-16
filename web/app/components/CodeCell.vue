@@ -24,6 +24,21 @@ const modified = computed(
 )
 const busy = computed(() => status.value === 'compiling' || status.value === 'running')
 
+// Template code hidden around the block; the gutter keeps the whole program's numbering.
+const showBefore = ref(false)
+const showAfter = ref(false)
+const beforeLines = computed(() => countLines(props.cell.before))
+const afterLines = computed(() => countLines(props.cell.after))
+const sourceLines = computed(() => source.value.split('\n').length)
+
+function countLines(text: string) {
+  return text ? text.replace(/\n$/, '').split('\n').length : 0
+}
+
+function hiddenLabel(count: number, where: 'Above' | 'Below') {
+  return count === 1 ? t(`hiddenLine${where}` as const) : t(`hiddenLines${where}` as const, { count })
+}
+
 /** Run with a spark at the click, or at the ▶ button when started from the keyboard. */
 function runWithSpark(event?: MouseEvent) {
   const origin = event ?? runButton.value
@@ -163,7 +178,28 @@ onBeforeUnmount(() => {
           <AppIcon name="play" />
         </button>
       </header>
-      <CodeEditor v-model="source" :language="cell.fenceLanguage" @run="runWithSpark()" />
+      <button v-if="beforeLines" class="hidden-code" :aria-expanded="showBefore" @click="showBefore = !showBefore">
+        <AppIcon name="chevronRight" />{{ hiddenLabel(beforeLines, 'Above') }}
+      </button>
+      <CodeEditor
+        v-if="showBefore"
+        class="hidden-part"
+        :model-value="cell.before.replace(/\n$/, '')"
+        :language="cell.fenceLanguage"
+        readonly
+      />
+      <CodeEditor v-model="source" :language="cell.fenceLanguage" :first-line="beforeLines + 1" @run="runWithSpark()" />
+      <CodeEditor
+        v-if="showAfter"
+        class="hidden-part"
+        :model-value="cell.after.replace(/\n$/, '')"
+        :language="cell.fenceLanguage"
+        :first-line="beforeLines + sourceLines + 1"
+        readonly
+      />
+      <button v-if="afterLines" class="hidden-code below" :aria-expanded="showAfter" @click="showAfter = !showAfter">
+        <AppIcon name="chevronRight" />{{ hiddenLabel(afterLines, 'Below') }}
+      </button>
       <label v-if="stdin !== null" class="stdin" :title="t('stdin')">
         <AppIcon name="keyboard" class="stdin-icon" />
         <textarea v-model="stdin" :rows="Math.min(8, stdin.split('\n').length)" spellcheck="false" :aria-label="t('stdin')" />

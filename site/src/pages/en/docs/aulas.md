@@ -37,6 +37,27 @@ In braces, after the language:
 - `flags`: extra compiler flags, on top of the configured ones.
 - `timeout`: time limit in seconds for this block.
 
+## Template: the code that repeats
+
+To avoid repeating `#include`, `using namespace std` and fast input in every block, declare a template once. The `{code}` line (it may sit behind a comment: `//{code}`, `# {code}`) marks where each block goes:
+
+````markdown
+```cpp template
+#include <bits/stdc++.h>
+using namespace std;
+//{code}
+```
+
+```cpp
+int main() { cout << gcd(12, 18) << "\n"; }
+```
+````
+
+- The template applies to the following blocks of the same language (aliases included), until the next template. An empty template turns it off.
+- Without a `{code}` line, the whole template goes before the block.
+- The template is not shown on the page. Each block shows a discreet strip, "2 template lines above", that opens the hidden part dimmed and read-only.
+- Line numbers are those of the whole program (the block above starts at line 3), so compiler errors match what you see.
+
 ## Standard input
 
 There are two ways to feed a program.

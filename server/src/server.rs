@@ -60,7 +60,9 @@ pub fn load_snapshot(path: &Path, config: &Config) -> Snapshot {
     match std::fs::read_to_string(path) {
         Ok(markdown) => Snapshot {
             file_name,
-            cells: document::parse(&markdown, |language| config.language(language).is_some()),
+            cells: document::parse(&markdown, |language| {
+                config.language(language).map(|(name, _)| name.to_string())
+            }),
             error: None,
         },
         Err(error) => Snapshot {
@@ -282,7 +284,7 @@ fn build_request(
     let snapshot = state.snapshot.borrow();
     let cell = document::find_cell(&snapshot.cells, cell_id)
         .ok_or("this block changed in the file; reload it")?;
-    let Cell::Code { fence_language, flags, timeout_seconds, .. } = cell else {
+    let Cell::Code { fence_language, flags, timeout_seconds, before, after, .. } = cell else {
         return Err("not a code block".to_string());
     };
     let (_, language) = state
@@ -291,7 +293,7 @@ fn build_request(
         .ok_or_else(|| format!("no language configured for '{fence_language}'"))?;
     Ok(RunRequest {
         language: language.clone(),
-        source,
+        source: document::assemble(before, &source, after),
         flags: flags.clone(),
         stdin,
         timeout: timeout_seconds.map(Duration::from_secs_f64).unwrap_or(state.config.timeout),

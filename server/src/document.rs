@@ -39,6 +39,9 @@ pub enum Cell {
         flags: Vec<String>,
         timeout_seconds: Option<f64>,
         stdin: Option<String>,
+        /// Hidden template code around `source` (see `Template`).
+        before: String,
+        after: String,
     },
     /// ```quiz block: question in Markdown, then `- [ ]` / `- [x]` options.
     Quiz {
@@ -93,11 +96,52 @@ pub struct FenceInfo {
     pub language: String,
     pub flags: Vec<String>,
     pub timeout_seconds: Option<f64>,
+    /// ```cpp template: hidden code wrapped around the following blocks.
+    pub template: bool,
+}
+
+/// Code the compiler gets but the page hides: what a ```lang template block
+/// has before and after its `{code}` line (a whole template without one is
+/// `before`). It applies to the next blocks of the same language; an empty
+/// template turns it off.
+#[derive(Debug, Clone, Default, PartialEq)]
+struct Template {
+    before: String,
+    after: String,
+}
+
+impl Template {
+    fn parse(text: &str) -> Self {
+        let mut before = String::new();
+        let mut after = String::new();
+        let mut marker_seen = false;
+        for line in text.lines() {
+            if !marker_seen && is_code_marker(line) {
+                marker_seen = true;
+                continue;
+            }
+            let part = if marker_seen { &mut after } else { &mut before };
+            part.push_str(line);
+            part.push('\n');
+        }
+        Self { before, after }
+    }
+}
+
+/// `{code}`, optionally behind a line comment (`//{code}`, `# {code}`).
+fn is_code_marker(line: &str) -> bool {
+    line.trim().trim_start_matches(|c: char| !c.is_alphanumeric() && c != '{') == "{code}"
+}
+
+/// The program the compiler gets: the visible source inside its template.
+pub fn assemble(before: &str, source: &str, after: &str) -> String {
+    format!("{before}{source}\n{after}")
 }
 
 /// Splits `markdown` into Markdown and code cells. A fenced block becomes a code
-/// cell when `is_runnable(language)`; a ```stdin block right after it becomes its stdin.
-pub fn parse(markdown: &str, is_runnable: impl Fn(&str) -> bool) -> Vec<Cell> {
+/// cell when `language_key` knows its language (returning the configured name,
+/// shared by aliases); a ```stdin block right after it becomes its stdin.
+pub fn parse(markdown: &str, language_key: impl Fn(&str) -> Option<String>) -> Vec<Cell> {
     let arena = Arena::new();
     let root = parse_document(&arena, markdown, &markdown_options());
     let lines: Vec<&str> = markdown.lines().collect();
@@ -127,16 +171,17 @@ pub fn parse(markdown: &str, is_runnable: impl Fn(&str) -> bool) -> Vec<Cell> {
             && builder.last_code_accepts_stdin()
             && is_blank(&lines, next_markdown_line, start);
         let is_quiz = info.language == QUIZ_FENCE;
-        if !attaches_stdin && !is_quiz && !is_runnable(&info.language) {
+        let key = language_key(&info.language);
+        if !attaches_stdin && !is_quiz && key.is_none() {
             continue;
         }
         builder.push_markdown(&lines, next_markdown_line, start);
-        if attaches_stdin {
-            builder.attach_stdin(&block.literal);
-        } else if is_quiz {
-            builder.push_quiz(&block.literal);
-        } else {
-            builder.push_code(info, start, block);
+        match key {
+            _ if attaches_stdin => builder.attach_stdin(&block.literal),
+            _ if is_quiz => builder.push_quiz(&block.literal),
+            Some(key) if info.template => builder.set_template(key, &block.literal),
+            Some(key) => builder.push_code(info, &key, start, block),
+            None => {}
         }
         next_markdown_line = end + 1;
     }
@@ -162,6 +207,7 @@ pub fn parse_fence_info(info: &str) -> FenceInfo {
             _ => {}
         }
     }
+    fence.template = split_words(attributes).iter().any(|word| word == "template");
     fence
 }
 
@@ -252,6 +298,8 @@ struct CellBuilder {
     /// Open steps: new cells go into the last one until `<!-- /steps -->`.
     steps: Option<Vec<Step>>,
     seen_ids: HashMap<u64, usize>,
+    /// Current template per configured language name.
+    templates: HashMap<String, Template>,
 }
 
 impl CellBuilder {
@@ -284,7 +332,12 @@ impl CellBuilder {
         self.target().push(Cell::Markdown { id, html });
     }
 
-    fn push_code(&mut self, info: FenceInfo, line: usize, block: &NodeCodeBlock) {
+    fn set_template(&mut self, language_key: String, text: &str) {
+        self.templates.insert(language_key, Template::parse(text));
+    }
+
+    fn push_code(&mut self, info: FenceInfo, language_key: &str, line: usize, block: &NodeCodeBlock) {
+        let template = self.templates.get(language_key).cloned().unwrap_or_default();
         self.target().push(Cell::Code {
             id: String::new(), // assigned in finish(), once stdin is known
             fence_language: info.language,
@@ -294,6 +347,8 @@ impl CellBuilder {
             flags: info.flags,
             timeout_seconds: info.timeout_seconds,
             stdin: None,
+            before: template.before,
+            after: template.after,
         });
     }
 
@@ -332,8 +387,9 @@ impl CellBuilder {
     fn assign_ids(&mut self, cells: &mut [Cell]) {
         for cell in cells {
             match cell {
-                Cell::Code { id, fence_language, source, flags, stdin, .. } => {
-                    *id = self.unique_id(&("code", &fence_language, &source, &flags, &stdin));
+                Cell::Code { id, fence_language, source, flags, stdin, before, after, .. } => {
+                    let content = (&fence_language, &source, &flags, &stdin, &before, &after);
+                    *id = self.unique_id(&("code", content));
                 }
                 Cell::Steps { id, steps } => {
                     for step in steps.iter_mut() {
@@ -365,8 +421,12 @@ impl CellBuilder {
 mod tests {
     use super::*;
 
-    fn runnable(language: &str) -> bool {
-        matches!(language, "cpp" | "python")
+    fn runnable(language: &str) -> Option<String> {
+        match language {
+            "cpp" | "c++" => Some("cpp".into()),
+            "python" => Some("python".into()),
+            _ => None,
+        }
     }
 
     fn code_cells(cells: &[Cell]) -> Vec<&Cell> {
@@ -457,8 +517,42 @@ mod tests {
     }
 
     #[test]
+    fn template_wraps_later_blocks_of_its_language() {
+        let lesson = "```cpp\nbefore_template\n```\n\n```cpp template\n#include <x>\n//{code}\nint tail;\n```\n\n```c++\nint main() {}\n```\n\n```python\nprint(1)\n```\n";
+        let cells = parse(lesson, runnable);
+        assert_eq!(cells.len(), 3, "the template itself is not a cell");
+        let Cell::Code { before, .. } = &cells[0] else { panic!("expected code") };
+        assert!(before.is_empty());
+        let Cell::Code { before, after, source, .. } = &cells[1] else { panic!("expected code") };
+        assert_eq!(before, "#include <x>\n");
+        assert_eq!(after, "int tail;\n");
+        assert_eq!(assemble(before, source, after), "#include <x>\nint main() {}\nint tail;\n");
+        let Cell::Code { before, .. } = &cells[2] else { panic!("expected code") };
+        assert!(before.is_empty(), "other languages are not wrapped");
+    }
+
+    #[test]
+    fn template_without_marker_is_all_before_and_empty_one_turns_it_off() {
+        let lesson = "```python template\nimport sys\n```\n\n```python\nx\n```\n\n```python template\n```\n\n```python\ny\n```\n";
+        let cells = parse(lesson, runnable);
+        let Cell::Code { before, after, .. } = &cells[0] else { panic!("expected code") };
+        assert_eq!((before.as_str(), after.as_str()), ("import sys\n", ""));
+        let Cell::Code { before, .. } = &cells[1] else { panic!("expected code") };
+        assert!(before.is_empty());
+    }
+
+    #[test]
+    fn code_marker_accepts_comments() {
+        assert!(is_code_marker("//{code}"));
+        assert!(is_code_marker("  # {code}  "));
+        assert!(!is_code_marker("int code;"));
+    }
+
+    #[test]
     fn fence_info_without_attributes() {
         assert_eq!(parse_fence_info("C++"), FenceInfo { language: "c++".into(), ..Default::default() });
         assert_eq!(parse_fence_info("cpp{timeout=1}").timeout_seconds, Some(1.0));
+        assert!(parse_fence_info("cpp template").template);
+        assert!(parse_fence_info("cpp {template timeout=1}").template);
     }
 }

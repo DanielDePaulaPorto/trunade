@@ -1,18 +1,23 @@
 <script setup lang="ts">
 import { EditorView, basicSetup } from 'codemirror'
-import { keymap } from '@codemirror/view'
-import { Compartment, Prec, type Extension } from '@codemirror/state'
+import { keymap, lineNumbers } from '@codemirror/view'
+import { Compartment, EditorState, Prec, type Extension } from '@codemirror/state'
 import { cpp } from '@codemirror/lang-cpp'
 import { python } from '@codemirror/lang-python'
 import { MONOKAI } from '~/composables/monokai'
 
-const props = defineProps<{ language: string }>()
+/** `firstLine` numbers the gutter as in the whole program when a template hides lines above. */
+const props = withDefaults(defineProps<{ language: string; firstLine?: number; readonly?: boolean }>(), {
+  firstLine: 1,
+  readonly: false,
+})
 const model = defineModel<string>({ required: true })
 const emit = defineEmits<{ run: [] }>()
 
 const container = ref<HTMLElement>()
 const { codeTheme } = usePreferences()
 const colors = new Compartment()
+const numbering = new Compartment()
 let view: EditorView | null = null
 
 const LANGUAGES: Record<string, () => Extension> = {
@@ -27,6 +32,8 @@ onMounted(() => {
     extensions: [
       basicSetup,
       colors.of(MONOKAI[codeTheme.value]),
+      numbering.of(lineNumbersFrom(props.firstLine)),
+      props.readonly ? [EditorState.readOnly.of(true), EditorView.editable.of(false)] : [],
       LANGUAGES[props.language]?.() ?? [],
       Prec.highest(
         keymap.of([
@@ -50,6 +57,11 @@ watch(model, (value) => {
 })
 
 watch(codeTheme, (value) => view?.dispatch({ effects: colors.reconfigure(MONOKAI[value]) }))
+watch(() => props.firstLine, (value) => view?.dispatch({ effects: numbering.reconfigure(lineNumbersFrom(value)) }))
+
+function lineNumbersFrom(first: number) {
+  return lineNumbers({ formatNumber: (line) => String(line + first - 1) })
+}
 
 onBeforeUnmount(() => view?.destroy())
 </script>

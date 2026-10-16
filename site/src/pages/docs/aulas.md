@@ -37,6 +37,27 @@ Entre chaves, depois da linguagem:
 - `flags`: flags extras para o compilador, além das da configuração.
 - `timeout`: tempo limite em segundos para este bloco.
 
+## Molde: o código que se repete
+
+Para não repetir `#include`, `using namespace std` e a leitura rápida em todo bloco, declare um molde uma vez. A linha `{code}` (pode vir atrás de um comentário: `//{code}`, `# {code}`) marca onde entra cada bloco:
+
+````markdown
+```cpp template
+#include <bits/stdc++.h>
+using namespace std;
+//{code}
+```
+
+```cpp
+int main() { cout << gcd(12, 18) << "\n"; }
+```
+````
+
+- O molde vale para os blocos seguintes da mesma linguagem (apelidos incluídos), até o próximo molde. Um molde vazio desliga.
+- Sem a linha `{code}`, o molde inteiro vai antes do bloco.
+- O molde não aparece na página. Cada bloco mostra uma faixa discreta, "2 linhas do molde acima", que abre o trecho esmaecido e só para leitura.
+- A numeração das linhas é a do programa inteiro (o bloco acima começa na linha 3), então os erros do compilador batem com o que se vê.
+
 ## Entrada padrão
 
 Há dois jeitos de dar entrada a um programa.
