@@ -3,7 +3,7 @@ import type { CodeThemeMode, LayoutWidth, Locale, ThemeMode } from '~/composable
 import type { IconName } from '~/composables/icons'
 import { BODY_FONTS, CODE_FONTS, TITLE_FONTS, type FontChoice } from '~/composables/fonts'
 
-const emit = defineEmits<{ close: [] }>()
+const emit = defineEmits<{ close: []; print: [] }>()
 const { t } = useI18n()
 const { themeMode, codeThemeMode, layoutWidth, locale, fontScale, titleFont, bodyFont, codeFont, growFont, shrinkFont, resetFont } =
   usePreferences()
@@ -65,6 +65,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <strong>{{ t('settings') }}</strong>
         <button class="tool" :title="t('close')" @click="emit('close')"><AppIcon name="close" /></button>
       </header>
+
+      <section style="--i: 2">
+        <button class="export-button" @click="emit('print')"><AppIcon name="printer" />{{ t('exportPdf') }}</button>
+        <p class="hint">{{ t('exportPdfHint') }}</p>
+      </section>
 
       <section style="--i: 2">
         <h3><AppIcon name="type" />{{ t('fontSize') }}</h3>

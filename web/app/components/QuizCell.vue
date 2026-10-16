@@ -7,6 +7,9 @@ const { t } = useI18n()
 const multiple = computed(() => props.cell.options.filter((o) => o.correct).length > 1)
 const chosen = ref<boolean[]>(props.cell.options.map(() => false))
 const revealed = ref(false)
+const { printing } = usePrint()
+/** The PDF is an answer key: printing shows the answers. */
+const showAnswers = computed(() => revealed.value || printing.value)
 const root = ref<HTMLElement>()
 
 onMounted(() => root.value && renderMath(root.value))
@@ -25,19 +28,19 @@ function toggleReveal() {
 /** Which mark the box shows: the student's choice, then the answer key once revealed. */
 function mark(index: number): 'check' | 'x' | null {
   const correct = props.cell.options[index]!.correct
-  if (revealed.value) return correct ? 'check' : chosen.value[index] ? 'x' : null
+  if (showAnswers.value) return correct ? 'check' : chosen.value[index] ? 'x' : null
   return chosen.value[index] && multiple.value ? 'check' : null
 }
 
 function optionClass(index: number) {
-  if (!revealed.value) return { chosen: chosen.value[index] }
+  if (!showAnswers.value) return { chosen: chosen.value[index] }
   const correct = props.cell.options[index]!.correct
   return { correct, wrong: chosen.value[index] && !correct, chosen: chosen.value[index] }
 }
 </script>
 
 <template>
-  <section ref="root" class="quiz" :class="{ revealed }">
+  <section ref="root" class="quiz" :class="{ revealed: showAnswers }">
     <div class="markdown quiz-question" v-html="cell.question" />
     <ul class="quiz-options" :role="multiple ? 'group' : 'radiogroup'">
       <li v-for="(option, index) in cell.options" :key="index">
@@ -45,7 +48,7 @@ function optionClass(index: number) {
           class="quiz-option"
           :class="optionClass(index)"
           :role="multiple ? 'checkbox' : 'radio'"
-          :aria-checked="revealed ? cell.options[index]!.correct : chosen[index]"
+          :aria-checked="showAnswers ? cell.options[index]!.correct : chosen[index]"
           @click="choose(index)"
         >
           <span class="quiz-mark" :class="{ square: multiple }">

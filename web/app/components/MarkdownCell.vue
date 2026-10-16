@@ -2,6 +2,7 @@
 const props = defineProps<{ html: string }>()
 const { theme } = usePreferences()
 const root = ref<HTMLElement>()
+const { printing } = usePrint()
 
 async function enhance() {
   await nextTick()
@@ -14,6 +15,7 @@ async function enhance() {
 
 onMounted(enhance)
 watch(() => props.html, enhance)
+watch(printing, (isPrinting) => isPrinting && root.value && settleHeadings(root.value))
 watch(theme, () => root.value && renderMermaid(root.value, theme.value))
 </script>
 

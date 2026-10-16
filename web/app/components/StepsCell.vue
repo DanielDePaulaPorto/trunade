@@ -7,6 +7,7 @@ const props = defineProps<{ cell: StepsCell }>()
 const { t } = useI18n()
 
 const current = ref(0)
+const { printing } = usePrint()
 const direction = ref<1 | -1>(1)
 const last = computed(() => props.cell.steps.length - 1)
 
@@ -29,7 +30,8 @@ function go(index: number) {
       </li>
     </ol>
     <div class="steps-body" :class="direction === 1 ? 'forward' : 'backward'">
-      <div v-for="(step, index) in cell.steps" v-show="index === current" :key="index" class="steps-panel">
+      <div v-for="(step, index) in cell.steps" v-show="printing || index === current" :key="index" class="steps-panel">
+        <p v-if="printing" class="steps-print-title">{{ index + 1 }}. {{ step.title }}</p>
         <CellView v-for="child in step.cells" :key="child.id" :cell="child" />
       </div>
     </div>

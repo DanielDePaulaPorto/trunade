@@ -5,6 +5,8 @@ import { FitAddon } from '@xterm/addon-fit'
 const MIN_ROWS = 2
 const MAX_ROWS = 24
 const BASE_FONT_PX = 15
+const PRINT_FONT_PX = 12
+const MAX_PRINT_ROWS = 1000
 const SHOW_CURSOR = '\x1b[?25h'
 const HIDE_CURSOR = '\x1b[?25l'
 
@@ -34,6 +36,7 @@ const THEME: ITheme = {
 
 const emit = defineEmits<{ input: [data: string] }>()
 const { fontScale, codeFontFamily } = usePreferences()
+const { printing } = usePrint()
 
 const container = ref<HTMLElement>()
 let terminal: Terminal | null = null
@@ -85,7 +88,24 @@ onBeforeUnmount(() => {
 })
 
 function fontSize() {
-  return Math.round(BASE_FONT_PX * fontScale.value)
+  return printing.value ? PRINT_FONT_PX : Math.round(BASE_FONT_PX * fontScale.value)
+}
+
+/** On paper there is no scrolling: show every line, then go back to the screen size. */
+watch(printing, (isPrinting) => {
+  if (!terminal) return
+  terminal.options.fontSize = fontSize()
+  const used = linesUsed()
+  const rows = isPrinting ? Math.min(MAX_PRINT_ROWS, used) : Math.min(MAX_ROWS, used)
+  terminal.resize(terminal.cols, Math.max(MIN_ROWS, rows))
+  if (isPrinting) terminal.scrollToTop()
+  else terminal.scrollToBottom()
+  fitWidth()
+})
+
+function linesUsed() {
+  const buffer = terminal!.buffer.active
+  return buffer.baseY + buffer.cursorY + 1
 }
 
 function fitWidth() {
@@ -96,9 +116,7 @@ function fitWidth() {
 /** Grow with the output (up to MAX_ROWS) instead of showing a fixed-height box. */
 function growToContent() {
   if (!terminal) return
-  const buffer = terminal.buffer.active
-  const used = buffer.baseY + buffer.cursorY + 1
-  const rows = Math.min(MAX_ROWS, Math.max(MIN_ROWS, used))
+  const rows = Math.min(MAX_ROWS, Math.max(MIN_ROWS, linesUsed()))
   if (rows > terminal.rows) terminal.resize(terminal.cols, rows)
 }
 

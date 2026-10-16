@@ -58,10 +58,19 @@ export function decryptHeadings(root: HTMLElement) {
   }
 }
 
+/** Puts every title back to its real text (used before printing). */
+export function settleHeadings(root: HTMLElement) {
+  for (const heading of root.querySelectorAll<HTMLElement>('[data-text]')) {
+    heading.dataset.settled = ''
+    heading.textContent = heading.dataset.text ?? ''
+  }
+}
+
 function decrypt(heading: HTMLElement) {
   const text = heading.dataset.text ?? ''
   let step = 0
   const timer = setInterval(() => {
+    if (heading.dataset.settled !== undefined) return clearInterval(timer)
     step++
     const revealed = Math.floor((text.length * step) / DECRYPT_STEPS)
     heading.textContent = [...text]

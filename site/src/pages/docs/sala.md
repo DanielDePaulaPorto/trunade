@@ -19,6 +19,7 @@ A página da aula foi pensada para o telão: fundo branco no tema claro, nenhuma
 | <kbd>W</kbd> | largura do texto: estreita ou página inteira |
 | <kbd>F</kbd> | tela cheia (<kbd>Esc</kbd> ou <kbd>F</kbd> sai) |
 | <kbd>D</kbd> | tema: automático, claro, escuro |
+| <kbd>⌘P</kbd> ou <kbd>Ctrl+P</kbd> | exportar PDF |
 | <kbd>O</kbd> | configurações (também no ☰) |
 | <kbd>⇧ Enter</kbd> | rodar o bloco, com o cursor no código |
 | <kbd>Esc</kbd> | sair do código ou do terminal |
@@ -37,6 +38,10 @@ O ☰ no canto abre o painel com:
 - **Idioma.** Português ou inglês.
 
 As escolhas ficam em `~/.config/trunade/preferences.toml` e valem para todas as aulas, em qualquer porta. O arquivo pode ser editado à mão.
+
+## Exportar PDF
+
+No ☰, **Exportar PDF** (ou <kbd>⌘P</kbd>) abre a impressão do navegador; escolha "Salvar como PDF". O arquivo sai como a aula está na tela, com as cores, o código editado e as saídas já executadas, além de todos os passos abertos e as respostas das perguntas marcadas. O nome sugerido é o do `.md`.
 
 ## O símbolo no canto
 

@@ -19,6 +19,7 @@ The lesson page is built for the projector: white background in the light theme,
 | <kbd>W</kbd> | text width: narrow or full page |
 | <kbd>F</kbd> | full screen (<kbd>Esc</kbd> or <kbd>F</kbd> leaves) |
 | <kbd>D</kbd> | theme: automatic, light, dark |
+| <kbd>⌘P</kbd> or <kbd>Ctrl+P</kbd> | export PDF |
 | <kbd>O</kbd> | settings (also under ☰) |
 | <kbd>⇧ Enter</kbd> | run the block, with the cursor in the code |
 | <kbd>Esc</kbd> | leave the code or the terminal |
@@ -37,6 +38,10 @@ The ☰ in the corner opens the panel with:
 - **Language.** Portuguese or English.
 
 Choices are saved in `~/.config/trunade/preferences.toml` and apply to every lesson, on any port. You can edit the file by hand.
+
+## Export PDF
+
+In ☰, **Export PDF** (or <kbd>⌘P</kbd>) opens the browser print dialog; pick "Save as PDF". The file looks like the lesson on screen, with colors, edited code and the outputs already run, plus every step open and quiz answers checked. The suggested name is the `.md` name.
 
 ## The symbol in the corner
 

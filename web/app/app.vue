@@ -2,6 +2,7 @@
 const { snapshot, connected, lastError, activeRuns } = useConnection()
 const { growFont, shrinkFont, resetFont, cycleTheme, toggleLayoutWidth } = usePreferences()
 const { t } = useI18n()
+const { printLesson } = usePrint()
 
 const settingsOpen = ref(false)
 const topicsOpen = ref(false)
@@ -40,12 +41,24 @@ function isTyping(target: EventTarget | null) {
 }
 
 function onKey(event: KeyboardEvent) {
+  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'p') {
+    event.preventDefault()
+    printLesson(snapshot.value?.fileName)
+    return
+  }
   if (event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return
   if (settingsOpen.value || topicsOpen.value || isTyping(event.target)) return
   const action = SHORTCUTS[event.key]
   if (!action) return
   event.preventDefault()
   action(event)
+}
+
+/** Close the panel first so it is not in the PDF. */
+async function exportPdf() {
+  settingsOpen.value = false
+  await nextTick()
+  printLesson(snapshot.value?.fileName)
 }
 
 onMounted(() => window.addEventListener('keydown', onKey))
@@ -72,7 +85,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
     </main>
 
     <Transition name="slide">
-      <SettingsPanel v-if="settingsOpen" @close="settingsOpen = false" />
+      <SettingsPanel v-if="settingsOpen" @close="settingsOpen = false" @print="exportPdf" />
     </Transition>
     <Transition name="fade">
       <TopicsModal v-if="topicsOpen" @close="topicsOpen = false" />
