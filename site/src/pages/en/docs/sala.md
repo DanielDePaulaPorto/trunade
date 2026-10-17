@@ -19,7 +19,7 @@ The lesson page is built for the projector: white background in the light theme,
 | <kbd>W</kbd> | text width: narrow or full page |
 | <kbd>F</kbd> | full screen (<kbd>Esc</kbd> or <kbd>F</kbd> leaves) |
 | <kbd>Z</kbd> | zooms the code block in use (or the one nearest the middle of the screen) to fill the screen; <kbd>Esc</kbd> returns |
-| <kbd>R</kbd> | run all: every block with fixed input, in order |
+| <kbd>R</kbd> | run all: every block, in order |
 | <kbd>D</kbd> | theme: automatic, light, dark |
 | <kbd>⌘P</kbd> or <kbd>Ctrl+P</kbd> | export PDF |
 | <kbd>O</kbd> | settings (also under ☰) |
@@ -43,7 +43,7 @@ Choices are saved in `~/.config/trunade/preferences.toml` and apply to every les
 
 ## Run all
 
-In ☰, **Run all** (or <kbd>R</kbd>) runs in order every block with `stdin` or `expected`, to check the lesson before class or before exporting the PDF. Interactive blocks are skipped, since they would wait for someone to type. A bar at the bottom shows the progress and, at the end, how many passed and which failed (compilation, runtime error, output other than expected); clicking a line takes you to the block, opening its step if it is inside one.
+In ☰ › Run and export, **Run all** (or <kbd>R</kbd>) runs every block in order, to check the lesson before class or before exporting. Blocks without `stdin` run once with empty input and a time limit: one that reads nothing runs as usual, and one that would wait for someone to type ends instead of blocking the queue. A bar at the bottom shows the progress and, at the end, how many passed and which failed (compilation, runtime error, output other than expected); clicking a line takes you to the block, opening its step if it is inside one.
 
 ## Export PDF
 
@@ -51,10 +51,11 @@ In ☰, **Export PDF** (or <kbd>⌘P</kbd>) opens the browser print dialog; pick
 
 ## Export HTML
 
-In ☰, **Export HTML** writes a single `.html` file next to the `.md` (with a `-1`, `-2`… suffix if the name is taken), without asking anything. It opens in any browser, without Trunade! and offline: the page, the fonts in use, formulas, diagrams and images travel inside the file (about 2 MB).
+In ☰ › Run and export, **Export HTML** writes a single `.html` file next to the `.md` (with a `-1`, `-2`… suffix if the name is taken), without asking anything. It opens in any browser, without Trunade! and offline: the page, the fonts in use, formulas, diagrams and images travel inside the file (about 2 MB).
 
 - ▶ replays the last run of each block, with colors and verdicts, as if it ran. A block that was not run has no output and says so when clicked.
-- With **Run every block with fixed input first** checked, blocks with `stdin`/`expected` run before writing. Interactive blocks only carry output if you ran them.
+- The file's theme is **light** by default; dark is an option next to the button.
+- With **Run every block first** (checked by default), every block runs before writing, so none is left without output. Unchecked, the last run of each block goes in, and a block never run has no output.
 - The file stays as it was on screen, like a PDF: same theme, fonts and width, code with your edits, no settings panel and no editing. Navigation (<kbd>T</kbd>, <kbd>Space</kbd>, arrows), <kbd>F</kbd>, <kbd>Z</kbd> and <kbd>R</kbd> still work.
 - Quiz answers stay hidden until clicked, as in class.
 

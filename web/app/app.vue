@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { staticLesson } from '~/composables/useStatic'
+import type { HtmlExportOptions } from '~/components/SettingsPanel.vue'
 
 const { snapshot, connected, lastError, activeRuns } = useConnection()
 const { growFont, shrinkFont, resetFont, cycleTheme, toggleLayoutWidth } = usePreferences()
@@ -67,9 +68,9 @@ function onKey(event: KeyboardEvent) {
   action(event)
 }
 
-function exportHtmlFromPanel(runFirst: boolean) {
+function exportHtmlFromPanel(options: HtmlExportOptions) {
   settingsOpen.value = false
-  useExport().exportHtml(runFirst)
+  useExport().exportHtml(options)
 }
 
 function runAllFromPanel() {

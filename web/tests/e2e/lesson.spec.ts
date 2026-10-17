@@ -96,23 +96,29 @@ test('Z zooms a block and Esc returns', async ({ page }) => {
   await expect(page.locator('.code-cell.zoomed')).toHaveCount(0)
 })
 
-test('run all reports the failing block', async ({ page }) => {
+test('run all runs every block and reports the failing ones', async ({ page }) => {
   await pressShortcut(page, 'r')
   const status = page.locator('.run-all')
   await expect(status.locator('.run-all-ok')).toContainText('2', { timeout: 30_000 })
-  await expect(status.locator('.run-all-failed')).toContainText('1')
+  await expect(status.locator('.run-all-failed')).toContainText('2')
+  // the interactive block runs with empty input: input() hits end of file
+  await expect(status.getByRole('button', { name: 'linha 16' })).toBeVisible()
+  await expect(terminalText(block(page, 1))).toContainText('EOFError')
   await expect(status.getByRole('button', { name: 'linha 23' })).toBeVisible()
 })
 
 test('exported HTML works without the server and replays runs', async ({ page }) => {
   await page.locator('.menu-button').click()
+  await page.getByRole('button', { name: /Rodar e exportar/ }).click()
   await page.getByRole('button', { name: 'Exportar HTML' }).click()
   const status = page.locator('.export-status')
   await expect(status).toContainText('HTML salvo em', { timeout: 30_000 })
   const path = (await status.innerText()).replace(/^.*HTML salvo em\s*/s, '').trim()
   rmOnExit.push(path)
 
+  await page.emulateMedia({ colorScheme: 'dark' }) // the file must not follow the system
   await page.goto(`file://${path}`)
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light')
   await expect(page).toHaveTitle('lesson.md · Trunade!')
   await expect(page.locator('.offline')).toHaveCount(0)
   await expect(page.locator('.menu-button')).toHaveCount(0)
@@ -126,7 +132,7 @@ test('exported HTML works without the server and replays runs', async ({ page })
   await expect(terminalText(cases)).toContainText('esperado «7», saiu «6»')
   const interactive = block(page, 1)
   await interactive.getByTitle('Executar (Shift+Enter)').click()
-  await expect(terminalText(interactive)).toContainText('não foi rodado antes da exportação')
+  await expect(terminalText(interactive)).toContainText('EOFError')
 })
 
 test('runs reach the usage log', async ({ page }) => {

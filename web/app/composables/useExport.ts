@@ -42,7 +42,8 @@ export function exportFinished(path: string | null, error: string | null) {
   state.value = path ? { phase: 'done', path } : { phase: 'failed', error: error ?? '?' }
 }
 
-async function exportHtml(runFirst: boolean) {
+/** Light by default: the file is read later, often printed or projected. */
+async function exportHtml({ runFirst, theme }: { runFirst: boolean; theme: 'light' | 'dark' }) {
   const { snapshot, send } = useConnection()
   if (!snapshot.value) return
   if (runFirst) {
@@ -59,7 +60,7 @@ async function exportHtml(runFirst: boolean) {
   )
   const lesson: StaticLesson = {
     snapshot: { ...snapshot.value, cells: await withInlineImages(withPageEdits(snapshot.value.cells, edits)) },
-    preferences: frozenPreferences(),
+    preferences: fixedPreferences(theme),
     runs,
     diagrams: drawnDiagrams(),
     exportedAt: new Date().toISOString(),
@@ -67,10 +68,11 @@ async function exportHtml(runFirst: boolean) {
   send({ type: 'exportHtml', lesson, fonts: fontsInUse() })
 }
 
-/** "Automatic" would follow the reader's system: keep the theme shown now. */
-function frozenPreferences() {
-  const { preferencesFile, theme, codeTheme } = usePreferences()
-  return { ...preferencesFile(), theme: theme.value, code_theme: codeTheme.value }
+/** The chosen theme, never "automatic" (it would follow the reader's system). */
+function fixedPreferences(theme: 'light' | 'dark') {
+  const { preferencesFile, codeThemeMode } = usePreferences()
+  const codeTheme = codeThemeMode.value === 'auto' ? theme : codeThemeMode.value
+  return { ...preferencesFile(), theme, code_theme: codeTheme }
 }
 
 /** Family names the exported CSS must keep (first name of each stack). */

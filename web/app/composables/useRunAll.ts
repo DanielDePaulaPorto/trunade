@@ -1,11 +1,10 @@
 /*
- * Runs, one after the other, every block with fixed input (test cases), to
- * check a lesson before class or before exporting the PDF. Interactive blocks
- * are skipped: they would wait for someone to type.
+ * Runs every block, one after the other, to check a lesson before class or
+ * before exporting. A block without fixed input runs once with empty input
+ * (pipes and time limit), so a program that waits for the keyboard ends
+ * instead of hanging the queue.
  */
 export interface BlockRunner {
-  /** Has test cases, so it runs without anyone typing. */
-  runsAlone: () => boolean
   /** Resolves true when it compiled, exited with 0 and every expected output matched. */
   run: () => Promise<boolean>
   line: number
@@ -39,7 +38,7 @@ function closeReport() {
 
 async function runAll() {
   if (report.value && !report.value.finished) return
-  const blocks = blocksInPageOrder().filter(([, runner]) => runner.runsAlone())
+  const blocks = blocksInPageOrder()
   const current: RunAllReport = reactive({ total: blocks.length, done: 0, failed: [], finished: false })
   report.value = current
   for (const [id, runner] of blocks) {

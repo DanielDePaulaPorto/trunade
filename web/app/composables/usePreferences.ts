@@ -124,7 +124,7 @@ function syncWithServer() {
     const merged = { ...current(), ...known }
     lastSaved = JSON.stringify(toFile(merged))
     apply(merged)
-  })
+  }, { immediate: true }) // the exported HTML has its preferences before this runs
   watch(current, (value) => {
     writeCache(value)
     save(value)

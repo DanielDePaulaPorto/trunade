@@ -4,8 +4,14 @@ import type { IconName } from '~/composables/icons'
 import { BODY_FONTS, CODE_FONTS, TITLE_FONTS, type FontChoice } from '~/composables/fonts'
 import { staticLesson } from '~/composables/useStatic'
 
-const emit = defineEmits<{ close: []; print: []; runAll: []; exportHtml: [runFirst: boolean] }>()
+export interface HtmlExportOptions {
+  runFirst: boolean
+  theme: 'light' | 'dark'
+}
+
+const emit = defineEmits<{ close: []; print: []; runAll: []; exportHtml: [options: HtmlExportOptions] }>()
 const runBeforeExport = ref(true)
+const exportTheme = ref<'light' | 'dark'>('light')
 const { t } = useI18n()
 const { themeMode, codeThemeMode, layoutWidth, locale, fontScale, titleFont, bodyFont, codeFont, growFont, shrinkFont, resetFont } =
   usePreferences()
@@ -54,6 +60,41 @@ const SHORTCUTS = computed(() => [
   { keys: ['Esc'], label: 'shortcutLeave' },
 ] as const)
 
+/* One group open at a time, so the panel fits without scrolling; the last one stays open next time. */
+type Group = 'appearance' | 'fonts' | 'lesson' | 'language' | 'shortcuts'
+const GROUP_KEY = 'trunade.settingsGroup'
+const openGroup = ref<Group | null>(readOpenGroup())
+
+function readOpenGroup(): Group | null {
+  try {
+    return (localStorage.getItem(GROUP_KEY) as Group | null) ?? 'appearance'
+  } catch {
+    return 'appearance'
+  }
+}
+
+function toggleGroup(group: Group) {
+  openGroup.value = openGroup.value === group ? null : group
+  try {
+    if (openGroup.value) localStorage.setItem(GROUP_KEY, openGroup.value)
+    else localStorage.removeItem(GROUP_KEY)
+  } catch {
+    // only a convenience
+  }
+}
+
+const GROUPS = computed(() => {
+  const theme = THEMES.find((option) => option.mode === themeMode.value)!
+  const width = WIDTHS.find((option) => option.value === layoutWidth.value)!
+  return [
+    { id: 'appearance', icon: 'sun', title: t('appearance'), summary: `${t(theme.label)} · ${t(width.label)} · ${Math.round(fontScale.value * 100)}%` },
+    { id: 'fonts', icon: 'font', title: t('fonts'), summary: [TITLE_FONTS[titleFont.value], BODY_FONTS[bodyFont.value], CODE_FONTS[codeFont.value]].map((font) => font.label).join(' · ') },
+    { id: 'lesson', icon: 'printer', title: t('runAndExport'), summary: t('runAndExportSummary') },
+    { id: 'language', icon: 'globe', title: t('language'), summary: LOCALES.find((option) => option.value === locale.value)!.label },
+    { id: 'shortcuts', icon: 'keyboard', title: t('shortcuts'), summary: t('shortcutsSummary') },
+  ] as { id: Group; icon: IconName; title: string; summary: string }[]
+})
+
 function onKey(event: KeyboardEvent) {
   if (event.metaKey || event.ctrlKey || event.altKey) return
   if (event.key === 'Escape' || event.key === 'o') emit('close')
@@ -70,92 +111,94 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <button class="tool" :title="t('close')" @click="emit('close')"><AppIcon name="close" /></button>
       </header>
 
-      <section style="--i: 2">
-        <button class="export-button" @click="emit('runAll')"><AppIcon name="play" />{{ t('runAll') }}</button>
-        <p class="hint">{{ t('runAllHint') }}</p>
-        <button class="export-button" @click="emit('print')"><AppIcon name="printer" />{{ t('exportPdf') }}</button>
-        <p class="hint">{{ t('exportPdfHint') }}</p>
-        <template v-if="!staticLesson">
-          <button class="export-button" @click="emit('exportHtml', runBeforeExport)"><AppIcon name="code" />{{ t('exportHtml') }}</button>
-          <label class="check-option"><input v-model="runBeforeExport" type="checkbox">{{ t('exportRunFirst') }}</label>
-          <p class="hint">{{ t('exportHtmlHint') }}</p>
-        </template>
-      </section>
+      <section v-for="(group, index) in GROUPS" :key="group.id" class="settings-group" :style="{ '--i': index + 2 }">
+        <button class="group-header" :aria-expanded="openGroup === group.id" @click="toggleGroup(group.id)">
+          <span class="group-icon"><AppIcon :name="group.icon" /></span>
+          <span class="group-text">
+            <strong>{{ group.title }}</strong>
+            <small>{{ group.summary }}</small>
+          </span>
+          <AppIcon name="chevronRight" class="group-chevron" />
+        </button>
 
-      <section style="--i: 2">
-        <h3><AppIcon name="type" />{{ t('fontSize') }}</h3>
-        <div class="stepper">
-          <button class="tool" @click="shrinkFont"><AppIcon name="minus" /></button>
-          <span class="stepper-value">{{ Math.round(fontScale * 100) }}%</span>
-          <button class="tool" @click="growFont"><AppIcon name="plus" /></button>
-          <button class="tool" :disabled="fontScale === 1" @click="resetFont"><AppIcon name="reset" /></button>
-        </div>
-        <p class="hint">{{ t('fontSizeHint') }}</p>
-      </section>
+        <div v-if="openGroup === group.id" class="group-body">
+          <template v-if="group.id === 'appearance'">
+            <h3>{{ t('theme') }}</h3>
+            <div class="segmented">
+              <button v-for="option in THEMES" :key="option.mode" :class="{ active: themeMode === option.mode }" @click="themeMode = option.mode">
+                <AppIcon :name="option.icon" />{{ t(option.label) }}
+              </button>
+            </div>
+            <h3>{{ t('codeColors') }}</h3>
+            <div class="segmented">
+              <button v-for="option in CODE_THEMES" :key="option.mode" :class="{ active: codeThemeMode === option.mode }" @click="codeThemeMode = option.mode">
+                {{ t(option.label) }}
+              </button>
+            </div>
+            <h3>{{ t('textWidth') }}</h3>
+            <div class="segmented">
+              <button v-for="option in WIDTHS" :key="option.value" :class="{ active: layoutWidth === option.value }" @click="layoutWidth = option.value">
+                <AppIcon :name="option.icon" />{{ t(option.label) }}
+              </button>
+            </div>
+            <h3>{{ t('fontSize') }}</h3>
+            <div class="stepper">
+              <button class="tool" @click="shrinkFont"><AppIcon name="minus" /></button>
+              <span class="stepper-value">{{ Math.round(fontScale * 100) }}%</span>
+              <button class="tool" @click="growFont"><AppIcon name="plus" /></button>
+              <button class="tool" :disabled="fontScale === 1" @click="resetFont"><AppIcon name="reset" /></button>
+            </div>
+          </template>
 
-      <section style="--i: 3">
-        <h3><AppIcon name="font" />{{ t('fonts') }}</h3>
-        <div v-for="group in FONT_GROUPS" :key="group.label" class="font-group">
-          <p class="font-group-label">{{ t(group.label) }}</p>
-          <div class="font-options">
-            <button
-              v-for="(font, id) in group.fonts"
-              :key="id"
-              :class="{ active: group.model.value === id }"
-              :style="{ fontFamily: font.family, fontWeight: font.weight }"
-              @click="group.model.value = id"
-            >
-              {{ font.label }}
+          <template v-else-if="group.id === 'fonts'">
+            <div v-for="fontGroup in FONT_GROUPS" :key="fontGroup.label" class="font-group">
+              <h3>{{ t(fontGroup.label) }}</h3>
+              <div class="font-options">
+                <button
+                  v-for="(font, id) in fontGroup.fonts"
+                  :key="id"
+                  :class="{ active: fontGroup.model.value === id }"
+                  :style="{ fontFamily: font.family, fontWeight: font.weight }"
+                  @click="fontGroup.model.value = id"
+                >
+                  {{ font.label }}
+                </button>
+              </div>
+            </div>
+            <p class="hint">{{ t('preferencesSaved') }}</p>
+          </template>
+
+          <template v-else-if="group.id === 'lesson'">
+            <button class="export-button" @click="emit('runAll')"><AppIcon name="play" />{{ t('runAll') }}</button>
+            <p class="hint">{{ t('runAllHint') }}</p>
+            <button class="export-button" @click="emit('print')"><AppIcon name="printer" />{{ t('exportPdf') }}</button>
+            <p class="hint">{{ t('exportPdfHint') }}</p>
+            <div class="export-html">
+              <div class="segmented" role="group" :aria-label="t('exportHtmlTheme')">
+                <button :class="{ active: exportTheme === 'light' }" @click="exportTheme = 'light'"><AppIcon name="sun" />{{ t('themeLight') }}</button>
+                <button :class="{ active: exportTheme === 'dark' }" @click="exportTheme = 'dark'"><AppIcon name="moon" />{{ t('themeDark') }}</button>
+              </div>
+              <label class="check-option"><input v-model="runBeforeExport" type="checkbox">{{ t('exportRunFirst') }}</label>
+              <button class="export-button" @click="emit('exportHtml', { runFirst: runBeforeExport, theme: exportTheme })">
+                <AppIcon name="code" />{{ t('exportHtml') }}
+              </button>
+            </div>
+            <p class="hint">{{ t('exportHtmlHint') }}</p>
+          </template>
+
+          <div v-else-if="group.id === 'language'" class="segmented">
+            <button v-for="option in LOCALES" :key="option.value" :class="{ active: locale === option.value }" @click="locale = option.value">
+              {{ option.label }}
             </button>
           </div>
-        </div>
-        <p class="hint">{{ t('preferencesSaved') }}</p>
-      </section>
 
-      <section style="--i: 4">
-        <h3><AppIcon name="sun" />{{ t('theme') }}</h3>
-        <div class="segmented">
-          <button v-for="option in THEMES" :key="option.mode" :class="{ active: themeMode === option.mode }" @click="themeMode = option.mode">
-            <AppIcon :name="option.icon" />{{ t(option.label) }}
-          </button>
+          <dl v-else class="shortcuts">
+            <template v-for="shortcut in SHORTCUTS" :key="shortcut.label">
+              <dt><kbd v-for="key in shortcut.keys" :key="key">{{ key }}</kbd></dt>
+              <dd>{{ t(shortcut.label) }}</dd>
+            </template>
+          </dl>
         </div>
-      </section>
-
-      <section style="--i: 5">
-        <h3><AppIcon name="wide" />{{ t('textWidth') }}</h3>
-        <div class="segmented">
-          <button v-for="option in WIDTHS" :key="option.value" :class="{ active: layoutWidth === option.value }" @click="layoutWidth = option.value">
-            <AppIcon :name="option.icon" />{{ t(option.label) }}
-          </button>
-        </div>
-      </section>
-
-      <section style="--i: 6">
-        <h3><AppIcon name="code" />{{ t('codeColors') }}</h3>
-        <div class="segmented">
-          <button v-for="option in CODE_THEMES" :key="option.mode" :class="{ active: codeThemeMode === option.mode }" @click="codeThemeMode = option.mode">
-            {{ t(option.label) }}
-          </button>
-        </div>
-      </section>
-
-      <section style="--i: 7">
-        <h3><AppIcon name="globe" />{{ t('language') }}</h3>
-        <div class="segmented">
-          <button v-for="option in LOCALES" :key="option.value" :class="{ active: locale === option.value }" @click="locale = option.value">
-            {{ option.label }}
-          </button>
-        </div>
-      </section>
-
-      <section style="--i: 8">
-        <h3><AppIcon name="keyboard" />{{ t('shortcuts') }}</h3>
-        <dl class="shortcuts">
-          <template v-for="shortcut in SHORTCUTS" :key="shortcut.label">
-            <dt><kbd v-for="key in shortcut.keys" :key="key">{{ key }}</kbd></dt>
-            <dd>{{ t(shortcut.label) }}</dd>
-          </template>
-        </dl>
       </section>
     </aside>
   </div>

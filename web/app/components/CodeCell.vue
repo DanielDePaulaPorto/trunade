@@ -29,6 +29,7 @@ let runId: string | null = null
 let endsWithNewline = true
 let casesStarted = 0
 let settle: ((passed: boolean) => void) | null = null
+let casesSent: TestCase[] = []
 // What the server sent for the run on screen, for the HTML export.
 let recording: RunRecord | null = null
 let recordingStart = 0
@@ -67,11 +68,12 @@ function runWithSpark(event?: MouseEvent) {
 
 /** For "run all": resolves once this run finishes, true if everything passed. */
 function runAndWait() {
-  run()
+  run({ unattended: true })
   return new Promise<boolean>((resolve) => (settle = resolve))
 }
 
-function run() {
+/** Unattended runs never wait for the keyboard: no fixed input means empty input. */
+function run({ unattended = false } = {}) {
   if (busy.value) stop()
   settle?.(false)
   settle = null
@@ -88,7 +90,11 @@ function run() {
   status.value = 'compiling'
   terminal.value?.reset()
   onRun(runId, handle)
-  send({ type: 'run', runId, cellId: props.cell.id, source: source.value, cases: cases.value, ...terminal.value?.size() })
+  // The exported HTML replays what was recorded, with the cases shown.
+  const emptyInput = unattended && !cases.value.length && !staticLesson
+  const sent = emptyInput ? [{ stdin: '', expected: null }] : cases.value
+  casesSent = sent
+  send({ type: 'run', runId, cellId: props.cell.id, source: source.value, cases: sent, ...terminal.value?.size() })
 }
 
 function stop() {
@@ -191,14 +197,14 @@ function quoted(line: string | null) {
 }
 
 function passed(outcome: Outcome) {
-  const allCasesRan = casesStarted === cases.value.length
+  const allCasesRan = casesStarted === Math.max(1, casesSent.length)
   return outcome.kind === 'exited' && allCasesRan && caseResults.value.every((result) => result !== 'rejected')
 }
 
 function caseResult(index: number, outcome: Outcome, verdict: Verdict | null): CaseResult {
   if (verdict) return verdict.kind === 'accepted' ? 'accepted' : 'rejected'
   const clean = outcome.kind === 'exited' && outcome.code === 0
-  return clean && cases.value[index]?.expected === null ? 'ran' : 'rejected'
+  return clean && (casesSent[index]?.expected ?? null) === null ? 'ran' : 'rejected'
 }
 
 function describe(outcome: Outcome): string {
@@ -237,7 +243,7 @@ registerExportable(props.cell.id, {
 })
 
 const { registerRunner, unregisterRunner } = useRunAll()
-registerRunner(props.cell.id, { runsAlone: () => cases.value.length > 0, run: runAndWait, line: props.cell.line })
+registerRunner(props.cell.id, { run: runAndWait, line: props.cell.line })
 
 onBeforeUnmount(() => {
   unregisterRunner(props.cell.id)

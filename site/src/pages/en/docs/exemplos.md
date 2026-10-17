@@ -455,4 +455,4 @@ int main() {
 <!-- /steps -->
 ~~~
 
-Before class, press <kbd>R</kbd> to run every block with fixed input and make sure nothing broke. Then export the PDF or the HTML from ☰.
+Before class, press <kbd>R</kbd> to run every block and make sure nothing broke. Then export the PDF or the HTML from ☰.

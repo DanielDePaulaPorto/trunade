@@ -19,7 +19,7 @@ A página da aula foi pensada para o telão: fundo branco no tema claro, nenhuma
 | <kbd>W</kbd> | largura do texto: estreita ou página inteira |
 | <kbd>F</kbd> | tela cheia (<kbd>Esc</kbd> ou <kbd>F</kbd> sai) |
 | <kbd>Z</kbd> | amplia o bloco de código em uso (ou o mais perto do meio da tela) até ocupar a tela; <kbd>Esc</kbd> volta |
-| <kbd>R</kbd> | rodar tudo: todos os blocos com entrada fixa, em ordem |
+| <kbd>R</kbd> | rodar tudo: todos os blocos, em ordem |
 | <kbd>D</kbd> | tema: automático, claro, escuro |
 | <kbd>⌘P</kbd> ou <kbd>Ctrl+P</kbd> | exportar PDF |
 | <kbd>O</kbd> | configurações (também no ☰) |
@@ -43,7 +43,7 @@ As escolhas ficam em `~/.config/trunade/preferences.toml` e valem para todas as 
 
 ## Rodar tudo
 
-No ☰, **Rodar tudo** (ou <kbd>R</kbd>) roda em ordem todos os blocos com `stdin` ou `expected`, para conferir a aula antes da sala ou antes de exportar o PDF. Blocos interativos ficam de fora, porque esperariam alguém digitar. Uma barra embaixo mostra o progresso e, no fim, quantos passaram e quais falharam (compilação, erro de execução, saída diferente da esperada); clicar na linha leva ao bloco, abrindo o passo se ele estiver dentro de um.
+Em ☰ › Rodar e exportar, **Rodar tudo** (ou <kbd>R</kbd>) roda em ordem todos os blocos, para conferir a aula antes da sala ou antes de exportar. Blocos sem `stdin` rodam uma vez com a entrada vazia e com tempo limite: quem não lê nada roda normalmente, e quem esperaria alguém digitar termina em vez de travar a fila. Uma barra embaixo mostra o progresso e, no fim, quantos passaram e quais falharam (compilação, erro de execução, saída diferente da esperada); clicar na linha leva ao bloco, abrindo o passo se ele estiver dentro de um.
 
 ## Exportar PDF
 
@@ -51,10 +51,11 @@ No ☰, **Exportar PDF** (ou <kbd>⌘P</kbd>) abre a impressão do navegador; es
 
 ## Exportar HTML
 
-No ☰, **Exportar HTML** grava um único arquivo `.html` ao lado do `.md` (com sufixo `-1`, `-2`… se o nome já existir), sem perguntar nada. Ele abre em qualquer navegador, sem o Trunade! e sem internet: a página, as fontes em uso, fórmulas, diagramas e imagens vão dentro do arquivo (cerca de 2 MB).
+Em ☰ › Rodar e exportar, **Exportar HTML** grava um único arquivo `.html` ao lado do `.md` (com sufixo `-1`, `-2`… se o nome já existir), sem perguntar nada. Ele abre em qualquer navegador, sem o Trunade! e sem internet: a página, as fontes em uso, fórmulas, diagramas e imagens vão dentro do arquivo (cerca de 2 MB).
 
 - O ▶ reproduz a última execução de cada bloco, com as cores e os vereditos, como se rodasse. Um bloco que não foi rodado fica sem saída e avisa ao clicar.
-- Marcada a opção **Rodar todos os blocos com entrada fixa antes**, os blocos com `stdin`/`expected` rodam antes de gravar. Blocos interativos só levam saída se você os tiver rodado.
+- O tema do arquivo é **claro** por padrão; escuro é uma opção ao lado do botão.
+- Com **Rodar todos os blocos antes** (marcada por padrão), todo bloco roda antes de gravar, então nenhum fica sem saída. Desmarcada, vai a última execução de cada bloco, e um bloco nunca rodado fica sem saída.
 - O arquivo fica como estava na tela, como um PDF: mesmo tema, fontes e largura, código com as edições, sem painel de configurações e sem edição. Valem a navegação (<kbd>T</kbd>, <kbd>Espaço</kbd>, setas), <kbd>F</kbd>, <kbd>Z</kbd> e <kbd>R</kbd>.
 - As respostas das perguntas continuam ocultas até clicar, como na aula.
 

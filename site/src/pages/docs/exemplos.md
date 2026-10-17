@@ -455,4 +455,4 @@ int main() {
 <!-- /steps -->
 ~~~
 
-Antes da aula, aperte <kbd>R</kbd> para rodar todos os blocos com entrada fixa e confirmar que nada quebrou. Depois, exporte o PDF ou o HTML pelo ☰.
+Antes da aula, aperte <kbd>R</kbd> para rodar todos os blocos e confirmar que nada quebrou. Depois, exporte o PDF ou o HTML pelo ☰.
