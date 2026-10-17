@@ -306,7 +306,13 @@ onBeforeUnmount(() => {
         :language="cell.fenceLanguage"
         readonly
       />
-      <CodeEditor v-model="source" :language="cell.fenceLanguage" :first-line="beforeLines + 1" @run="runWithSpark()" />
+      <CodeEditor
+        v-model="source"
+        :language="cell.fenceLanguage"
+        :first-line="beforeLines + 1"
+        :readonly="!!staticLesson"
+        @run="runWithSpark()"
+      />
       <CodeEditor
         v-if="showAfter"
         class="hidden-part"
@@ -326,11 +332,11 @@ onBeforeUnmount(() => {
         </span>
         <label class="stdin" :title="t('stdin')">
           <AppIcon name="keyboard" class="stdin-icon" />
-          <textarea v-model="testCase.stdin" :rows="rows(testCase.stdin)" spellcheck="false" :aria-label="t('stdin')" />
+          <textarea v-model="testCase.stdin" :readonly="!!staticLesson" :rows="rows(testCase.stdin)" spellcheck="false" :aria-label="t('stdin')" />
         </label>
         <label v-if="testCase.expected !== null" class="stdin expected" :title="t('expectedOutput')">
           <AppIcon name="equal" class="stdin-icon" />
-          <textarea v-model="testCase.expected" :rows="rows(testCase.expected)" spellcheck="false" :aria-label="t('expectedOutput')" />
+          <textarea v-model="testCase.expected" :readonly="!!staticLesson" :rows="rows(testCase.expected)" spellcheck="false" :aria-label="t('expectedOutput')" />
         </label>
       </div>
       <TerminalOutput v-show="hasOutput" ref="terminal" :scale="scale" @input="input" />

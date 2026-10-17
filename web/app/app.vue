@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { staticLesson } from '~/composables/useStatic'
+
 const { snapshot, connected, lastError, activeRuns } = useConnection()
 const { growFont, shrinkFont, resetFont, cycleTheme, toggleLayoutWidth } = usePreferences()
 const { t } = useI18n()
@@ -32,6 +34,9 @@ const SHORTCUTS: Record<string, (event: KeyboardEvent) => void> = {
   r: runAll,
 }
 
+/** The exported HTML is shown as exported, like a PDF: no theme, width, font or settings changes. */
+const STATIC_SHORTCUTS = new Set(['t', ' ', 'ArrowDown', 'ArrowUp', 'PageDown', 'PageUp', 'f', 'z', 'r'])
+
 /** With a block zoomed, moving through the page makes no sense. */
 const ZOOM_SHORTCUTS = new Set(['z', 'f', 'd', '+', '=', '-', '0'])
 
@@ -55,6 +60,7 @@ function onKey(event: KeyboardEvent) {
   if (event.metaKey || event.ctrlKey || event.altKey || event.defaultPrevented) return
   if (zoomedCell.value && event.key === 'Escape') return closeZoom()
   if (settingsOpen.value || topicsOpen.value || isTyping(event.target)) return
+  if (staticLesson && !STATIC_SHORTCUTS.has(event.key)) return
   const action = SHORTCUTS[event.key]
   if (!action || (zoomedCell.value && !ZOOM_SHORTCUTS.has(event.key))) return
   event.preventDefault()
@@ -91,7 +97,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="page">
-    <button class="menu-button" :title="t('settings')" @click="settingsOpen = true">
+    <button v-if="!staticLesson" class="menu-button" :title="t('settings')" @click="settingsOpen = true">
       <AppIcon name="menu" />
     </button>
     <p v-if="!connected" class="offline">{{ t('reconnecting') }}</p>

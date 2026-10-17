@@ -59,12 +59,18 @@ async function exportHtml(runFirst: boolean) {
   )
   const lesson: StaticLesson = {
     snapshot: { ...snapshot.value, cells: await withInlineImages(withPageEdits(snapshot.value.cells, edits)) },
-    preferences: usePreferences().preferencesFile(),
+    preferences: frozenPreferences(),
     runs,
     diagrams: drawnDiagrams(),
     exportedAt: new Date().toISOString(),
   }
   send({ type: 'exportHtml', lesson, fonts: fontsInUse() })
+}
+
+/** "Automatic" would follow the reader's system: keep the theme shown now. */
+function frozenPreferences() {
+  const { preferencesFile, theme, codeTheme } = usePreferences()
+  return { ...preferencesFile(), theme: theme.value, code_theme: codeTheme.value }
 }
 
 /** Family names the exported CSS must keep (first name of each stack). */

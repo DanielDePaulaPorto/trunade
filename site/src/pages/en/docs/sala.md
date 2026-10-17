@@ -55,7 +55,7 @@ In ☰, **Export HTML** writes a single `.html` file next to the `.md` (with a `
 
 - ▶ replays the last run of each block, with colors and verdicts, as if it ran. A block that was not run has no output and says so when clicked.
 - With **Run every block with fixed input first** checked, blocks with `stdin`/`expected` run before writing. Interactive blocks only carry output if you ran them.
-- The code goes as it is on screen, edits included. Editing in the exported file works, but ▶ only replays the original code.
+- The file stays as it was on screen, like a PDF: same theme, fonts and width, code with your edits, no settings panel and no editing. Navigation (<kbd>T</kbd>, <kbd>Space</kbd>, arrows), <kbd>F</kbd>, <kbd>Z</kbd> and <kbd>R</kbd> still work.
 - Quiz answers stay hidden until clicked, as in class.
 
 ## The symbol in the corner

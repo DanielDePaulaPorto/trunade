@@ -55,7 +55,7 @@ No ☰, **Exportar HTML** grava um único arquivo `.html` ao lado do `.md` (com 
 
 - O ▶ reproduz a última execução de cada bloco, com as cores e os vereditos, como se rodasse. Um bloco que não foi rodado fica sem saída e avisa ao clicar.
 - Marcada a opção **Rodar todos os blocos com entrada fixa antes**, os blocos com `stdin`/`expected` rodam antes de gravar. Blocos interativos só levam saída se você os tiver rodado.
-- O código vai como está na tela, com as edições. Editar no arquivo exportado funciona, mas o ▶ só reproduz o código original.
+- O arquivo fica como estava na tela, como um PDF: mesmo tema, fontes e largura, código com as edições, sem painel de configurações e sem edição. Valem a navegação (<kbd>T</kbd>, <kbd>Espaço</kbd>, setas), <kbd>F</kbd>, <kbd>Z</kbd> e <kbd>R</kbd>.
 - As respostas das perguntas continuam ocultas até clicar, como na aula.
 
 ## O símbolo no canto
