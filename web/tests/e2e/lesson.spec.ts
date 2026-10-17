@@ -1,6 +1,10 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { readdirSync, readFileSync, rmSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test, type Locator, type Page } from '@playwright/test'
+
+/** Exports are written beside the fixture; do not leave them in the repository. */
+const rmOnExit: string[] = []
+test.afterAll(() => rmOnExit.forEach((path) => rmSync(path, { force: true })))
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')
@@ -98,6 +102,26 @@ test('run all reports the failing block', async ({ page }) => {
   await expect(status.locator('.run-all-ok')).toContainText('2', { timeout: 30_000 })
   await expect(status.locator('.run-all-failed')).toContainText('1')
   await expect(status.getByRole('button', { name: 'linha 23' })).toBeVisible()
+})
+
+test('exported HTML works without the server and replays runs', async ({ page }) => {
+  await page.locator('.menu-button').click()
+  await page.getByRole('button', { name: 'Exportar HTML' }).click()
+  const status = page.locator('.export-status')
+  await expect(status).toContainText('HTML salvo em', { timeout: 30_000 })
+  const path = (await status.innerText()).replace(/^.*HTML salvo em\s*/s, '').trim()
+  rmOnExit.push(path)
+
+  await page.goto(`file://${path}`)
+  await expect(page).toHaveTitle('lesson.md · Trunade!')
+  await expect(page.locator('.offline')).toHaveCount(0)
+  const cases = block(page, 2)
+  await cases.getByTitle('Executar (Shift+Enter)').click()
+  await expect(cases.locator('.case-mark.rejected')).toHaveCount(1)
+  await expect(terminalText(cases)).toContainText('esperado «7», saiu «6»')
+  const interactive = block(page, 1)
+  await interactive.getByTitle('Executar (Shift+Enter)').click()
+  await expect(terminalText(interactive)).toContainText('não foi rodado antes da exportação')
 })
 
 test('runs reach the usage log', async ({ page }) => {

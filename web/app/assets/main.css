@@ -1365,6 +1365,18 @@ kbd {
   margin-bottom: 0.9rem;
 }
 
+.check-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.check-option input {
+  accent-color: var(--brand);
+}
+
 .run-all {
   position: fixed;
   left: 50%;
@@ -1381,6 +1393,10 @@ kbd {
   background: var(--raised);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
+}
+
+.run-all.export-status {
+  bottom: 4.5rem;
 }
 
 .run-all-summary {

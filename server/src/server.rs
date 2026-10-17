@@ -144,6 +144,8 @@ enum ClientMessage {
     #[serde(rename_all = "camelCase")]
     OpenEditor { line: usize },
     SavePreferences { preferences: Preferences },
+    /// The lesson as the page shows it, to save as one HTML file (`export.rs`).
+    ExportHtml { lesson: Value, fonts: Vec<String> },
     /// Something that happened in the page, for the usage log (`PAGE_EVENTS`).
     Log {
         event: String,
@@ -181,6 +183,10 @@ enum ServerMessage {
         outcome: Outcome,
         compile_ms: Option<u128>,
         run_ms: Option<u128>,
+    },
+    Exported {
+        path: Option<String>,
+        error: Option<String>,
     },
     Error {
         message: String,
@@ -303,6 +309,15 @@ fn handle_client_message(message: ClientMessage, state: &AppState, outbox: &Outb
         }
         ClientMessage::Stop { run_id } => control_run(runs, &run_id, Control::Stop),
         ClientMessage::SavePreferences { preferences } => save_preferences(state, outbox, preferences),
+        ClientMessage::ExportHtml { lesson, fonts } => {
+            let result = crate::export::write(&state.document_path, &lesson, &fonts);
+            state.log.record("export", json!({ "ok": result.is_ok() }));
+            let (path, error) = match result {
+                Ok(path) => (Some(path.display().to_string()), None),
+                Err(error) => (None, Some(format!("{error:#}"))),
+            };
+            send(outbox, ServerMessage::Exported { path, error });
+        }
         ClientMessage::Log { event, data } => {
             if PAGE_EVENTS.contains(&event.as_str()) {
                 state.log.record(&event, data);

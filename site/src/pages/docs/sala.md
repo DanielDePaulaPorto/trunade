@@ -49,6 +49,15 @@ No ☰, **Rodar tudo** (ou <kbd>R</kbd>) roda em ordem todos os blocos com `stdi
 
 No ☰, **Exportar PDF** (ou <kbd>⌘P</kbd>) abre a impressão do navegador; escolha "Salvar como PDF". O arquivo sai como a aula está na tela, com as cores, o código editado e as saídas já executadas, além de todos os passos abertos e as respostas das perguntas marcadas. O nome sugerido é o do `.md`.
 
+## Exportar HTML
+
+No ☰, **Exportar HTML** grava um único arquivo `.html` ao lado do `.md` (com sufixo `-1`, `-2`… se o nome já existir), sem perguntar nada. Ele abre em qualquer navegador, sem o Trunade! e sem internet: a página, as fontes em uso, fórmulas, diagramas e imagens vão dentro do arquivo (cerca de 2 MB).
+
+- O ▶ reproduz a última execução de cada bloco, com as cores e os vereditos, como se rodasse. Um bloco que não foi rodado fica sem saída e avisa ao clicar.
+- Marcada a opção **Rodar todos os blocos com entrada fixa antes**, os blocos com `stdin`/`expected` rodam antes de gravar. Blocos interativos só levam saída se você os tiver rodado.
+- O código vai como está na tela, com as edições. Editar no arquivo exportado funciona, mas o ▶ só reproduz o código original.
+- As respostas das perguntas continuam ocultas até clicar, como na aula.
+
 ## O símbolo no canto
 
 O símbolo no cabeçalho mostra se há programa rodando: o rotor gira e os olhos acendem enquanto compila ou executa, e dá uma volta para trás quando termina.

@@ -1,4 +1,10 @@
+import { fileURLToPath } from 'node:url'
+
 // The Rust server serves the generated static app; there is no Node server at runtime.
+// TRUNADE_STATIC=1 builds the variant used to export a lesson as one HTML file:
+// a single JS bundle (no chunks to fetch), no Mermaid, output in .output-static.
+const exportBuild = process.env.TRUNADE_STATIC === '1'
+
 export default defineNuxtConfig({
   compatibilityDate: '2026-10-01',
   ssr: false,
@@ -19,7 +25,6 @@ export default defineNuxtConfig({
   ],
   app: {
     head: {
-      title: 'Trunade!',
       meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
       link: [
         { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
@@ -28,6 +33,18 @@ export default defineNuxtConfig({
       ],
     },
   },
+  ...(exportBuild && {
+    nitro: { output: { dir: '.output-static' } },
+    experimental: { appManifest: false },
+    alias: { mermaid: fileURLToPath(new URL('./app/static/mermaid-stub.ts', import.meta.url)) },
+    vite: {
+      build: {
+        cssCodeSplit: false,
+        assetsInlineLimit: 0,
+        rollupOptions: { output: { codeSplitting: false } },
+      },
+    },
+  }),
   runtimeConfig: {
     public: {
       // In `pnpm dev` the page comes from Nuxt (port 3000) but the backend is the

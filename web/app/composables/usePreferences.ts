@@ -88,6 +88,7 @@ export function usePreferences() {
     shrinkFont: () => setFontScale(fontScale.value - FONT_SCALE.step),
     resetFont: () => setFontScale(1),
     cycleTheme,
+    preferencesFile: () => toFile(current()),
   }
 }
 

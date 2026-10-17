@@ -1,5 +1,7 @@
 import type { RunMessage, ServerMessage, Snapshot } from './types'
 import type { PreferencesFile } from './usePreferences'
+import { staticLesson, staticSend } from './useStatic'
+import { exportFinished } from './useExport'
 
 type RunListener = (message: RunMessage) => void
 
@@ -15,10 +17,20 @@ let socket: WebSocket | null = null
 
 /** Single WebSocket shared by the whole page, reconnecting while the server restarts. */
 export function useConnection() {
-  if (!socket && import.meta.client) {
+  if (staticLesson) {
+    startStatic()
+  } else if (!socket && import.meta.client) {
     connect()
   }
   return { snapshot, connected, lastError, activeRuns, serverPreferences, send, onRun, offRun }
+}
+
+/** Exported HTML: the lesson and preferences come with the file. */
+function startStatic() {
+  if (connected.value) return
+  connected.value = true
+  snapshot.value = staticLesson!.snapshot
+  serverPreferences.value = staticLesson!.preferences
 }
 
 function connect() {
@@ -42,6 +54,9 @@ function dispatch(message: ServerMessage) {
     case 'preferences':
       serverPreferences.value = message.preferences
       break
+    case 'exported':
+      exportFinished(message.path, message.error)
+      break
     case 'error':
       lastError.value = message.message
       break
@@ -58,8 +73,9 @@ function socketUrl(): string {
   return base.toString()
 }
 
-function send(message: object) {
-  socket?.send(JSON.stringify(message))
+function send(message: { type: string; [key: string]: unknown }) {
+  if (staticLesson) staticSend(message, dispatch)
+  else socket?.send(JSON.stringify(message))
 }
 
 function onRun(runId: string, listener: RunListener) {

@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "nuxt dev",
-    "generate": "nuxt generate",
+    "generate": "nuxt generate && TRUNADE_STATIC=1 nuxt generate",
     "postinstall": "nuxt prepare",
     "test:e2e": "nuxt generate && playwright test"
   },

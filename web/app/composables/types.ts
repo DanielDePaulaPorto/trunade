@@ -85,5 +85,6 @@ export type RunMessage =
 export type ServerMessage =
   | { type: 'document'; snapshot: Snapshot }
   | { type: 'preferences'; preferences: PreferencesFile }
+  | { type: 'exported'; path: string | null; error: string | null }
   | { type: 'error'; message: string }
   | RunMessage

@@ -2,8 +2,10 @@
 import type { CodeThemeMode, LayoutWidth, Locale, ThemeMode } from '~/composables/usePreferences'
 import type { IconName } from '~/composables/icons'
 import { BODY_FONTS, CODE_FONTS, TITLE_FONTS, type FontChoice } from '~/composables/fonts'
+import { staticLesson } from '~/composables/useStatic'
 
-const emit = defineEmits<{ close: []; print: []; runAll: [] }>()
+const emit = defineEmits<{ close: []; print: []; runAll: []; exportHtml: [runFirst: boolean] }>()
+const runBeforeExport = ref(true)
 const { t } = useI18n()
 const { themeMode, codeThemeMode, layoutWidth, locale, fontScale, titleFont, bodyFont, codeFont, growFont, shrinkFont, resetFont } =
   usePreferences()
@@ -73,6 +75,11 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
         <p class="hint">{{ t('runAllHint') }}</p>
         <button class="export-button" @click="emit('print')"><AppIcon name="printer" />{{ t('exportPdf') }}</button>
         <p class="hint">{{ t('exportPdfHint') }}</p>
+        <template v-if="!staticLesson">
+          <button class="export-button" @click="emit('exportHtml', runBeforeExport)"><AppIcon name="code" />{{ t('exportHtml') }}</button>
+          <label class="check-option"><input v-model="runBeforeExport" type="checkbox">{{ t('exportRunFirst') }}</label>
+          <p class="hint">{{ t('exportHtmlHint') }}</p>
+        </template>
       </section>
 
       <section style="--i: 2">

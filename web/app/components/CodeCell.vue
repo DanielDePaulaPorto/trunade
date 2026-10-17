@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { CodeCell, Outcome, RunMessage, TestCase, Verdict } from '~/composables/types'
+import { staticLesson, type RecordedMessage, type RunRecord } from '~/composables/useStatic'
 import TerminalOutput from './TerminalOutput.vue'
 import { zoomScale } from '~/composables/useZoom'
 
@@ -28,6 +29,10 @@ let runId: string | null = null
 let endsWithNewline = true
 let casesStarted = 0
 let settle: ((passed: boolean) => void) | null = null
+// What the server sent for the run on screen, for the HTML export.
+let recording: RunRecord | null = null
+let recordingStart = 0
+let lastRun: RunRecord | null = null
 
 const modified = computed(
   () => source.value !== props.cell.source || JSON.stringify(cases.value) !== JSON.stringify(props.cell.cases),
@@ -77,6 +82,9 @@ function run() {
   endsWithNewline = true
   casesStarted = 0
   caseResults.value = []
+  recording = { source: source.value, cases: cases.value.map((c) => ({ ...c })), events: [] }
+  recordingStart = performance.now()
+  lastRun = null
   status.value = 'compiling'
   terminal.value?.reset()
   onRun(runId, handle)
@@ -92,6 +100,7 @@ function clearOutput() {
   terminal.value?.reset()
   hasOutput.value = false
   caseResults.value = []
+  lastRun = null
   status.value = 'idle'
 }
 
@@ -100,6 +109,7 @@ function input(data: string) {
 }
 
 function handle(message: RunMessage) {
+  record(message)
   switch (message.type) {
     case 'compiling':
       status.value = 'compiling'
@@ -142,6 +152,22 @@ function writeOutcome(outcome: Outcome) {
   if (!note) return
   const color = outcome.kind === 'exited' || outcome.kind === 'stopped' ? 33 : 31
   write(`${endsWithNewline ? '' : '\r\n'}\x1b[${color}m[${note}]\x1b[0m`)
+}
+
+function record(message: RunMessage) {
+  if (!recording) return
+  const { runId: _, ...recorded } = message
+  recording.events.push({ at: Math.round(performance.now() - recordingStart), message: recorded as RecordedMessage })
+  if (message.type === 'finished') {
+    lastRun = recording
+    recording = null
+  }
+}
+
+/** The run on screen still matches the code and input shown. */
+function currentRun() {
+  const unchanged = lastRun && lastRun.source === source.value && JSON.stringify(lastRun.cases) === JSON.stringify(cases.value)
+  return unchanged ? lastRun : null
 }
 
 function writeCaseHeader(index: number) {
@@ -204,11 +230,18 @@ function openInEditor() {
   send({ type: 'openEditor', line: props.cell.line })
 }
 
+const { registerExportable, unregisterExportable } = useExport()
+registerExportable(props.cell.id, {
+  edits: () => ({ source: source.value, cases: cases.value.map((c) => ({ ...c })) }),
+  lastRun: currentRun,
+})
+
 const { registerRunner, unregisterRunner } = useRunAll()
 registerRunner(props.cell.id, { runsAlone: () => cases.value.length > 0, run: runAndWait, line: props.cell.line })
 
 onBeforeUnmount(() => {
   unregisterRunner(props.cell.id)
+  unregisterExportable(props.cell.id)
   settle?.(false)
   stop()
   if (runId) offRun(runId)
@@ -241,7 +274,7 @@ onBeforeUnmount(() => {
         <span v-if="runMs != null" class="chip" :title="t('runTime')">
           <AppIcon name="timer" /><CountUp :value="runMs" :format="seconds" />
         </span>
-        <button class="tool" :title="t('openInEditor', { line: cell.line })" @click="openInEditor">
+        <button v-if="!staticLesson" class="tool" :title="t('openInEditor', { line: cell.line })" @click="openInEditor">
           <AppIcon name="pencil" />
         </button>
         <button v-if="modified" class="tool" :title="t('undoEdit')" @click="reset">

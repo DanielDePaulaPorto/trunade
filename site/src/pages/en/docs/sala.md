@@ -49,6 +49,15 @@ In ☰, **Run all** (or <kbd>R</kbd>) runs in order every block with `stdin` or 
 
 In ☰, **Export PDF** (or <kbd>⌘P</kbd>) opens the browser print dialog; pick "Save as PDF". The file looks like the lesson on screen, with colors, edited code and the outputs already run, plus every step open and quiz answers checked. The suggested name is the `.md` name.
 
+## Export HTML
+
+In ☰, **Export HTML** writes a single `.html` file next to the `.md` (with a `-1`, `-2`… suffix if the name is taken), without asking anything. It opens in any browser, without Trunade! and offline: the page, the fonts in use, formulas, diagrams and images travel inside the file (about 2 MB).
+
+- ▶ replays the last run of each block, with colors and verdicts, as if it ran. A block that was not run has no output and says so when clicked.
+- With **Run every block with fixed input first** checked, blocks with `stdin`/`expected` run before writing. Interactive blocks only carry output if you ran them.
+- The code goes as it is on screen, edits included. Editing in the exported file works, but ▶ only replays the original code.
+- Quiz answers stay hidden until clicked, as in class.
+
 ## The symbol in the corner
 
 The symbol in the header shows whether a program is running: the rotor turns and the eyes light up while compiling or running, and it spins back once when it finishes.

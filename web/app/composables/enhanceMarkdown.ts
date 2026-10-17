@@ -1,5 +1,6 @@
 import katex from 'katex'
 import type { Theme } from './usePreferences'
+import { staticLesson } from './useStatic'
 
 /** Turns comrak's math markers ($…$, $$…$$, ```math) into KaTeX output. */
 export function renderMath(root: HTMLElement) {
@@ -25,6 +26,11 @@ export async function renderMermaid(root: HTMLElement, theme: Theme) {
   }
   const diagrams = root.querySelectorAll<HTMLElement>('.mermaid-diagram')
   if (diagrams.length === 0) return
+  if (staticLesson) {
+    // Exported HTML: drawn at export time, Mermaid itself is not included.
+    for (const host of diagrams) host.innerHTML = staticLesson.diagrams[host.dataset.source ?? ''] ?? ''
+    return
+  }
   // Mermaid is large: load it only for documents that have diagrams.
   const { default: mermaid } = await import('mermaid')
   mermaid.initialize({

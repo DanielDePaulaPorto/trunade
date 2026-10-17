@@ -9,10 +9,9 @@ const { runAll } = useRunAll()
 const settingsOpen = ref(false)
 const topicsOpen = ref(false)
 
-watch(
-  () => snapshot.value?.fileName,
-  (name) => useHead({ title: name ? `${name} · Trunade!` : 'Trunade!' }),
-)
+useHead({
+  title: computed(() => (snapshot.value?.fileName ? `${snapshot.value.fileName} · Trunade!` : 'Trunade!')),
+})
 
 const SHORTCUTS: Record<string, (event: KeyboardEvent) => void> = {
   t: () => (topicsOpen.value = true),
@@ -62,6 +61,11 @@ function onKey(event: KeyboardEvent) {
   action(event)
 }
 
+function exportHtmlFromPanel(runFirst: boolean) {
+  settingsOpen.value = false
+  useExport().exportHtml(runFirst)
+}
+
 function runAllFromPanel() {
   settingsOpen.value = false
   runAll()
@@ -105,9 +109,10 @@ onBeforeUnmount(() => {
     </main>
 
     <Transition name="slide">
-      <SettingsPanel v-if="settingsOpen" @close="settingsOpen = false" @print="exportPdf" @run-all="runAllFromPanel" />
+      <SettingsPanel v-if="settingsOpen" @close="settingsOpen = false" @print="exportPdf" @run-all="runAllFromPanel" @export-html="exportHtmlFromPanel" />
     </Transition>
     <RunAllStatus />
+    <ExportStatus />
     <Transition name="fade">
       <TopicsModal v-if="topicsOpen" @close="topicsOpen = false" />
     </Transition>
