@@ -1,12 +1,14 @@
 ---
 layout: ../../../layouts/Docs.astro
 title: Syntax
-description: Reference of everything Trunade! understands in a .md file, with examples.
+description: Reference of everything Trunade! understands in a .md file, with the Markdown and how it shows on the page.
 ---
 
 # Syntax
 
 A lesson is plain Markdown (CommonMark with the GitHub extensions). Trunade! gives meaning to a few fenced blocks and two HTML comments. Everything else is text.
+
+Each example shows the Markdown and, right below it, how it shows on the Trunade! page, already run.
 
 ## Summary
 
@@ -14,7 +16,8 @@ A lesson is plain Markdown (CommonMark with the GitHub extensions). Trunade! giv
 |---|---|
 | ```` ```cpp ```` | runnable block (any configured language) |
 | ```` ```cpp {flags="-O2" timeout=5} ```` | block with extra flags and its own time limit |
-| ```` ```cpp template ```` | hidden template around the following blocks |
+| ```` ```cpp template=name ```` | declares a hidden template |
+| ```` ```cpp-name ```` | block that uses the template `name` |
 | ```` ```stdin ```` | fixed input for the block above (one test case) |
 | ```` ```expected ```` | expected output for the case above, with a ✓/✗ verdict |
 | ```` ```quiz ```` | multiple choice question |
@@ -30,7 +33,7 @@ Any other fence (```` ```text ````, ```` ```bash ````, ```` ```json ````) stays 
 
 A fence whose language is configured becomes an editable box with ▶. Each block is a **whole program**, compiled from scratch; nothing carries over from one block to the next.
 
-````markdown
+````markdown preview=bloco
 ```cpp
 #include <iostream>
 int main() {
@@ -56,7 +59,7 @@ In braces, after the language. There are only two.
 | `flags` | `flags="-O2 -DDEBUG"` | flags added to the configured ones, separated by spaces |
 | `timeout` | `timeout=1.5` | time limit in seconds (only with fixed input) |
 
-````markdown
+````markdown preview=atributos
 ```cpp {flags="-DDEBUG -O2" timeout=2}
 #include <iostream>
 int main() {
@@ -66,49 +69,59 @@ int main() {
     std::cout << "done\n";
 }
 ```
+
+```expected
+debug mode
+done
+```
 ````
 
 Quotes are needed when the value has spaces. The flags show in the block's bar.
 
-## Template
+## Templates
 
-The template is the code that repeats (headers, `using namespace std`, fast input, a fixed `main`). It is declared once, stays hidden, and the compiler gets it around each block. The `{code}` line marks where the block goes:
+A template is the code that repeats (headers, `using namespace std`, fast input, a fixed `main`). It has a **name**, is declared once and stays hidden. Only a block that asks for it uses it, with the name after the language: ```` ```cpp-contest ````. A block without a name stays whole.
 
-````markdown
-```cpp template
+The `{code}` line marks where the block goes in the template:
+
+````markdown preview=molde
+```cpp template=contest
 #include <bits/stdc++.h>
 using namespace std;
 //{code}
 ```
 
-```cpp
+```cpp-contest
 int main() {
     cout << gcd(12, 18) << '\n';
+}
+```
+
+```cpp
+#include <iostream>
+int main() {
+    std::cout << "this block is whole\n";
 }
 ```
 ````
 
 Rules:
 
-- The marker is a line with only `{code}`, possibly behind a comment of the language: `//{code}`, `// {code}`, `# {code}`.
-- Without a marker, the whole template goes **before** the block.
-- It applies to the following blocks **of the same language**, aliases included (a `cpp` template applies to ```` ```c++ ````). Templates of different languages coexist.
-- A new template of the same language replaces the previous one. An empty template turns it off:
-
-  ````markdown
-  ```cpp template
-  ```
-  ````
-
-- The template does not show as a block. Each block shows a discreet strip, **"2 template lines above"**, that opens the hidden part dimmed and read-only.
+- Declare with `template=name` after the language. The name has no spaces (letters, digits, `_`).
+- Use with `language-name`: ```` ```cpp-contest ````, ```` ```c++-contest ````, ```` ```python-io ````. Language aliases work.
+- The template must be declared **before** the block that uses it. Declaring the same name again changes the template for the blocks that follow.
+- Templates belong to a language: a C++ `io` and a Python `io` coexist.
+- The marker is a line with only `{code}`, possibly behind a comment of the language: `//{code}`, `// {code}`, `# {code}`. Without a marker, the whole template goes **before** the block.
+- The declaration does not show on the page. The block shows the template name in its bar and a discreet strip, **"2 template lines above"**, that opens the hidden part dimmed and read-only.
 - Line numbers are those of the whole program, so `main.cpp:4:5: error` points at the line 4 you see.
+- Typos show on the page itself, in a warning box: a `template` without a name, or a block asking for a template not declared.
 
 ### Template with code after
 
 What comes after `{code}` is compiled too. The block can then hold only the function that matters:
 
-````markdown
-```cpp template
+````markdown preview=molde-depois
+```cpp template=tests
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -121,22 +134,62 @@ int main() {
 }
 ```
 
-```cpp
+```cpp-tests
 void solve() {
     long long a, b;
     cin >> a >> b;
     cout << gcd(a, b) << '\n';
 }
 ```
+
+```stdin
+2
+12 18
+7 5
+```
+
+```expected
+6
+1
+```
 ````
 
-### Template in Python
+### Several templates in one lesson
 
-````markdown
-```python template
+````markdown preview=moldes
+```cpp template=simple
+#include <bits/stdc++.h>
+using namespace std;
+//{code}
+```
+
+```cpp template=fast
+#include <bits/stdc++.h>
+using namespace std;
+//{code}
+int main() {
+    ios::sync_with_stdio(false);
+    cin.tie(nullptr);
+    solve();
+}
+```
+
+```python template=io
 import sys
 input = sys.stdin.readline
 # {code}
+```
+
+```cpp-simple
+int main() { cout << "simple\n"; }
+```
+
+```cpp-fast
+void solve() { cout << "fast\n"; }
+```
+
+```python-io
+print("python")
 ```
 ````
 
@@ -146,41 +199,42 @@ input = sys.stdin.readline
 
 ### Fixed input
 
-````markdown
+````markdown preview=entrada
+```cpp
+#include <iostream>
+int main() {
+    int a, b;
+    std::cin >> a >> b;
+    std::cout << a + b << "\n";
+}
+```
+
 ```stdin
-3
-1 2 3
+2 40
 ```
 ````
 
 With fixed input the program runs on pipes: stdout and stderr show separately (stderr in red) and the time limit applies. An empty `stdin` runs with no input and with the time limit.
 
-### Expected output
+### Expected output and several cases
 
-````markdown
-```stdin
-3
-1 2 3
+Each `stdin` opens a case; the following `expected` completes it. The program is compiled **once** and runs on each case, in order. Each case gets ✓ or ✗, and on ✗ the terminal says where the output differs, like a judge:
+
+````markdown preview=casos
+```cpp
+#include <iostream>
+int main() {
+    int n, sum = 0;
+    std::cin >> n;
+    for (int i = 0; i < n; i++) {
+        int x;
+        std::cin >> x;
+        sum += x;
+    }
+    std::cout << sum << "\n";
+}
 ```
 
-```expected
-6
-```
-````
-
-After running, the case gets ✓ or ✗. On ✗, the terminal says where the output differs, like a judge: `✗ wrong answer on line 1: expected «4000000000», got «-294967296»`.
-
-The comparison:
-
-- ignores trailing spaces on each line and trailing blank lines;
-- counts leading spaces and any other difference;
-- only compares when the program exited with code 0. A runtime error, signal or time limit is already ✗.
-
-### Several cases
-
-Each `stdin` opens a case; the following `expected` completes it. The program is compiled **once** and runs on each case, in order:
-
-````markdown
 ```stdin
 3
 1 2 3
@@ -200,6 +254,12 @@ Each `stdin` opens a case; the following `expected` completes it. The program is
 ```
 ````
 
+The comparison:
+
+- ignores trailing spaces on each line and trailing blank lines;
+- counts leading spaces and any other difference;
+- only compares when the program exited with code 0. A runtime error, signal or time limit is already ✗.
+
 | Sequence after the block | Cases |
 |---|---|
 | `stdin` | 1 case, no verdict |
@@ -212,9 +272,22 @@ Each `stdin` opens a case; the following `expected` completes it. The program is
 
 With no `stdin` or `expected`, the program runs in a real terminal: whoever is at the keyboard types into the page's terminal. There is no time limit in this mode (use ■ to stop), and stdout and stderr come mixed, as in a terminal.
 
+````markdown preview=interativo input="Ana"
+```cpp
+#include <iostream>
+#include <string>
+int main() {
+    std::string name;
+    std::cout << "What's your name? ";
+    std::cin >> name;
+    std::cout << "Hello, " << name << "!\n";
+}
+```
+````
+
 ## Questions
 
-````markdown
+````markdown preview=quiz reveal
 ```quiz
 What is the complexity of binary search on $n$ elements?
 - [ ] $O(n)$
@@ -225,9 +298,9 @@ What is the complexity of binary search on $n$ elements?
 
 - Everything before the list is the question, in Markdown (math and `code` work).
 - `- [x]` marks the right options, `- [ ]` the wrong ones.
-- One right option: single choice. More than one: multiple choice.
+- One right option: single choice. More than one: multiple choice, with square boxes.
 
-````markdown
+````markdown preview=quiz-multipla
 ```quiz
 Which structures give the smallest element in $O(1)$?
 - [x] `priority_queue` with `greater<>`
@@ -241,9 +314,9 @@ Answers stay hidden until someone clicks **Show answer**.
 
 ## Exercise in steps
 
-Two HTML comments split a stretch into steps, with Back and Next:
+Two HTML comments split a stretch into steps, with Back and Next. The page shows one step at a time:
 
-~~~markdown
+~~~markdown preview=passos
 <!-- step: Statement -->
 Read $n$ and print the sum from $1$ to $n$.
 
@@ -278,7 +351,7 @@ int main() {
 
 KaTeX, drawn locally:
 
-````markdown
+````markdown preview=formulas
 Binary search makes $\lceil \log_2 n \rceil$ comparisons.
 
 $$
@@ -294,7 +367,7 @@ T(n) = 2\,T(n/2) + O(n) \implies T(n) = O(n \log n)
 
 Mermaid, loaded only when the lesson has a diagram and redrawn when the theme changes:
 
-````markdown
+````markdown preview=diagrama
 ```mermaid
 graph LR
   A[read n] --> B{n > 0?}
@@ -304,7 +377,7 @@ graph LR
 ```
 ````
 
-````markdown
+````markdown preview=sequencia
 ```mermaid
 sequenceDiagram
   participant P as Program
@@ -317,7 +390,7 @@ sequenceDiagram
 
 ## Callout boxes
 
-````markdown
+````markdown preview=alertas
 > [!NOTE]
 > `int` goes up to 2 147 483 647.
 
@@ -337,7 +410,7 @@ Types: `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, `CAUTION`. Text after the type bec
 
 Tables, ~~strikethrough~~, autolinks, task lists and footnotes:
 
-````markdown
+````markdown preview=github
 | Structure | Insert | Smallest |
 |---|---|---|
 | `set` | $O(\log n)$ | $O(1)$ |

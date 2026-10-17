@@ -134,6 +134,36 @@ pre {
   line-height: 1.55;
 }
 
+/* Markdown example → its picture in the Trunade! page (plugins/previews.mjs) */
+pre:has(+ .preview) {
+  margin-bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.preview {
+  margin: 0 0 var(--space-32, 32px);
+  padding: var(--space-8) var(--space-16) var(--space-16);
+  border: 1px solid var(--line);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+  background: #ffffff;
+}
+
+.preview figcaption {
+  margin-bottom: var(--space-8);
+  color: #4d5f59;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.preview img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 kbd {
   display: inline-block;
   min-width: 2em;

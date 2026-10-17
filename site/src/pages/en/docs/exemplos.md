@@ -6,14 +6,14 @@ description: Ready-made recipes to copy into your lesson, tested on Trunade!.
 
 # Examples
 
-Recipes to copy and paste. All of them ran on Trunade! with `g++-16`, and the outputs below are the real ones. The [syntax](/en/docs/sintaxe/) page explains each piece.
+Recipes to copy and paste. Each one shows the Markdown and, below it, the Trunade! page with the real run (`g++-16`). The [syntax](/en/docs/sintaxe/) page explains each piece.
 
 ## A contest problem
 
 The template hides the header; the cases play the judge. The first case is the one from the statement and the second is the extreme case.
 
-````markdown
-```cpp template
+````markdown preview=ex-maratona
+```cpp template=contest
 #include <bits/stdc++.h>
 using namespace std;
 //{code}
@@ -21,7 +21,7 @@ using namespace std;
 
 ## Sum of an array
 
-```cpp
+```cpp-contest
 int main() {
     int n;
     cin >> n;
@@ -58,19 +58,20 @@ Both cases get ✓.
 
 ## Passed the sample, failed the test
 
-The same problem with `int`, right below in the same lesson (the template above still applies). Every student needs to see this once:
+The same problem with `int`. Every student needs to see this once:
 
-````markdown
+````markdown preview=ex-overflow
 ```cpp
+#include <iostream>
 int main() {
     int n, sum = 0;
-    cin >> n;
+    std::cin >> n;
     for (int i = 0; i < n; i++) {
         int x;
-        cin >> x;
+        std::cin >> x;
         sum += x;
     }
-    cout << sum << '\n';
+    std::cout << sum << '\n';
 }
 ```
 
@@ -93,20 +94,14 @@ int main() {
 ```
 ````
 
-Case 1 gets ✓. Case 2 gets ✗ and the terminal shows:
-
-```text
-── case 2 ──
--294967296
-✗ wrong answer on line 1: expected «4000000000», got «-294967296»
-```
+Case 1 gets ✓; case 2 gets ✗, with the line that differs.
 
 ## Several tests per input
 
 When the problem starts with `t` tests, put `main` in the template and keep only `solve()` on screen:
 
-````markdown
-```cpp template
+````markdown preview=ex-testes
+```cpp template=tests
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -119,7 +114,7 @@ int main() {
 }
 ```
 
-```cpp
+```cpp-tests
 void solve() {
     long long a, b;
     cin >> a >> b;
@@ -141,14 +136,7 @@ void solve() {
 ```
 ````
 
-The block shows "3 template lines above" and "6 template lines below", and the editor numbering starts at line 4.
-
-To go back to whole blocks, turn the template off:
-
-````markdown
-```cpp template
-```
-````
+The block shows "3 template lines above" and "6 template lines below", and the editor numbering starts at line 4. Blocks without `-tests` stay whole.
 
 ## Errors are content too
 
@@ -156,7 +144,7 @@ Each block below has an empty `stdin`: it then runs with a time limit and withou
 
 **Compile error**: the compiler output shows in full, in color.
 
-````markdown
+````markdown preview=ex-compilacao
 ```cpp
 #include <iostream>
 int main() {
@@ -169,14 +157,10 @@ int main() {
 ```
 ````
 
-```text
-main.cpp:4:5: error: expected ',' or ';' before 'std'
-[compilation failed]
-```
 
 **Null pointer access**: the signal shows by name.
 
-````markdown
+````markdown preview=ex-segfault
 ```cpp
 int main() {
     int* p = nullptr;
@@ -188,13 +172,10 @@ int main() {
 ```
 ````
 
-```text
-[Segmentation fault: 11]
-```
 
 **Infinite loop**: with `timeout`, the lesson does not hang.
 
-````markdown
+````markdown preview=ex-timeout
 ```cpp {timeout=1}
 int main() {
     while (true) {}
@@ -205,15 +186,12 @@ int main() {
 ```
 ````
 
-```text
-[time limit exceeded]
-```
 
 ## Finding the bug with a flag
 
 `-D_GLIBCXX_DEBUG` turns on the standard library checks. The out-of-bounds access that used to pass silently becomes an explained error:
 
-````markdown
+````markdown preview=ex-debug-vetor
 ```cpp {flags="-D_GLIBCXX_DEBUG"}
 #include <iostream>
 #include <vector>
@@ -227,15 +205,10 @@ int main() {
 ```
 ````
 
-```text
-Error: attempt to subscript container with out-of-bounds index 3, but
-container only holds 3 elements.
-[Abort trap: 6]
-```
 
 Another useful flag is `-DDEBUG`, to switch debugging code on with `#ifdef DEBUG`:
 
-````markdown
+````markdown preview=ex-debug-flag
 ```cpp {flags="-DDEBUG -O2"}
 #include <iostream>
 int main() {
@@ -256,7 +229,7 @@ done
 
 With no `stdin`, the class plays right in the page's terminal:
 
-````markdown
+````markdown preview=ex-jogo input="10|50|42"
 ```cpp
 #include <iostream>
 int main() {
@@ -273,23 +246,17 @@ int main() {
 ```
 ````
 
-```text
-Guess: 10
-higher
-Guess: 42
-Got it in 2 tries!
-```
 
 ## Python, with fast input
 
-````markdown
-```python template
+````markdown preview=ex-python
+```python template=io
 import sys
 input = sys.stdin.readline
 # {code}
 ```
 
-```python
+```python-io
 n = int(input())
 print(sum(map(int, input().split())) // n)
 ```
@@ -308,7 +275,7 @@ print(sum(map(int, input().split())) // n)
 
 The statement first, then a question for the class to think about, and finally the solution that runs:
 
-~~~markdown
+~~~markdown preview=ex-passos
 <!-- step: Statement -->
 Given $n$ numbers, print how many are even.
 
@@ -348,7 +315,7 @@ int main() {
 
 ## Theory with a formula and a diagram
 
-````markdown
+````markdown preview=ex-teoria
 ## Merge sort
 
 Each level of the recursion does $O(n)$ work, and there are $\log_2 n$ levels:
@@ -375,10 +342,10 @@ graph TD
 
 A starting point with everything in place:
 
-~~~markdown
+~~~markdown preview=ex-esqueleto
 # Lesson 7 · Binary search
 
-```cpp template
+```cpp template=search
 #include <bits/stdc++.h>
 using namespace std;
 //{code}
@@ -405,7 +372,7 @@ graph LR
 
 ## Implementation
 
-```cpp
+```cpp-search
 int main() {
     vector<int> v = {1, 3, 5, 7, 9, 11};
     int target;
@@ -436,7 +403,7 @@ int main() {
 Print the position of the first element $\ge x$.
 
 <!-- step: Solution -->
-```cpp
+```cpp-search
 int main() {
     vector<int> v = {1, 3, 5, 7, 9, 11};
     int x;

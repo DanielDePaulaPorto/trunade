@@ -6,14 +6,14 @@ description: Receitas prontas para copiar para a sua aula, testadas no Trunade!.
 
 # Exemplos
 
-Receitas para copiar e colar. Todas foram rodadas no Trunade! com `g++-16`, e as saídas abaixo são as de verdade. A [sintaxe](/docs/sintaxe/) explica cada peça.
+Receitas para copiar e colar. Cada uma mostra o Markdown e, embaixo, a página do Trunade! com a execução de verdade (`g++-16`). A [sintaxe](/docs/sintaxe/) explica cada peça.
 
 ## Um problema de maratona
 
 O molde esconde o cabeçalho; os casos fazem o papel do juiz. O primeiro caso é o do enunciado e o segundo é o caso extremo.
 
-````markdown
-```cpp template
+````markdown preview=ex-maratona
+```cpp template=maratona
 #include <bits/stdc++.h>
 using namespace std;
 //{code}
@@ -21,7 +21,7 @@ using namespace std;
 
 ## Soma do vetor
 
-```cpp
+```cpp-maratona
 int main() {
     int n;
     cin >> n;
@@ -58,19 +58,20 @@ Os dois casos dão ✓.
 
 ## Passou no exemplo, falhou no teste
 
-O mesmo problema com `int`, logo abaixo na mesma aula (o molde de cima continua valendo). É a cena que todo aluno precisa ver uma vez:
+O mesmo problema com `int`. É a cena que todo aluno precisa ver uma vez:
 
-````markdown
+````markdown preview=ex-overflow
 ```cpp
+#include <iostream>
 int main() {
     int n, soma = 0;
-    cin >> n;
+    std::cin >> n;
     for (int i = 0; i < n; i++) {
         int x;
-        cin >> x;
+        std::cin >> x;
         soma += x;
     }
-    cout << soma << '\n';
+    std::cout << soma << '\n';
 }
 ```
 
@@ -93,20 +94,14 @@ int main() {
 ```
 ````
 
-O caso 1 dá ✓. O caso 2 dá ✗ e o terminal mostra:
-
-```text
-── caso 2 ──
--294967296
-✗ resposta errada na linha 1: esperado «4000000000», saiu «-294967296»
-```
+O caso 1 dá ✓; o caso 2 dá ✗, com a linha que divergiu.
 
 ## Vários testes por entrada
 
 Quando o problema começa com `t` testes, ponha o `main` no molde e deixe na tela só o `solve()`:
 
-````markdown
-```cpp template
+````markdown preview=ex-testes
+```cpp template=testes
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -119,7 +114,7 @@ int main() {
 }
 ```
 
-```cpp
+```cpp-testes
 void solve() {
     long long a, b;
     cin >> a >> b;
@@ -141,14 +136,7 @@ void solve() {
 ```
 ````
 
-O bloco mostra "3 linhas do molde acima" e "6 linhas do molde abaixo", e a numeração do editor começa na linha 4.
-
-Para voltar a blocos completos, desligue o molde:
-
-````markdown
-```cpp template
-```
-````
+O bloco mostra "3 linhas do molde acima" e "6 linhas do molde abaixo", e a numeração do editor começa na linha 4. Blocos sem `-testes` continuam completos.
 
 ## O erro também é conteúdo
 
@@ -156,7 +144,7 @@ Cada bloco abaixo leva um `stdin` vazio: assim roda com tempo limite e sem esper
 
 **Erro de compilação**: a saída do compilador aparece inteira e colorida.
 
-````markdown
+````markdown preview=ex-compilacao
 ```cpp
 #include <iostream>
 int main() {
@@ -169,14 +157,10 @@ int main() {
 ```
 ````
 
-```text
-main.cpp:4:5: error: expected ',' or ';' before 'std'
-[falha na compilação]
-```
 
 **Acesso a ponteiro nulo**: o sinal aparece com o nome.
 
-````markdown
+````markdown preview=ex-segfault
 ```cpp
 int main() {
     int* p = nullptr;
@@ -188,13 +172,10 @@ int main() {
 ```
 ````
 
-```text
-[Segmentation fault: 11]
-```
 
 **Laço infinito**: com `timeout`, a aula não trava.
 
-````markdown
+````markdown preview=ex-timeout
 ```cpp {timeout=1}
 int main() {
     while (true) {}
@@ -205,15 +186,12 @@ int main() {
 ```
 ````
 
-```text
-[tempo limite excedido]
-```
 
 ## Achar o bug com uma flag
 
 `-D_GLIBCXX_DEBUG` liga as verificações da biblioteca padrão. O acesso fora do vetor, que antes passava calado, vira um erro com explicação:
 
-````markdown
+````markdown preview=ex-debug-vetor
 ```cpp {flags="-D_GLIBCXX_DEBUG"}
 #include <iostream>
 #include <vector>
@@ -227,15 +205,10 @@ int main() {
 ```
 ````
 
-```text
-Error: attempt to subscript container with out-of-bounds index 3, but
-container only holds 3 elements.
-[Abort trap: 6]
-```
 
 Outra flag útil é `-DDEBUG`, para ligar trechos de depuração com `#ifdef DEBUG`:
 
-````markdown
+````markdown preview=ex-debug-flag
 ```cpp {flags="-DDEBUG -O2"}
 #include <iostream>
 int main() {
@@ -256,7 +229,7 @@ pronto
 
 Sem `stdin`, a turma joga no próprio terminal da página:
 
-````markdown
+````markdown preview=ex-jogo input="10|50|42"
 ```cpp
 #include <iostream>
 int main() {
@@ -273,23 +246,17 @@ int main() {
 ```
 ````
 
-```text
-Palpite: 10
-maior
-Palpite: 42
-Acertou em 2 tentativas!
-```
 
 ## Python, com leitura rápida
 
-````markdown
-```python template
+````markdown preview=ex-python
+```python template=io
 import sys
 input = sys.stdin.readline
 # {code}
 ```
 
-```python
+```python-io
 n = int(input())
 print(sum(map(int, input().split())) // n)
 ```
@@ -308,7 +275,7 @@ print(sum(map(int, input().split())) // n)
 
 O enunciado primeiro, depois uma pergunta para a turma pensar e, no fim, a solução que roda:
 
-~~~markdown
+~~~markdown preview=ex-passos
 <!-- step: Enunciado -->
 Dados $n$ números, imprima quantos são pares.
 
@@ -348,7 +315,7 @@ int main() {
 
 ## Teoria com fórmula e diagrama
 
-````markdown
+````markdown preview=ex-teoria
 ## Merge sort
 
 Cada nível da recursão faz $O(n)$ trabalho, e há $\log_2 n$ níveis:
@@ -375,10 +342,10 @@ graph TD
 
 Um ponto de partida com tudo no lugar:
 
-~~~markdown
+~~~markdown preview=ex-esqueleto
 # Aula 7 · Busca binária
 
-```cpp template
+```cpp template=busca
 #include <bits/stdc++.h>
 using namespace std;
 //{code}
@@ -405,7 +372,7 @@ graph LR
 
 ## Implementação
 
-```cpp
+```cpp-busca
 int main() {
     vector<int> v = {1, 3, 5, 7, 9, 11};
     int alvo;
@@ -436,7 +403,7 @@ int main() {
 Imprima a posição do primeiro elemento $\ge x$.
 
 <!-- step: Solução -->
-```cpp
+```cpp-busca
 int main() {
     vector<int> v = {1, 3, 5, 7, 9, 11};
     int x;

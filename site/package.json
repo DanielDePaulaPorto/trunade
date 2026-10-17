@@ -9,6 +9,7 @@
     "preview": "astro preview"
   },
   "dependencies": {
+    "@astrojs/markdown-satteri": "0.4.3",
     "@fontsource-variable/jetbrains-mono": "^5.3.0",
     "astro": "^7.3.6"
   },

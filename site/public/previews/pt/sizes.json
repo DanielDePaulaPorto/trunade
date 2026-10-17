@@ -1,0 +1,134 @@
+{
+  "ex-maratona": {
+    "width": 860,
+    "height": 812
+  },
+  "ex-overflow": {
+    "width": 860,
+    "height": 707
+  },
+  "ex-testes": {
+    "width": 860,
+    "height": 536
+  },
+  "ex-compilacao": {
+    "width": 860,
+    "height": 478
+  },
+  "ex-segfault": {
+    "width": 860,
+    "height": 335
+  },
+  "ex-timeout": {
+    "width": 860,
+    "height": 313
+  },
+  "ex-debug-vetor": {
+    "width": 860,
+    "height": 721
+  },
+  "ex-debug-flag": {
+    "width": 860,
+    "height": 466
+  },
+  "ex-jogo": {
+    "width": 860,
+    "height": 569
+  },
+  "ex-python": {
+    "width": 860,
+    "height": 357
+  },
+  "ex-passos": {
+    "width": 860,
+    "height": 298
+  },
+  "ex-teoria": {
+    "width": 860,
+    "height": 794
+  },
+  "ex-esqueleto": {
+    "width": 860,
+    "height": 1832
+  },
+  "rec-formulas": {
+    "width": 860,
+    "height": 169
+  },
+  "rec-diagrama": {
+    "width": 860,
+    "height": 267
+  },
+  "rec-quiz": {
+    "width": 860,
+    "height": 390
+  },
+  "rec-passos": {
+    "width": 860,
+    "height": 298
+  },
+  "bloco": {
+    "width": 860,
+    "height": 288
+  },
+  "atributos": {
+    "width": 860,
+    "height": 466
+  },
+  "molde": {
+    "width": 860,
+    "height": 524
+  },
+  "molde-depois": {
+    "width": 860,
+    "height": 493
+  },
+  "moldes": {
+    "width": 860,
+    "height": 650
+  },
+  "entrada": {
+    "width": 860,
+    "height": 381
+  },
+  "casos": {
+    "width": 860,
+    "height": 707
+  },
+  "interativo": {
+    "width": 860,
+    "height": 399
+  },
+  "quiz": {
+    "width": 860,
+    "height": 390
+  },
+  "quiz-multipla": {
+    "width": 860,
+    "height": 448
+  },
+  "passos": {
+    "width": 860,
+    "height": 298
+  },
+  "formulas": {
+    "width": 860,
+    "height": 296
+  },
+  "diagrama": {
+    "width": 860,
+    "height": 287
+  },
+  "sequencia": {
+    "width": 860,
+    "height": 488
+  },
+  "alertas": {
+    "width": 860,
+    "height": 576
+  },
+  "github": {
+    "width": 860,
+    "height": 392
+  }
+}

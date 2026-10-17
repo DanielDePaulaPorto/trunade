@@ -12,7 +12,7 @@ All of this is Markdown and works offline. The full reference, with every rule, 
 
 `$x^2$` inline. For display math, `$$ … $$` or a `math` block:
 
-````markdown
+````markdown preview=rec-formulas
 Binary search makes $\lceil \log_2 n \rceil$ comparisons.
 
 ```math
@@ -24,7 +24,7 @@ T(n) = T(n/2) + O(1)
 
 `mermaid` blocks become diagrams and follow the page theme.
 
-````markdown
+````markdown preview=rec-diagrama
 ```mermaid
 graph LR
   A[read n] --> B{n > 0?}
@@ -37,7 +37,7 @@ graph LR
 
 A `quiz` block: the first part is the question and the list holds the options. `- [x]` marks the right ones; more than one makes it multiple choice.
 
-````markdown
+````markdown preview=rec-quiz reveal
 ```quiz
 What is the complexity of binary search?
 - [ ] O(n)
@@ -52,7 +52,7 @@ The class picks; you reveal when you want. On reveal, the right options show up 
 
 Comment markers split a passage into steps, with Back and Next. Code inside the steps still runs.
 
-~~~markdown
+~~~markdown preview=rec-passos
 <!-- step: Statement -->
 Read two integers and print their sum.
 

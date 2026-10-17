@@ -12,7 +12,7 @@ Tudo aqui é Markdown e funciona sem internet. A referência completa, com cada 
 
 `$x^2$` no meio do texto. Em destaque, `$$ … $$` ou um bloco `math`:
 
-````markdown
+````markdown preview=rec-formulas
 A busca binária faz $\lceil \log_2 n \rceil$ comparações.
 
 ```math
@@ -24,7 +24,7 @@ T(n) = T(n/2) + O(1)
 
 Blocos `mermaid` viram diagramas e acompanham o tema da página.
 
-````markdown
+````markdown preview=rec-diagrama
 ```mermaid
 graph LR
   A[ler n] --> B{n > 0?}
@@ -37,7 +37,7 @@ graph LR
 
 Um bloco `quiz`: a primeira parte é o enunciado e a lista são as opções. `- [x]` marca as certas; mais de uma vira múltipla escolha.
 
-````markdown
+````markdown preview=rec-quiz reveal
 ```quiz
 Qual a complexidade da busca binária?
 - [ ] O(n)
@@ -52,7 +52,7 @@ A turma escolhe; você revela quando quiser. Ao revelar, as corretas aparecem ma
 
 Marcadores em comentário dividem um trecho em passos, com Anterior e Próximo. O código dentro dos passos continua rodando.
 
-~~~markdown
+~~~markdown preview=rec-passos
 <!-- step: Enunciado -->
 Leia dois inteiros e imprima a soma.
 

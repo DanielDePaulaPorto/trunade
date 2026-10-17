@@ -7,7 +7,8 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate && TRUNADE_STATIC=1 nuxt generate",
     "postinstall": "nuxt prepare",
-    "test:e2e": "pnpm generate && playwright test"
+    "test:e2e": "pnpm generate && playwright test",
+    "previews": "pnpm generate && cargo build --manifest-path ../server/Cargo.toml && playwright test -c playwright.previews.config.ts"
   },
   "dependencies": {
     "@codemirror/lang-cpp": "^6.0.3",
