@@ -43,12 +43,12 @@ print(n * 2)
 
 ## Molde
 
-```python template
+```python template=sys
 import sys
 # {code}
 ```
 
-```python
+```python-sys
 print(sys.version_info.major)
 ```
 

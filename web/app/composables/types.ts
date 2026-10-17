@@ -16,6 +16,8 @@ export interface CodeCell {
   timeoutSeconds: number | null
   /** ```stdin / ```expected pairs; empty means an interactive run. */
   cases: TestCase[]
+  /** Template asked for by name (```cpp-name). */
+  template: string | null
   /** Hidden template code compiled around `source`. */
   before: string
   after: string

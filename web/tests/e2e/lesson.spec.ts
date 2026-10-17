@@ -51,6 +51,8 @@ test('template code is hidden, numbered and compiled', async ({ page }) => {
   const cell = block(page, 3)
   const strip = cell.getByRole('button', { name: '1 linha do molde acima' })
   await expect(strip).toBeVisible()
+  await expect(cell.locator('.chip').filter({ hasText: 'sys' })).toBeVisible()
+  await expect(block(page, 0).locator('.hidden-code')).toHaveCount(0) // no name, no template
   await expect(cell.locator('.cm-lineNumbers .cm-gutterElement').filter({ hasText: /^2$/ })).toBeVisible()
   await strip.click()
   await expect(cell.locator('.hidden-part')).toContainText('import sys')

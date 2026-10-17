@@ -43,6 +43,8 @@ pub enum Cell {
         timeout_seconds: Option<f64>,
         /// ```stdin / ```expected blocks right after the code. None: interactive run.
         cases: Vec<TestCase>,
+        /// Name of the template used (```cpp-name), if any.
+        template: Option<String>,
         /// Hidden template code around `source` (see `Template`).
         before: String,
         after: String,
@@ -100,14 +102,13 @@ pub struct FenceInfo {
     pub language: String,
     pub flags: Vec<String>,
     pub timeout_seconds: Option<f64>,
-    /// ```cpp template: hidden code wrapped around the following blocks.
-    pub template: bool,
+    /// ```cpp template=name declares a template; a bare `template` gives Some("").
+    pub template: Option<String>,
 }
 
-/// Code the compiler gets but the page hides: what a ```lang template block
-/// has before and after its `{code}` line (a whole template without one is
-/// `before`). It applies to the next blocks of the same language; an empty
-/// template turns it off.
+/// Code the compiler gets but the page hides: what a ```lang template=name
+/// block has before and after its `{code}` line (a whole template without one
+/// is `before`). Only blocks that ask for it by name (```lang-name) use it.
 #[derive(Debug, Clone, Default, PartialEq)]
 struct Template {
     before: String,
@@ -175,23 +176,45 @@ pub fn parse(markdown: &str, language_key: impl Fn(&str) -> Option<String>) -> V
             && builder.last_is_code()
             && is_blank(&lines, next_markdown_line, start);
         let is_quiz = info.language == QUIZ_FENCE;
-        let key = language_key(&info.language);
-        if !attaches_case && !is_quiz && key.is_none() {
+        let language = resolve_language(&info.language, &language_key);
+        if !attaches_case && !is_quiz && language.is_none() {
             continue;
         }
         builder.push_markdown(&lines, next_markdown_line, start);
-        match key {
+        match language {
             _ if attaches_case && info.language == STDIN_FENCE => builder.add_stdin(&block.literal),
             _ if attaches_case => builder.add_expected(&block.literal),
             _ if is_quiz => builder.push_quiz(&block.literal),
-            Some(key) if info.template => builder.set_template(key, &block.literal),
-            Some(key) => builder.push_code(info, &key, start, block),
+            Some(language) if info.template.is_some() => builder.declare_template(&language, &info, &block.literal),
+            Some(language) => builder.push_code(info, language, start, block),
             None => {}
         }
         next_markdown_line = end + 1;
     }
     builder.push_markdown(&lines, next_markdown_line, lines.len() + 1);
     builder.finish()
+}
+
+/// A fence's language once resolved: `cpp-maratona` is C++ with the template `maratona`.
+struct FenceLanguage {
+    /// Configured language name, shared by aliases.
+    key: String,
+    /// The fence's own spelling, without the template suffix.
+    written: String,
+    template: Option<String>,
+}
+
+fn resolve_language(fence: &str, language_key: &impl Fn(&str) -> Option<String>) -> Option<FenceLanguage> {
+    if let Some(key) = language_key(fence) {
+        return Some(FenceLanguage { key, written: fence.to_string(), template: None });
+    }
+    let (written, name) = fence.split_once('-')?;
+    let key = language_key(written)?;
+    (!name.is_empty()).then(|| FenceLanguage {
+        key,
+        written: written.to_string(),
+        template: Some(name.to_string()),
+    })
 }
 
 pub fn parse_fence_info(info: &str) -> FenceInfo {
@@ -212,7 +235,13 @@ pub fn parse_fence_info(info: &str) -> FenceInfo {
             _ => {}
         }
     }
-    fence.template = split_words(attributes).iter().any(|word| word == "template");
+    for word in split_words(attributes) {
+        match word.split_once('=') {
+            Some(("template", name)) => fence.template = Some(name.to_string()),
+            None if word == "template" => fence.template = Some(String::new()),
+            _ => {}
+        }
+    }
     fence
 }
 
@@ -303,8 +332,8 @@ struct CellBuilder {
     /// Open steps: new cells go into the last one until `<!-- /steps -->`.
     steps: Option<Vec<Step>>,
     seen_ids: HashMap<u64, usize>,
-    /// Current template per configured language name.
-    templates: HashMap<String, Template>,
+    /// Templates declared so far, by (configured language, name).
+    templates: HashMap<(String, String), Template>,
 }
 
 impl CellBuilder {
@@ -337,15 +366,36 @@ impl CellBuilder {
         self.target().push(Cell::Markdown { id, html });
     }
 
-    fn set_template(&mut self, language_key: String, text: &str) {
-        self.templates.insert(language_key, Template::parse(text));
+    fn declare_template(&mut self, language: &FenceLanguage, info: &FenceInfo, text: &str) {
+        match info.template.as_deref() {
+            Some(name) if !name.is_empty() => {
+                self.templates.insert((language.key.clone(), name.to_string()), Template::parse(text));
+            }
+            _ => self.push_warning(&format!(
+                "This template has no name. Declare it as <code>```{0} template=name</code> and use it with <code>```{0}-name</code>.",
+                language.written
+            )),
+        }
     }
 
-    fn push_code(&mut self, info: FenceInfo, language_key: &str, line: usize, block: &NodeCodeBlock) {
-        let template = self.templates.get(language_key).cloned().unwrap_or_default();
+    fn push_code(&mut self, info: FenceInfo, language: FenceLanguage, line: usize, block: &NodeCodeBlock) {
+        let template = match &language.template {
+            None => Template::default(),
+            Some(name) => match self.templates.get(&(language.key.clone(), name.clone())) {
+                Some(template) => template.clone(),
+                None => {
+                    self.push_warning(&format!(
+                        "The template <code>{name}</code> is not declared above this block (<code>```{} template={name}</code>).",
+                        language.written
+                    ));
+                    Template::default()
+                }
+            },
+        };
         self.target().push(Cell::Code {
             id: String::new(), // assigned in finish(), once the cases are known
-            fence_language: info.language,
+            fence_language: language.written,
+            template: language.template,
             line,
             // The closing fence's newline is not part of the program; editors show it as an empty line.
             source: block.literal.strip_suffix('\n').unwrap_or(&block.literal).to_string(),
@@ -355,6 +405,15 @@ impl CellBuilder {
             before: template.before,
             after: template.after,
         });
+    }
+
+    /// A mistake in the lesson, shown where it happens instead of failing silently.
+    fn push_warning(&mut self, message: &str) {
+        let html = format!(
+            "<div class=\"markdown-alert markdown-alert-caution\">\n<p class=\"markdown-alert-title\">Trunade!</p>\n<p>{message}</p>\n</div>\n"
+        );
+        let id = self.unique_id(&("warning", &html));
+        self.target().push(Cell::Markdown { id, html });
     }
 
     fn push_quiz(&mut self, text: &str) {
@@ -410,6 +469,7 @@ impl CellBuilder {
         for cell in cells {
             match cell {
                 Cell::Code { id, fence_language, source, flags, cases, before, after, .. } => {
+                    // the template's content is in before/after, its name changes nothing
                     let content = (&fence_language, &source, &flags, &cases, &before, &after);
                     *id = self.unique_id(&("code", content));
                 }
@@ -555,28 +615,40 @@ mod tests {
     }
 
     #[test]
-    fn template_wraps_later_blocks_of_its_language() {
-        let lesson = "```cpp\nbefore_template\n```\n\n```cpp template\n#include <x>\n//{code}\nint tail;\n```\n\n```c++\nint main() {}\n```\n\n```python\nprint(1)\n```\n";
+    fn named_template_wraps_only_blocks_that_ask_for_it() {
+        let lesson = "```cpp template=cp\n#include <x>\n//{code}\nint tail;\n```\n\n```c++-cp\nint main() {}\n```\n\n```cpp\nint whole;\n```\n";
         let cells = parse(lesson, runnable);
-        assert_eq!(cells.len(), 3, "the template itself is not a cell");
-        let Cell::Code { before, .. } = &cells[0] else { panic!("expected code") };
-        assert!(before.is_empty());
-        let Cell::Code { before, after, source, .. } = &cells[1] else { panic!("expected code") };
-        assert_eq!(before, "#include <x>\n");
-        assert_eq!(after, "int tail;\n");
+        assert_eq!(cells.len(), 2, "the template itself is not a cell");
+        let Cell::Code { fence_language, template, before, after, source, .. } = &cells[0] else { panic!("expected code") };
+        assert_eq!(fence_language, "c++");
+        assert_eq!(template.as_deref(), Some("cp"));
         assert_eq!(assemble(before, source, after), "#include <x>\nint main() {}\nint tail;\n");
-        let Cell::Code { before, .. } = &cells[2] else { panic!("expected code") };
-        assert!(before.is_empty(), "other languages are not wrapped");
+        let Cell::Code { template, before, .. } = &cells[1] else { panic!("expected code") };
+        assert!(template.is_none() && before.is_empty(), "a block without a name is whole");
     }
 
     #[test]
-    fn template_without_marker_is_all_before_and_empty_one_turns_it_off() {
-        let lesson = "```python template\nimport sys\n```\n\n```python\nx\n```\n\n```python template\n```\n\n```python\ny\n```\n";
+    fn several_templates_and_marker_less_template() {
+        let lesson = "```python template=io\nimport sys\n```\n\n```cpp template=io\n#include <cstdio>\n```\n\n```python-io\nx\n```\n\n```cpp-io\ny\n```\n";
         let cells = parse(lesson, runnable);
         let Cell::Code { before, after, .. } = &cells[0] else { panic!("expected code") };
         assert_eq!((before.as_str(), after.as_str()), ("import sys\n", ""));
         let Cell::Code { before, .. } = &cells[1] else { panic!("expected code") };
-        assert!(before.is_empty());
+        assert_eq!(before, "#include <cstdio>\n", "same name, other language");
+    }
+
+    #[test]
+    fn mistakes_with_templates_are_shown() {
+        let cells = parse("```cpp template\nx\n```\n\n```cpp-missing\nint main() {}\n```\n", runnable);
+        assert!(matches!(&cells[0], Cell::Markdown { html, .. } if html.contains("no name")));
+        assert!(matches!(&cells[1], Cell::Markdown { html, .. } if html.contains("<code>missing</code>")));
+        assert!(matches!(&cells[2], Cell::Code { before, .. } if before.is_empty()));
+    }
+
+    #[test]
+    fn unknown_language_with_a_dash_stays_text() {
+        let cells = parse("```objective-c\nx\n```\n", runnable);
+        assert!(matches!(&cells[0], Cell::Markdown { .. }));
     }
 
     #[test]
@@ -590,7 +662,8 @@ mod tests {
     fn fence_info_without_attributes() {
         assert_eq!(parse_fence_info("C++"), FenceInfo { language: "c++".into(), ..Default::default() });
         assert_eq!(parse_fence_info("cpp{timeout=1}").timeout_seconds, Some(1.0));
-        assert!(parse_fence_info("cpp template").template);
-        assert!(parse_fence_info("cpp {template timeout=1}").template);
+        assert_eq!(parse_fence_info("cpp template=cp").template.as_deref(), Some("cp"));
+        assert_eq!(parse_fence_info("cpp {template=cp timeout=1}").template.as_deref(), Some("cp"));
+        assert_eq!(parse_fence_info("cpp template").template.as_deref(), Some(""));
     }
 }

@@ -267,6 +267,9 @@ onBeforeUnmount(() => {
     <div class="cell-body">
       <header class="cell-toolbar">
         <span class="language">{{ cell.fenceLanguage }}</span>
+        <span v-if="cell.template" class="chip" :title="t('templateChip')">
+          <AppIcon name="code" />{{ cell.template }}
+        </span>
         <span v-if="cell.flags.length" class="chip" :title="t('flags')">
           <AppIcon name="flag" />{{ cell.flags.join(' ') }}
         </span>
