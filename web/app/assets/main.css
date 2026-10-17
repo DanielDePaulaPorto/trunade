@@ -624,6 +624,41 @@ em {
   font-family: var(--font-mono);
 }
 
+/* > [!NOTE], [!TIP], [!IMPORTANT], [!WARNING], [!CAUTION] (comrak alerts) */
+.markdown-alert {
+  --alert: var(--brand);
+  margin: 1.25rem 0;
+  padding: 0.1rem 1rem;
+  border-left: 3px solid var(--alert);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  background: var(--raised);
+}
+
+.markdown-alert-important {
+  --alert: var(--brand-text);
+}
+
+.markdown-alert-warning {
+  --alert: var(--bronze);
+}
+
+.markdown-alert-caution {
+  --alert: var(--code-stop);
+}
+
+.markdown-alert-title {
+  margin: 0.6rem 0 0.2rem;
+  font-weight: 700;
+  color: var(--alert);
+}
+
+.footnotes {
+  margin-top: 2rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.85em;
+}
+
 .hidden-code {
   display: flex;
   align-items: center;
@@ -1421,6 +1456,7 @@ kbd {
 }
 
 .run-all-link {
+  white-space: nowrap;
   padding: 0.1rem 0.45rem;
   font: inherit;
   color: var(--code-stop);

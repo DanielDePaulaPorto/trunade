@@ -5,10 +5,10 @@ import { langFromPath, localize } from '../i18n'
 const { frontmatter } = Astro.props
 const lang = langFromPath(Astro.url.pathname)
 const TITLES = {
-  pt: { docs: 'Documentação', previous: 'Anterior', next: 'Próxima', pages: ['Visão geral', 'Instalação', 'Escrevendo aulas', 'Recursos de aula', 'Na sala', 'Configuração'] },
-  en: { docs: 'Docs', previous: 'Previous', next: 'Next', pages: ['Overview', 'Installation', 'Writing lessons', 'Lesson features', 'In class', 'Configuration'] },
+  pt: { docs: 'Documentação', previous: 'Anterior', next: 'Próxima', pages: ['Visão geral', 'Instalação', 'Escrevendo aulas', 'Sintaxe', 'Exemplos', 'Recursos de aula', 'Na sala', 'Configuração'] },
+  en: { docs: 'Docs', previous: 'Previous', next: 'Next', pages: ['Overview', 'Installation', 'Writing lessons', 'Syntax', 'Examples', 'Lesson features', 'In class', 'Configuration'] },
 }[lang]
-const SLUGS = ['/docs/', '/docs/instalacao/', '/docs/aulas/', '/docs/recursos/', '/docs/sala/', '/docs/configuracao/']
+const SLUGS = ['/docs/', '/docs/instalacao/', '/docs/aulas/', '/docs/sintaxe/', '/docs/exemplos/', '/docs/recursos/', '/docs/sala/', '/docs/configuracao/']
 const PAGES = SLUGS.map((slug, i) => ({ href: localize(slug, lang), title: TITLES.pages[i] }))
 const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`
 const index = PAGES.findIndex((page) => page.href === path)

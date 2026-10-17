@@ -6,7 +6,7 @@ description: Code blocks, attributes and standard input.
 
 # Writing lessons
 
-A lesson is plain Markdown. Fenced blocks in a configured language become programs; everything else stays text.
+A lesson is plain Markdown. Fenced blocks in a configured language become programs; everything else stays text. This page is a tour; the full reference is in [Syntax](/en/docs/sintaxe/) and ready-made recipes in [Examples](/en/docs/exemplos/).
 
 ## Code blocks
 

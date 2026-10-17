@@ -6,7 +6,7 @@ description: Blocos de código, atributos e entrada padrão.
 
 # Escrevendo aulas
 
-A aula é Markdown comum. Blocos cercados com uma linguagem configurada viram programas; os demais continuam texto.
+A aula é Markdown comum. Blocos cercados com uma linguagem configurada viram programas; os demais continuam texto. Esta página é um passeio; a referência completa está em [Sintaxe](/docs/sintaxe/) e as receitas prontas, em [Exemplos](/docs/exemplos/).
 
 ## Blocos de código
 

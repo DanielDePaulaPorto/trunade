@@ -6,7 +6,7 @@ description: Fórmulas, diagramas, perguntas, exercícios em passos e páginas e
 
 # Recursos de aula
 
-Tudo aqui é Markdown e funciona sem internet.
+Tudo aqui é Markdown e funciona sem internet. A referência completa, com cada regra, está em [Sintaxe](/docs/sintaxe/); aulas inteiras, em [Exemplos](/docs/exemplos/).
 
 ## Fórmulas
 

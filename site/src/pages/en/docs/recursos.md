@@ -6,7 +6,7 @@ description: Math, diagrams, questions, step-by-step exercises and embedded page
 
 # Lesson features
 
-All of this is Markdown and works offline.
+All of this is Markdown and works offline. The full reference, with every rule, is in [Syntax](/en/docs/sintaxe/); whole lessons in [Examples](/en/docs/exemplos/).
 
 ## Math
 
