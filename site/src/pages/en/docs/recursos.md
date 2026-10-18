@@ -69,6 +69,10 @@ int main() { int a, b; std::cin >> a >> b; std::cout << a + b << "\n"; }
 
 Without `<!-- /steps -->`, the steps run to the end of the file.
 
+## Reveal at the right moment
+
+An element with `data-reveal` (`<img src="impact.gif" data-reveal>`) stays hidden until the lesson reaches its section. Details in [Syntax](/en/docs/sintaxe/#reveal-on-reaching-the-section).
+
 ## HTML, images and pages
 
 `<div>`, `<img>` and `<iframe>` are allowed. Files next to the `.md` (images, HTML pages) are served by Trunade! itself.

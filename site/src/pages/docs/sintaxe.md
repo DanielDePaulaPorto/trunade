@@ -26,6 +26,7 @@ Cada exemplo mostra o Markdown e, logo abaixo, como ele aparece na página do Tr
 | ```` ```mermaid ```` | diagrama |
 | `> [!NOTE]`, `> [!TIP]`… | caixa de destaque |
 | `<img>`, `<iframe>`, `<div>`… | HTML, como está |
+| `data-reveal` num elemento HTML | escondido até a aula chegar à seção dele |
 
 Qualquer outro fence (```` ```text ````, ```` ```bash ````, ```` ```json ````) continua sendo só código colorido, sem ▶.
 
@@ -443,5 +444,32 @@ Iframes ocupam a largura do texto. Uma página **local** é reduzida para caber 
 <iframe src="visualizacao.html"></iframe>
 <iframe src="https://visualgo.net/en/sorting" data-width="1200" height="640"></iframe>
 ```
+
+## Revelar ao chegar na seção
+
+Para guardar uma imagem impactante, uma resposta ou um spoiler até a hora certa, ponha `data-reveal` no elemento. Ele fica invisível, com o espaço reservado (a página não pula), até o título da seção dele chegar ao topo da tela. Aí aparece, com uma transição curta, e não some mais.
+
+````markdown
+## Seção 1
+
+Texto que vem antes.
+
+## Seção 2
+
+<img src="img/impacto.gif" alt="" height="300" data-reveal>
+
+<div data-reveal>
+
+O **segredo** também pode ser texto em Markdown, lista, fórmula ou tabela.
+
+</div>
+````
+
+- Vale em qualquer elemento HTML: `<img>`, `<div>`, `<svg>`, `<iframe>`, `<p>`. Uma imagem em Markdown (`![](x.gif)`) precisa virar `<img … data-reveal>`.
+- A "seção" é o último título (`#`, `##` ou `###`) antes do elemento. Sem título antes, ele aparece logo.
+- Na última seção da aula, que talvez não consiga chegar ao topo, o elemento aparece quando a página chega ao fim.
+- Um GIF começa do primeiro quadro na hora em que aparece.
+- Dentro de `<div data-reveal>`, deixe uma linha em branco depois da abertura e antes do fechamento, para o Markdown funcionar. Blocos de código não entram: eles continuam visíveis.
+- No PDF tudo sai visível. No HTML exportado, o comportamento é o mesmo da aula.
 
 Veja os [exemplos](/docs/exemplos/) para aulas inteiras montadas com tudo isso.

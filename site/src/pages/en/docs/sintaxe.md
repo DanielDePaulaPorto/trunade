@@ -26,6 +26,7 @@ Each example shows the Markdown and, right below it, how it shows on the Trunade
 | ```` ```mermaid ```` | diagram |
 | `> [!NOTE]`, `> [!TIP]`… | callout box |
 | `<img>`, `<iframe>`, `<div>`… | HTML, as is |
+| `data-reveal` on an HTML element | hidden until the lesson reaches its section |
 
 Any other fence (```` ```text ````, ```` ```bash ````, ```` ```json ````) stays highlighted code, with no ▶.
 
@@ -443,5 +444,32 @@ Iframes take the text width. A **local** page is scaled down to fit and its heig
 <iframe src="visualization.html"></iframe>
 <iframe src="https://visualgo.net/en/sorting" data-width="1200" height="640"></iframe>
 ```
+
+## Reveal on reaching the section
+
+To keep a striking image, an answer or a spoiler for the right moment, put `data-reveal` on the element. It stays invisible, with its space kept (the page does not jump), until the heading of its section reaches the top of the screen. Then it appears, with a short transition, and stays.
+
+````markdown
+## Section 1
+
+Text that comes before.
+
+## Section 2
+
+<img src="img/impact.gif" alt="" height="300" data-reveal>
+
+<div data-reveal>
+
+The **secret** can also be Markdown text, a list, a formula or a table.
+
+</div>
+````
+
+- It works on any HTML element: `<img>`, `<div>`, `<svg>`, `<iframe>`, `<p>`. A Markdown image (`![](x.gif)`) must become `<img … data-reveal>`.
+- The "section" is the last heading (`#`, `##` or `###`) before the element. With no heading before it, it shows right away.
+- In the lesson's last section, which may not be able to reach the top, the element appears when the page reaches its end.
+- A GIF starts from its first frame when it appears.
+- Inside `<div data-reveal>`, leave a blank line after the opening tag and before the closing one, so the Markdown works. Code blocks do not go in: they stay visible.
+- In the PDF everything is visible. In the exported HTML it behaves as in class.
 
 See the [examples](/en/docs/exemplos/) for whole lessons built with all of this.

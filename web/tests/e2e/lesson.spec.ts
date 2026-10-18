@@ -151,6 +151,18 @@ test('input and output grow with their content, without scrollbars', async ({ pa
   expect(overflow).toEqual({ input: false, output: false })
 })
 
+test('data-reveal keeps an element hidden until its section reaches the top', async ({ page }) => {
+  const secret = page.locator('#segredo')
+  await expect(secret).toBeAttached()
+  await expect(secret).toBeHidden()
+  await page.getByRole('heading', { name: 'Seção com segredo' }).evaluate((heading) => {
+    document.documentElement.style.scrollBehavior = 'auto'
+    window.scrollTo(0, window.scrollY + heading.getBoundingClientRect().top - 20)
+  })
+  await expect(secret).toBeVisible()
+  await expect(secret).toContainText('segredo da aula')
+})
+
 test('runs reach the usage log', async ({ page }) => {
   await block(page, 0).getByTitle('Executar (Shift+Enter)').click()
   await expect(terminalText(block(page, 0))).toContainText('42')

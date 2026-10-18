@@ -86,13 +86,16 @@ async function exportPdf() {
 }
 
 let stopTracking = () => {}
+let stopReveals = () => {}
 onMounted(() => {
   window.addEventListener('keydown', onKey)
   stopTracking = trackUsage()
+  stopReveals = trackReveals()
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey)
   stopTracking()
+  stopReveals()
 })
 </script>
 

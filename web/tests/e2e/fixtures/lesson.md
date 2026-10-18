@@ -87,3 +87,11 @@ um
 dois
 três
 ```
+
+## Seção com segredo
+
+<div data-reveal id="segredo">
+
+O **segredo** da aula.
+
+</div>

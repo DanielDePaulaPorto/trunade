@@ -661,6 +661,22 @@ em {
   font-size: 0.85em;
 }
 
+/* data-reveal: space kept, shown when its section arrives (composables/useReveal.ts) */
+.markdown [data-reveal]:not(.revealed) {
+  visibility: hidden;
+}
+
+.markdown [data-reveal].revealed {
+  animation: reveal-in 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes reveal-in {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+
 .hidden-code {
   display: flex;
   align-items: center;
@@ -1568,6 +1584,10 @@ kbd {
 
 /* As on screen (colors included), without the controls. */
 @media print {
+  .markdown [data-reveal] {
+    visibility: visible !important;
+  }
+
   @page {
     margin: 14mm 12mm;
   }
