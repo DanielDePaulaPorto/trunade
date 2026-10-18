@@ -101,7 +101,7 @@ test('Z zooms a block and Esc returns', async ({ page }) => {
 test('run all runs every block and reports the failing ones', async ({ page }) => {
   await pressShortcut(page, 'r')
   const status = page.locator('.run-all')
-  await expect(status.locator('.run-all-ok')).toContainText('2', { timeout: 30_000 })
+  await expect(status.locator('.run-all-ok')).toContainText('3', { timeout: 30_000 })
   await expect(status.locator('.run-all-failed')).toContainText('2')
   // the interactive block runs with empty input: input() hits end of file
   await expect(status.getByRole('button', { name: 'linha 16' })).toBeVisible()
@@ -135,6 +135,20 @@ test('exported HTML works without the server and replays runs', async ({ page })
   const interactive = block(page, 1)
   await interactive.getByTitle('Executar (Shift+Enter)').click()
   await expect(terminalText(interactive)).toContainText('EOFError')
+})
+
+test('input and output grow with their content, without scrollbars', async ({ page }) => {
+  const cell = page.locator('.code-cell').last()
+  await cell.getByTitle('Executar (Shift+Enter)').click()
+  await expect(terminalText(cell)).toContainText('linha 40')
+  const overflow = await cell.evaluate((element) => {
+    const scrolls = (box: Element | null) => !!box && box.scrollHeight > box.clientHeight + 1
+    return {
+      input: scrolls(element.querySelector('textarea')),
+      output: scrolls(element.querySelector('.xterm-viewport')),
+    }
+  })
+  expect(overflow).toEqual({ input: false, output: false })
 })
 
 test('runs reach the usage log', async ({ page }) => {

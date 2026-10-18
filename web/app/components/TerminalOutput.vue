@@ -3,10 +3,12 @@ import { Terminal, type ITheme } from '@xterm/xterm'
 import { FitAddon } from '@xterm/addon-fit'
 
 const MIN_ROWS = 2
-const MAX_ROWS = 24
+/** The terminal grows with the output, with no scrollbar; this only stops a runaway program. */
+const MAX_ROWS = 1000
+/** What the program sees as the terminal height (PTY). */
+const PROGRAM_ROWS = 24
 const BASE_FONT_PX = 15
 const PRINT_FONT_PX = 12
-const MAX_PRINT_ROWS = 1000
 const SHOW_CURSOR = '\x1b[?25h'
 const HIDE_CURSOR = '\x1b[?25l'
 
@@ -93,15 +95,12 @@ function fontSize() {
   return printing.value ? PRINT_FONT_PX : Math.round(BASE_FONT_PX * fontScale.value * props.scale)
 }
 
-/** On paper there is no scrolling: show every line, then go back to the screen size. */
-watch(printing, (isPrinting) => {
+/** Printing changes the font size: refit, keeping every line visible. */
+watch(printing, () => {
   if (!terminal) return
   terminal.options.fontSize = fontSize()
-  const used = linesUsed()
-  const rows = isPrinting ? Math.min(MAX_PRINT_ROWS, used) : Math.min(MAX_ROWS, used)
-  terminal.resize(terminal.cols, Math.max(MIN_ROWS, rows))
-  if (isPrinting) terminal.scrollToTop()
-  else terminal.scrollToBottom()
+  terminal.resize(terminal.cols, Math.max(MIN_ROWS, Math.min(MAX_ROWS, linesUsed())))
+  terminal.scrollToTop()
   fitWidth()
 })
 
@@ -115,7 +114,7 @@ function fitWidth() {
   if (terminal && cols && cols !== terminal.cols) terminal.resize(cols, terminal.rows)
 }
 
-/** Grow with the output (up to MAX_ROWS) instead of showing a fixed-height box. */
+/** Grow with the output instead of showing a fixed-height box that scrolls. */
 function growToContent() {
   if (!terminal) return
   const rows = Math.min(MAX_ROWS, Math.max(MIN_ROWS, linesUsed()))
@@ -145,7 +144,7 @@ function write(text: string) {
 }
 
 function size() {
-  return { cols: terminal?.cols ?? 80, rows: MAX_ROWS }
+  return { cols: terminal?.cols ?? 80, rows: PROGRAM_ROWS }
 }
 
 defineExpose({ reset, setInteractive, write, size })

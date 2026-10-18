@@ -36,6 +36,7 @@
   /* Defaults; the font preferences override these on the root element. */
   --font-title: "Gloock", ui-serif, Georgia, serif;
   --title-weight: 400;
+  --title-tracking: 0.07em;
   --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, Menlo, monospace;
   --radius: 8px;
   --radius-lg: 14px;
@@ -234,7 +235,7 @@ em {
 
 .trn-name {
   display: block;
-  height: 1.15rem;
+  height: 1.35rem;
   width: auto;
   fill: var(--text);
 }
@@ -296,6 +297,7 @@ em {
 .markdown h3 {
   font-family: var(--font-title);
   font-weight: var(--title-weight);
+  letter-spacing: var(--title-tracking);
   line-height: 1.2;
   text-wrap: balance;
   margin: 2.2rem 0 0.75rem;
@@ -756,7 +758,9 @@ em {
   background: transparent;
   border: 0;
   outline: none;
-  resize: vertical;
+  resize: none;
+  overflow: hidden;
+  field-sizing: content; /* grows with the text, wrapped lines included */
 }
 
 .output {
@@ -769,13 +773,9 @@ em {
   background-color: var(--term-bg) !important;
 }
 
-/* The terminal grows with its output; its scrollbar only shows on hover. */
+/* The terminal grows with its output: no scrollbar. */
 .output .xterm .scrollbar {
-  opacity: 0 !important;
-}
-
-.output:hover .xterm .scrollbar {
-  opacity: 1 !important;
+  display: none !important;
 }
 
 /* --------------------------------------------------------------- quiz */

@@ -219,8 +219,9 @@ function describe(outcome: Outcome): string {
   }
 }
 
+/** Fallback height where `field-sizing: content` is missing; the box never scrolls. */
 function rows(text: string) {
-  return Math.max(1, Math.min(8, text.replace(/\n$/, '').split('\n').length))
+  return Math.max(1, text.split('\n').length)
 }
 
 function seconds(ms: number) {

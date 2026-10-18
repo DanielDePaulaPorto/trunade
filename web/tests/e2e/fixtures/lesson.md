@@ -72,3 +72,18 @@ Leia um número.
 <!-- step: Solução -->
 Resposta final.
 <!-- /steps -->
+
+## Saída longa
+
+```python
+n = int(input())
+for i in range(n):
+    print("linha", i + 1)
+```
+
+```stdin
+40
+um
+dois
+três
+```
