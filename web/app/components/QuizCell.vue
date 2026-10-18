@@ -20,15 +20,25 @@ function choose(index: number) {
   chosen.value[index] = !chosen.value[index]
 }
 
+const revealButton = ref<HTMLButtonElement>()
+
 function toggleReveal() {
   if (revealed.value) chosen.value = chosen.value.map(() => false)
-  else logAnswer()
+  else {
+    logAnswer()
+    if (answeredRight() && revealButton.value) confetti(revealButton.value)
+  }
   revealed.value = !revealed.value
+}
+
+/** Exactly the right options chosen. */
+function answeredRight() {
+  return props.cell.options.every((option, index) => option.correct === chosen.value[index])
 }
 
 function logAnswer() {
   const chosenIndexes = chosen.value.flatMap((isChosen, index) => (isChosen ? [index] : []))
-  const correct = props.cell.options.every((option, index) => option.correct === chosen.value[index])
+  const correct = answeredRight()
   logEvent('quiz', { cell: props.cell.id, question: logText(props.cell.question), chosen: chosenIndexes, correct })
 }
 
@@ -65,7 +75,7 @@ function optionClass(index: number) {
         </button>
       </li>
     </ul>
-    <button class="quiz-reveal" @click="toggleReveal">
+    <button ref="revealButton" class="quiz-reveal" @click="toggleReveal">
       {{ revealed ? t('tryAgain') : t('showAnswer') }}
     </button>
   </section>

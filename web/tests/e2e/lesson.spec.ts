@@ -66,6 +66,12 @@ test('quiz marks the right answer once revealed', async ({ page }) => {
   await quiz.getByRole('button', { name: 'Ver resposta' }).click()
   await expect(quiz.locator('.quiz-option.wrong')).toHaveCount(1)
   await expect(quiz.locator('.quiz-option.correct')).toContainText('4')
+  await expect(page.locator('canvas.confetti')).toHaveCount(0) // wrong answer: no party
+
+  await quiz.getByRole('button', { name: 'Tentar de novo' }).click()
+  await quiz.getByRole('radio', { name: '4' }).click()
+  await quiz.getByRole('button', { name: 'Ver resposta' }).click()
+  await expect(page.locator('canvas.confetti')).toHaveCount(1)
 })
 
 test('steps move forward', async ({ page }) => {

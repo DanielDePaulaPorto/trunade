@@ -311,7 +311,7 @@ Which structures give the smallest element in $O(1)$?
 ```
 ````
 
-Answers stay hidden until someone clicks **Show answer**.
+Answers stay hidden until someone clicks **Show answer**. If the choice is right (every correct option and no wrong one), confetti flies.
 
 ## Exercise in steps
 

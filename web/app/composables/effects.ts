@@ -86,3 +86,73 @@ function decrypt(heading: HTMLElement) {
 function randomChar() {
   return SCRAMBLE_CHARS[Math.floor(Math.random() * SCRAMBLE_CHARS.length)]
 }
+
+/* Confetti for a right answer: paper bits thrown up from an element, falling with gravity. */
+const CONFETTI_PIECES = 140
+const CONFETTI_MS = 2600
+const GRAVITY = 0.32
+// Brand inks: malachite in two tones, glow, and bronze only as a pinch.
+const CONFETTI_COLORS = ['#0b8f6a', '#0b8f6a', '#0e6e53', '#5ef2d0', '#5ef2d0', '#a85d18']
+
+interface Piece {
+  x: number
+  y: number
+  vx: number
+  vy: number
+  size: number
+  angle: number
+  spin: number
+  color: string
+}
+
+export function confetti(from: HTMLElement) {
+  if (prefersLessMotion()) return
+  const canvas = document.createElement('canvas')
+  canvas.className = 'confetti'
+  const ratio = window.devicePixelRatio || 1
+  canvas.width = window.innerWidth * ratio
+  canvas.height = window.innerHeight * ratio
+  document.body.append(canvas)
+  const context = canvas.getContext('2d')!
+  context.scale(ratio, ratio)
+
+  const origin = center(from)
+  const pieces: Piece[] = Array.from({ length: CONFETTI_PIECES }, () => {
+    const direction = -Math.PI / 2 + (Math.random() - 0.5) * 1.6 // mostly upwards, fanned out
+    const speed = 9 + Math.random() * 11
+    return {
+      x: origin.x,
+      y: origin.y,
+      vx: Math.cos(direction) * speed,
+      vy: Math.sin(direction) * speed,
+      size: 6 + Math.random() * 6,
+      angle: Math.random() * Math.PI,
+      spin: (Math.random() - 0.5) * 0.4,
+      color: CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]!,
+    }
+  })
+
+  const start = performance.now()
+  const frame = (now: number) => {
+    const elapsed = now - start
+    context.clearRect(0, 0, window.innerWidth, window.innerHeight)
+    context.globalAlpha = Math.min(1, 2 * (1 - elapsed / CONFETTI_MS)) // fade over the last half
+    for (const piece of pieces) {
+      piece.vx *= 0.985 // air
+      piece.vy = piece.vy * 0.985 + GRAVITY
+      piece.x += piece.vx
+      piece.y += piece.vy
+      piece.angle += piece.spin
+      context.save()
+      context.translate(piece.x, piece.y)
+      context.rotate(piece.angle)
+      context.scale(1, Math.cos(piece.angle * 2)) // paper turning over
+      context.fillStyle = piece.color
+      context.fillRect(-piece.size / 2, -piece.size / 4, piece.size, piece.size / 2)
+      context.restore()
+    }
+    if (elapsed < CONFETTI_MS) requestAnimationFrame(frame)
+    else canvas.remove()
+  }
+  requestAnimationFrame(frame)
+}

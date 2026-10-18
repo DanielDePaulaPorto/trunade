@@ -311,7 +311,7 @@ Quais estruturas dão acesso ao menor elemento em $O(1)$?
 ```
 ````
 
-As respostas ficam ocultas até alguém clicar em **Ver resposta**.
+As respostas ficam ocultas até alguém clicar em **Ver resposta**. Se a escolha estiver certa (todas as corretas e nenhuma errada), voam confetes.
 
 ## Exercício em passos
 
