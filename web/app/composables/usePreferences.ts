@@ -102,6 +102,7 @@ function applyToPage() {
   root.style.fontSize = `${BASE_FONT_PX * fontScale.value}px`
   root.style.setProperty('--font-title', title.family)
   root.style.setProperty('--title-weight', String(title.weight))
+  root.style.setProperty('--title-tracking', 'tracking' in title ? title.tracking : 'normal')
   root.style.setProperty('--font-text', BODY_FONTS[bodyFont.value].family)
   root.style.setProperty('--font-mono', codeFontFamily.value)
 }

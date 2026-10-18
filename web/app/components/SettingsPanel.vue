@@ -158,7 +158,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
                   v-for="(font, id) in fontGroup.fonts"
                   :key="id"
                   :class="{ active: fontGroup.model.value === id }"
-                  :style="{ fontFamily: font.family, fontWeight: font.weight }"
+                  :style="{ fontFamily: font.family, fontWeight: font.weight, letterSpacing: 'tracking' in font ? font.tracking : undefined }"
                   @click="fontGroup.model.value = id"
                 >
                   {{ font.label }}

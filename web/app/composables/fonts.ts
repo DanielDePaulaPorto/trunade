@@ -7,6 +7,8 @@ export interface FontChoice {
   family: string
   /** Display faces with a single weight must not be synthesized bold. */
   weight?: number
+  /** Letter spacing for titles (Gloock: 7%, like the logo). */
+  tracking?: string
 }
 
 const MONO_FALLBACK = 'ui-monospace, SFMono-Regular, Menlo, monospace'
@@ -14,7 +16,7 @@ const SANS_FALLBACK = 'ui-sans-serif, system-ui, sans-serif'
 const SERIF_FALLBACK = 'ui-serif, Georgia, serif'
 
 export const TITLE_FONTS = {
-  gloock: { label: 'Gloock', family: `"Gloock", ${SERIF_FALLBACK}`, weight: 400 },
+  gloock: { label: 'Gloock', family: `"Gloock", ${SERIF_FALLBACK}`, weight: 400, tracking: '0.07em' },
   'ibm-plex-mono': { label: 'IBM Plex Mono', family: `"IBM Plex Mono", ${MONO_FALLBACK}`, weight: 700 },
   fraunces: { label: 'Fraunces', family: `"Fraunces Variable", ${SERIF_FALLBACK}`, weight: 700 },
   'cormorant-garamond': { label: 'Cormorant Garamond', family: `"Cormorant Garamond Variable", ${SERIF_FALLBACK}`, weight: 700 },
