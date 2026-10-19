@@ -5,45 +5,45 @@
   </picture>
 </h1>
 
-Aulas de programação escritas em Markdown, com blocos de código que compilam e rodam no navegador.
+Programming lessons written in Markdown, with code blocks that compile and run in the browser.
 
 ```bash
-trunade aula.md
+trunade lesson.md
 ```
 
-Documentação completa (sintaxe, exemplos, recursos de aula): [trunade.org](https://www.trunade.org) ou `site/src/pages/docs/`.
+The command opens the lesson in the browser. Every ` ```cpp ` block becomes an editable box with ▶; the output shows right below, in a terminal. You edit the `.md` in your own editor (Zed, VS Code, Vim…) and the page updates when you save.
 
-O comando abre a aula no navegador. Cada bloco ` ```cpp ` vira uma caixa editável com ▶; a saída aparece logo abaixo, num terminal. Você edita o `.md` no seu editor (Zed, VS Code, Vim…) e a página se atualiza ao salvar.
+Full documentation (syntax, examples, lesson features): [trunade.org](https://www.trunade.org), or `site/src/pages/en/docs/` in this repository.
 
-## Por que não o Jupyter?
+## Why not Jupyter?
 
-O Jupyter é ótimo para análise de dados, onde cada célula continua o estado da anterior e o resultado (tabelas, gráficos) fica salvo no próprio notebook. Uma aula de programação em C++ pede outra coisa.
+Jupyter is great for data analysis, where each cell continues the state of the previous one and results (tables, plots) are stored in the notebook. A C++ programming lesson asks for something else.
 
 | | Trunade! | Jupyter |
 |---|---|---|
-| **Arquivo da aula** | Markdown puro. Diffs legíveis no git, abre em qualquer editor, não guarda saída nem metadados. | `.ipynb` em JSON, com saídas e metadados misturados ao texto. Conflitos de merge difíceis. |
-| **O que é um bloco** | Um programa completo, com `main()`, compilado como o aluno compila na prova ou na maratona. | Uma célula que continua o estado das anteriores. Para C++ (xeus-cling), código interpretado, sem `main` e com semântica própria. |
-| **Compilador** | O real (`g++-16` por padrão, configurável), com as flags que você escolher. Erros na íntegra, coloridos. | O do kernel. |
-| **Erros de execução** | Código de saída, sinais (`Segmentation fault`), tempo limite e limite de saída aparecem na tela. | Dependem do kernel; um laço infinito trava a célula. |
-| **Entrada padrão** | Interativa num terminal real, ou fixa num bloco ` ```stdin ` versionado junto com a aula. | `input()` limitado; em C++ geralmente não há `cin` interativo. |
-| **Projeção em sala** | Tema claro, fonte ajustável, navegação por seções com espaço e índice com `T`, nada de barras de ferramentas. | Interface de notebook, feita para editar. |
-| **Instalação** | Um binário, funciona offline. | Python, Jupyter e um kernel de C++. |
+| **Lesson file** | Plain Markdown. Readable git diffs, opens in any editor, no stored output or metadata. | `.ipynb` JSON, with outputs and metadata mixed into the text. Hard merge conflicts. |
+| **What a block is** | A whole program, with `main()`, compiled the way students compile in an exam or a contest. | A cell that continues earlier state. For C++ (xeus-cling), interpreted code with no `main` and its own semantics. |
+| **Compiler** | The real one (`g++-16` by default, configurable), with your flags. Full, colored errors. | The kernel's. |
+| **Runtime errors** | Exit code, signals (`Segmentation fault`), time limit and output limit are shown. | Kernel-dependent; an infinite loop hangs the cell. |
+| **Standard input** | Interactive in a real terminal, or fixed in a ` ```stdin ` block kept with the lesson, with expected output and a judge-like verdict. | Limited `input()`; usually no interactive `cin` in C++. |
+| **Projecting in class** | Light theme, adjustable font, section navigation with Space and an outline with `T`, no toolbars. | A notebook UI, built for editing. |
+| **Installation** | One binary, works offline. | Python, Jupyter and a C++ kernel. |
 
-Use o Jupyter quando o estado entre células for o ponto (exploração de dados, gráficos). Use o Trunade! quando cada exemplo for um programa.
+Use Jupyter when state across cells is the point (data exploration, plots). Use Trunade! when every example is a program.
 
-## Instalação
+## Installation
 
-Requisitos: Rust, Node com pnpm e um compilador C++ (no macOS, `brew install gcc` instala o `g++-16`; o `g++` da Apple é o Clang e não tem `<bits/stdc++.h>`).
+Requirements: Rust, Node with pnpm, and a C++ compiler (on macOS, `brew install gcc` installs `g++-16`; Apple's `g++` is Clang and has no `<bits/stdc++.h>`).
 
 ```bash
 ./install.sh
 ```
 
-O script gera a interface web, embute no binário e instala `trunade` em `~/.cargo/bin`.
+The script builds the web interface, embeds it in the binary and installs `trunade` into `~/.cargo/bin`.
 
-## Escrevendo uma aula
+## Writing a lesson
 
-Blocos cercados com uma linguagem configurada viram células executáveis. Os demais continuam texto.
+Fenced blocks in a configured language become runnable cells. Everything else stays text.
 
 ````markdown
 ```cpp {flags="-O2" timeout=5}
@@ -54,64 +54,41 @@ int main() { int a, b; std::cin >> a >> b; std::cout << a + b << "\n"; }
 ```stdin
 2 40
 ```
+
+```expected
+42
+```
 ````
 
-- **Atributos** no fence: `flags` (flags extras do compilador) e `timeout` (segundos).
-- **Entrada fixa:** um bloco ` ```stdin ` logo depois do código. Sem ele, o programa roda num terminal e você digita a entrada na hora (sem tempo limite; use ■ para parar).
-- **Fórmulas:** `$x^2$` no texto, `$$ … $$` ou ` ```math ` em destaque (KaTeX).
-- **Diagramas:** ` ```mermaid `.
-- **Perguntas:** a primeira parte é o enunciado; `- [x]` marca as certas (mais de uma vira múltipla escolha).
+- **Attributes** on the fence: `flags` (extra compiler flags) and `timeout` (seconds).
+- **Test cases:** ` ```stdin ` and ` ```expected ` blocks right after the code. Several pairs make several cases, each with ✓ or ✗. Without them, the program runs in a terminal and you type the input on the spot.
+- **Templates:** declare the repeated code once (` ```cpp template=contest `, with a `//{code}` line) and use it only where you want (` ```cpp-contest `).
+- **Formulas** (KaTeX), **diagrams** (` ```mermaid `), **questions** (` ```quiz `), **exercises in steps** (`<!-- step: Title -->`), callouts (`> [!TIP]`) and HTML, including `data-reveal` to keep an element hidden until its section comes up.
 
-  ````markdown
-  ```quiz
-  Qual a complexidade da busca binária?
-  - [ ] O(n)
-  - [x] O(log n)
-  ```
-  ````
+See the [syntax reference](https://www.trunade.org/en/docs/sintaxe/) and the [examples](https://www.trunade.org/en/docs/exemplos/).
 
-- **Exercício em passos:** os blocos entre os marcadores viram um passo a passo (enunciado → dica → solução). O código dentro dos passos continua executável.
+## In class
 
-  ~~~markdown
-  <!-- step: Enunciado -->
-  Leia dois inteiros e imprima a soma.
-
-  <!-- step: Dica -->
-  Use `std::cin >> a >> b`.
-
-  <!-- step: Solução -->
-  ```cpp
-  #include <iostream>
-  int main() { int a, b; std::cin >> a >> b; std::cout << a + b << "\n"; }
-  ```
-  <!-- /steps -->
-  ~~~
-
-- **HTML** é aceito: `<div>`, `<img>`, `<iframe>`. Imagens e páginas ao lado do `.md` são servidas pelo próprio Trunade!. Iframes de páginas locais se ajustam sozinhos à largura do texto e à altura do conteúdo. Para um site externo mais largo que o texto, informe a largura que ele precisa e o Trunade! reduz para caber: `<iframe src="https://…" data-width="1200" height="600"></iframe>`.
-
-## Na aula
-
-| Tecla | Ação |
+| Key | Action |
 |---|---|
-| `T` | índice de seções (→ abre as subseções) |
-| `Espaço` / `↓` / `Page Down` | próxima seção, com rolagem suave |
-| `Shift+Espaço` / `↑` / `Page Up` | seção anterior |
-| `+` `-` `0` | aumentar, diminuir, restaurar a fonte |
-| `D` | alternar tema |
-| `⌘P` / `Ctrl+P` | exportar PDF (também no ☰) |
-| `W` | largura do texto: estreita ou página inteira |
-| `F` | tela cheia (`Esc` ou `F` sai) |
-| `O` | configurações (também no ☰) |
-| `Shift+Enter` | executar o bloco, com o cursor no código |
-| `Esc` | sair do código ou do terminal |
+| `T` | section outline (→ opens subsections) |
+| `Space` / `↓` / `Page Down` | next section, smooth scroll |
+| `Shift+Space` / `↑` / `Page Up` | previous section |
+| `+` `-` `0` | bigger, smaller, reset font |
+| `D` | switch theme |
+| `W` | text width: narrow or full page |
+| `F` | full screen |
+| `Z` | zoom into a code block (`Esc` returns) |
+| `R` | run every block |
+| `⌘P` / `Ctrl+P` | export PDF |
+| `O` | settings (also ☰) |
+| `Shift+Enter` | run the block, with the cursor in the code |
 
-No painel ☰ também dá para trocar as fontes (títulos, texto e código), a largura do texto, o idioma (português/inglês) e as cores do código (seguir o tema, Monokai claro ou escuro).
+The ☰ panel also exports a self-contained HTML file and copies the lesson as plain HTML for a Moodle page. Choices (fonts, theme, width, language, code colors) are kept in `~/.config/trunade/preferences.toml` for every lesson.
 
-O tamanho de fonte do Trunade! muda só o conteúdo da página. Todas as escolhas do painel ficam em `~/.config/trunade/preferences.toml` e valem para qualquer aula. O zoom do navegador (`⌘ +`) continua funcionando e se multiplica com ele.
+## Configuration
 
-## Configuração
-
-`~/.config/trunade/config.toml` vale para todas as aulas; um `trunade.toml` ao lado do `.md` sobrescreve só o que declarar.
+`~/.config/trunade/config.toml` applies to every lesson; a `trunade.toml` next to the `.md` overrides only what it declares.
 
 ```toml
 timeout_seconds = 10
@@ -124,4 +101,4 @@ compile = ["g++-16", "-std=c++23", "-Wall", "{flags}", "{source}", "-o", "{binar
 run = ["{binary}"]
 ```
 
-C++, C e Python vêm configurados.
+C++, C and Python come configured.
