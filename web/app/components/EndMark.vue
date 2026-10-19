@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /*
- * End of the lesson: the vortex alone (design/identidade/favicon), static.
+ * End of the lesson: the vortex alone (brand book: favicon), static.
  * The brand never animates this drawing.
  */
 const { t } = useI18n()

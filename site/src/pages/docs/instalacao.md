@@ -22,10 +22,10 @@ brew install gcc
 
 ## Instalar
 
-Na pasta do projeto:
+Na pasta do repositório:
 
 ```bash
-TrunadeCode/install.sh
+./install.sh
 ```
 
 O script gera a interface web, embute no binário e instala `trunade` em `~/.cargo/bin`.

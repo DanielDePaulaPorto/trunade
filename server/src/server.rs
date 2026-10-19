@@ -527,7 +527,7 @@ async fn static_file(State(state): State<Arc<AppState>>, uri: Uri) -> Response {
     if path.is_empty() {
         return (
             StatusCode::SERVICE_UNAVAILABLE,
-            "Trunade! web app not built: run `pnpm generate` in TrunadeCode/web and rebuild.",
+            "Trunade! web app not built: run `pnpm generate` in web/ and rebuild.",
         )
             .into_response();
     }

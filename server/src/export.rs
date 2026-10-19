@@ -54,7 +54,7 @@ fn create_beside(document: &Path) -> Result<(PathBuf, std::fs::File)> {
 
 fn build_html(lesson: &Value, fonts: &[String], title: &str) -> Result<String> {
     let index = asset_text("index.html")
-        .context("the export build is missing: run `pnpm generate` in TrunadeCode/web and rebuild")?;
+        .context("the export build is missing: run `pnpm generate` in web/ and rebuild")?;
     let mut html = String::with_capacity(4 * 1024 * 1024);
     let mut rest = index.as_str();
     while let Some(start) = rest.find('<') {

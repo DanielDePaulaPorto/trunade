@@ -1,5 +1,5 @@
 /*
- * Trunade! — tokens from the brand book (design/identidade/tokens.css).
+ * Trunade! — tokens from the brand book (brand book tokens).
  * Malachite is the brand; small text uses --brand-text. Glow means "a program
  * is running" and only appears on dark surfaces. Everything is monospaced:
  * Fonts are a preference (composables/fonts.ts): Gloock titles and
@@ -173,7 +173,7 @@ em {
 }
 
 /*
- * The symbol (design/identidade/simbolo-animado): only the rotor moves, in
+ * The symbol (brand book: animated symbol): only the rotor moves, in
  * full turns with a burst-and-brake curve; one turn backwards is the reset.
  */
 .trn {

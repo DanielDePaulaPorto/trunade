@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /*
- * The name "Trunade!" as drawn in the logo (design/identidade/logos/trunade-nome.svg):
+ * The name "Trunade!" as drawn in the logo (brand book: name logo):
  * Gloock with 7% letter spacing, in curves, so it looks the same with any page font.
  * Colors come from CSS.
  */

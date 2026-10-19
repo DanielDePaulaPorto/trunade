@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /*
- * The Trunade! symbol (design/identidade/simbolo-animado): a terminal skull
+ * The Trunade! symbol (brand book: animated symbol): a terminal skull
  * whose eyes are the `>_` prompt, inside a rotor of three arcs. Idle, the `_`
  * blinks; running, the rotor turns and the eyes glow; when the run ends the
  * rotor takes one turn backwards (the reset). Below 24px use the favicon.

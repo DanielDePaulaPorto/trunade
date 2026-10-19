@@ -22,10 +22,10 @@ brew install gcc
 
 ## Install
 
-From the project folder:
+From the repository folder:
 
 ```bash
-TrunadeCode/install.sh
+./install.sh
 ```
 
 The script builds the web interface, embeds it in the binary and installs `trunade` in `~/.cargo/bin`.
