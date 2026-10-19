@@ -86,15 +86,18 @@ function labelled(label: string, text: string, color: string) {
 }
 
 /**
- * Some Moodle sites read the content as Markdown too: a line starting with
- * spaces became a code block (its HTML shown as text) and a blank line ended
- * the HTML. Indentation goes inside an empty-looking span and blank lines get
- * one, so no line starts with a space or is empty; the copied text is the same.
+ * In Moodle, a code line starting with spaces showed its HTML as text (the
+ * content is read like Markdown somewhere along the way). So no line starts
+ * with a space or is empty: indentation goes inside a span. The span carries a
+ * style because Moodle's editor (TinyMCE) unwraps spans with no attributes,
+ * which put the spaces back. The copied text is the same.
  */
+const INDENT = '<span style="white-space:pre">'
+
 function unindented(html: string) {
   return html
     .split('\n')
-    .map((line) => (line.trim() ? line.replace(/^[ \t]+/, (space) => `<span>${space}</span>`) : `<span>${line}</span>`))
+    .map((line) => (line.trim() ? line.replace(/^[ \t]+/, (space) => `${INDENT}${space}</span>`) : `${INDENT}${line}</span>`))
     .join('\n')
 }
 

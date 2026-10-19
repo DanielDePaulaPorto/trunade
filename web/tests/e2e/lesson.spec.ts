@@ -185,6 +185,10 @@ test('copy for Moodle puts plain, inline-styled HTML on the clipboard', async ({
   expect(html).toContain('42')
   expect(html).toContain('import</span> sys') // template lines go along: students copy whole programs
   expect(html).toContain('<details>')
+  // no code line may start with a space: some Moodles escape such lines
+  for (const pre of html.match(/<pre[^>]*>[\s\S]*?<\/pre>/g) ?? []) {
+    expect(pre.split('\n').filter((line) => /^\s/.test(line))).toEqual([])
+  }
 })
 
 test('runs reach the usage log', async ({ page }) => {
