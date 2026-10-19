@@ -180,14 +180,14 @@ test('copy for Moodle puts plain, inline-styled HTML on the clipboard', async ({
   const html = await page.evaluate(() => navigator.clipboard.readText())
   writeFileSync(join(process.env.TRUNADE_TEST_HOME!, 'moodle.html'), html)
   expect(html).not.toMatch(/<script|<style|class="cm-|xterm/)
-  expect(html).toContain('<span style="color:#f92672">') // Monokai keyword, inline
+  expect(html).toMatch(/<pre style="[^"]*">a, b = map\(int, input\(\)\.split\(\)\)/) // code as plain text, no tags
   expect(html).toMatch(/SAÍDA|saída/i)
   expect(html).toContain('42')
-  expect(html).toContain('import</span> sys') // template lines go along: students copy whole programs
+  expect(html).toContain('import sys') // template lines go along: students copy whole programs
   expect(html).toContain('<details>')
-  // no code line may start with a space: some Moodles escape such lines
+  // no tag inside code blocks: a Moodle display filter showed them as text
   for (const pre of html.match(/<pre[^>]*>[\s\S]*?<\/pre>/g) ?? []) {
-    expect(pre.split('\n').filter((line) => /^\s/.test(line))).toEqual([])
+    expect(pre.replace(/^<pre[^>]*>|<\/pre>$/g, '')).not.toMatch(/<[a-z/]/i)
   }
 })
 

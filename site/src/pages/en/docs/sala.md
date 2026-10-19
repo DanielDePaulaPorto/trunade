@@ -64,7 +64,7 @@ In ☰ › Run and export, **Export HTML** writes a single `.html` file next to 
 In ☰ › Run and export, **Copy for Moodle** puts the whole lesson on the clipboard as plain HTML, to paste into a Moodle **Page** (in the normal editor or in source view). Moodle removes scripts and stylesheets, so this copy is made to survive that:
 
 - no effects, no scripts and no custom fonts: every style is written on each element;
-- code goes whole (template included, if any), colored in Monokai, ready for students to select and copy;
+- code goes whole (template included, if any), as plain text on Monokai's dark background, ready for students to select and copy (no syntax colors: a Moodle filter showed the color tags as text);
 - input, expected output and the output on screen go below each block: run everything first (<kbd>R</kbd>);
 - formulas go back to `\( … \)` and `\[ … \]`, for Moodle's MathJax filter to draw;
 - the lesson's SVG figures, diagrams and images go as embedded images, in the light theme's colors;

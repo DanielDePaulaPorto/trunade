@@ -64,7 +64,7 @@ Em ☰ › Rodar e exportar, **Exportar HTML** grava um único arquivo `.html` a
 Em ☰ › Rodar e exportar, **Copiar para o Moodle** põe a aula inteira na área de transferência como HTML simples, para colar no conteúdo de uma **Página** do Moodle (no editor normal ou no modo código-fonte). O Moodle remove scripts e folhas de estilo, então essa cópia é feita para sobreviver a isso:
 
 - sem efeitos, sem scripts e sem fontes próprias: todo estilo vai escrito em cada elemento;
-- o código vai completo (com o molde, quando houver), colorido em Monokai, pronto para o aluno selecionar e copiar;
+- o código vai completo (com o molde, quando houver), como texto puro no fundo escuro do Monokai, pronto para o aluno selecionar e copiar (sem cores de sintaxe: um filtro do Moodle mostrava as tags de cor como texto);
 - entrada, saída esperada e a saída que está na tela vão abaixo de cada bloco: rode tudo antes (<kbd>R</kbd>);
 - fórmulas voltam a `\( … \)` e `\[ … \]`, para o filtro MathJax do Moodle desenhar;
 - figuras SVG da aula, diagramas e imagens vão como imagem embutida, com as cores do tema claro;

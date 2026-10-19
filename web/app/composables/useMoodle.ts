@@ -1,17 +1,14 @@
 /*
  * "Copy for Moodle": the lesson as plain HTML to paste into a Moodle Page.
  * Moodle keeps only what is written on each element, so there is no script,
- * no stylesheet and no web font: every style is inline, code is colored with
- * inline Monokai spans, formulas go back to \( … \) for Moodle's MathJax
+ * no stylesheet and no web font: every style is inline, code is plain text
+ * (see codeHtml), formulas go back to \( … \) for Moodle's MathJax
  * filter, diagrams become images. Outputs are what the page shows now (run
  * everything with R first). The clipboard gets HTML (rich paste) and the same
  * HTML as text (for the editor's source view).
  */
-import { highlightCode, tagHighlighter } from '@lezer/highlight'
-import { cppLanguage } from '@codemirror/lang-cpp'
-import { pythonLanguage } from '@codemirror/lang-python'
 import type { Cell, CodeCell, QuizCell, StepsCell } from './types'
-import { DARK, highlightRules } from './monokai'
+import { DARK } from './monokai'
 import { drawnDiagrams, exportableBlock, inlineImages } from './useExport'
 
 const MONO = "'JetBrains Mono', Menlo, Consolas, monospace"
@@ -34,8 +31,6 @@ const ALERT_COLORS: Record<string, string> = {
   warning: '#a85d18',
   caution: '#d3245c',
 }
-const CODE_LANGUAGES = { cpp: cppLanguage, 'c++': cppLanguage, cxx: cppLanguage, cc: cppLanguage, c: cppLanguage }
-const PYTHON = ['python', 'py', 'python3']
 
 /** Copies the lesson; call it straight from the click (the clipboard needs the gesture). */
 export function copyForMoodle() {
@@ -66,12 +61,18 @@ async function cellHtml(cell: Cell, drawn: Map<string, string>): Promise<string>
 
 // ----------------------------------------------------------------- code
 
+/**
+ * Code goes as plain text, with no tag inside the <pre>: on a real Moodle the
+ * page was stored intact, but a display filter showed the inline color spans
+ * of some lines as text. Without tags there is nothing to escape, and
+ * students still select and copy the whole program.
+ */
 function codeHtml(cell: CodeCell) {
   const block = exportableBlock(cell.id)
   const edits = block?.edits()
   const program = block?.program() ?? cell.source
   const { t } = useI18n()
-  const parts = [`<pre style="${STYLE.code}"><code>${unindented(highlight(program, cell.fenceLanguage))}</code></pre>`]
+  const parts = [`<pre style="${STYLE.code}">${escape(program)}</pre>`]
   for (const testCase of edits?.cases ?? cell.cases) {
     if (testCase.stdin.trim()) parts.push(labelled(t('stdin'), testCase.stdin, '#e6db74'))
     if (testCase.expected !== null) parts.push(labelled(t('expectedOutput'), testCase.expected, '#a6e22e'))
@@ -82,48 +83,10 @@ function codeHtml(cell: CodeCell) {
 }
 
 function labelled(label: string, text: string, color: string) {
-  return `<p style="${STYLE.label}">${escape(label)}</p><pre style="${STYLE.terminal};color:${color}">${unindented(escape(text.replace(/\n$/, '')))}</pre>`
+  return `<p style="${STYLE.label}">${escape(label)}</p><pre style="${STYLE.terminal};color:${color}">${escape(text.replace(/\n$/, ''))}</pre>`
 }
 
-/**
- * In Moodle, a code line starting with spaces showed its HTML as text (the
- * content is read like Markdown somewhere along the way). So no line starts
- * with a space or is empty: indentation goes inside a span. The span carries a
- * style because Moodle's editor (TinyMCE) unwraps spans with no attributes,
- * which put the spaces back. The copied text is the same.
- */
-const INDENT = '<span style="white-space:pre">'
 
-function unindented(html: string) {
-  return html
-    .split('\n')
-    .map((line) => (line.trim() ? line.replace(/^[ \t]+/, (space) => `${INDENT}${space}</span>`) : `${INDENT}${line}</span>`))
-    .join('\n')
-}
-
-/** Monokai colors as inline styles, from the same parser the editor uses. */
-function highlight(code: string, fenceLanguage: string) {
-  const language = PYTHON.includes(fenceLanguage) ? pythonLanguage : CODE_LANGUAGES[fenceLanguage as keyof typeof CODE_LANGUAGES]
-  if (!language) return escape(code)
-  const highlighter = tagHighlighter(
-    highlightRules(DARK).map(({ tag, color, fontStyle, backgroundColor }) => ({
-      tag,
-      // A "class" here is an inline style without spaces; several are joined with spaces.
-      class: [`color:${color}`, fontStyle && `font-style:${fontStyle}`, backgroundColor && `background:${backgroundColor}`]
-        .filter(Boolean)
-        .join(';'),
-    })),
-  )
-  let html = ''
-  highlightCode(
-    code,
-    language.parser.parse(code),
-    highlighter,
-    (text, styles) => (html += styles ? `<span style="${styles.split(' ').join(';')}">${escape(text)}</span>` : escape(text)),
-    () => (html += '\n'),
-  )
-  return html
-}
 
 // ------------------------------------------------------------- markdown
 
@@ -282,7 +245,8 @@ function styleElements(root: DocumentFragment) {
       element.setAttribute('style', `${style};${element.getAttribute('style') ?? ''}`)
     }
   }
-  for (const pre of root.querySelectorAll('pre')) pre.innerHTML = unindented(pre.innerHTML)
+  // Plain text in <pre> too (fenced blocks that do not run): see codeHtml.
+  for (const pre of root.querySelectorAll('pre')) pre.textContent = pre.textContent
 }
 
 // ------------------------------------------------------- quiz and steps
