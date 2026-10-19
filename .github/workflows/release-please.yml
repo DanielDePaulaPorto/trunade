@@ -1,0 +1,19 @@
+# Opens/updates a release PR from Conventional Commits (feat: → minor, fix: → patch).
+# Merging that PR bumps Cargo.toml, Cargo.lock and web/package.json, writes the
+# CHANGELOG and tags the release. Requires "Allow GitHub Actions to create and
+# approve pull requests" in the repository settings.
+name: release-please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v5

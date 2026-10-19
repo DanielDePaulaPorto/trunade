@@ -1,0 +1,15 @@
+.DS_Store
+.venv/
+__pycache__/
+.pytest_cache/
+target/
+node_modules/
+.nuxt/
+.output/
+.data/
+dist
+.astro/
+test-results/
+playwright-report/
+.output-static/
+.idea/
