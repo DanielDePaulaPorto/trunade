@@ -14,9 +14,10 @@ playwright-report/
 .output-static/
 .idea/
 
-# Local copies of third-party pages used only in examples/01-hello.md
+# Local lesson and the third-party pages it uses
 examples/ProblemCF.html
 examples/cf2.html
 examples/select.html
 examples/image.png
 examples/image_1.png
+examples/01-hello.md
