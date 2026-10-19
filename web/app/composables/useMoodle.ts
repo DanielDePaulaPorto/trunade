@@ -171,7 +171,9 @@ function svgToImage(svg: SVGSVGElement, original: SVGSVGElement | undefined) {
   if (!svg.getAttribute('font-family')) svg.style.setProperty('font-family', 'ui-monospace, Menlo, Consolas, monospace')
   if (!svg.getAttribute('width')) svg.setAttribute('width', width)
   const image = document.createElement('img')
-  image.src = `data:image/svg+xml;base64,${utf8Base64(svg.outerHTML)}`
+  // XML, not outerHTML: Mermaid labels are HTML inside <foreignObject>, and an
+  // HTML serialization (<br> unclosed) is not a valid SVG file, so it showed nothing.
+  image.src = `data:image/svg+xml;base64,${utf8Base64(new XMLSerializer().serializeToString(svg))}`
   image.alt = svg.getAttribute('aria-label') ?? ''
   image.setAttribute('width', width)
   image.style.maxWidth = '100%'

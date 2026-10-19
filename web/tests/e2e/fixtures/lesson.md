@@ -95,3 +95,10 @@ três
 O **segredo** da aula.
 
 </div>
+
+## Diagrama
+
+```mermaid
+graph LR
+  A[ler] --> B[resolver<br>e conferir] --> C[imprimir]
+```

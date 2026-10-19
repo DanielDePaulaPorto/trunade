@@ -185,6 +185,14 @@ test('copy for Moodle puts plain, inline-styled HTML on the clipboard', async ({
   expect(html).toContain('42')
   expect(html).toContain('import sys') // template lines go along: students copy whole programs
   expect(html).toContain('<details>')
+  // every figure is an SVG file a browser can read (Mermaid labels included)
+  const svgs = [...html.matchAll(/data:image\/svg\+xml;base64,([^"]+)/g)].map((match) => match[1]!)
+  expect(svgs.length).toBeGreaterThan(0)
+  const invalid = await page.evaluate((files) => files.filter((file) => {
+    const xml = new TextDecoder().decode(Uint8Array.from(atob(file), (c) => c.charCodeAt(0)))
+    return new DOMParser().parseFromString(xml, 'image/svg+xml').querySelector('parsererror')
+  }).length, svgs)
+  expect(invalid).toBe(0)
   // no tag inside code blocks: a Moodle display filter showed them as text
   for (const pre of html.match(/<pre[^>]*>[\s\S]*?<\/pre>/g) ?? []) {
     expect(pre.replace(/^<pre[^>]*>|<\/pre>$/g, '')).not.toMatch(/<[a-z/]/i)
