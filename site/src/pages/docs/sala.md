@@ -67,7 +67,7 @@ Em ☰ › Rodar e exportar, **Copiar para o Moodle** põe a aula inteira na ár
 - o código vai completo (com o molde, quando houver), colorido em Monokai, pronto para o aluno selecionar e copiar;
 - entrada, saída esperada e a saída que está na tela vão abaixo de cada bloco: rode tudo antes (<kbd>R</kbd>);
 - fórmulas voltam a `\( … \)` e `\[ … \]`, para o filtro MathJax do Moodle desenhar;
-- diagramas e imagens vão como imagem embutida;
+- figuras SVG da aula, diagramas e imagens vão como imagem embutida, com as cores do tema claro;
 - perguntas viram uma lista com um **Ver resposta** que abre sem JavaScript; passos viram seções em sequência; `data-reveal` mostra tudo.
 
 GIFs grandes deixam a cópia pesada, como no HTML exportado.

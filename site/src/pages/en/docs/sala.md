@@ -67,7 +67,7 @@ In ☰ › Run and export, **Copy for Moodle** puts the whole lesson on the clip
 - code goes whole (template included, if any), colored in Monokai, ready for students to select and copy;
 - input, expected output and the output on screen go below each block: run everything first (<kbd>R</kbd>);
 - formulas go back to `\( … \)` and `\[ … \]`, for Moodle's MathJax filter to draw;
-- diagrams and images go as embedded images;
+- the lesson's SVG figures, diagrams and images go as embedded images, in the light theme's colors;
 - questions become a list with a **Show answer** that opens without JavaScript; steps become sections in sequence; `data-reveal` shows everything.
 
 Large GIFs make the copy heavy, as in the exported HTML.
