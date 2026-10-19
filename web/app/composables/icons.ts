@@ -28,6 +28,7 @@ export const ICONS = {
   wide: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="m7 12 3-3M7 12l3 3M7 12h10M17 12l-3-3M17 12l-3 3"/>',
   maximize: '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>',
   minimize: '<path d="M4 14h6v6M20 10h-6V4M14 10l7-7M3 21l7-7"/>',
+  clipboard: '<rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>',
   equal: '<path d="M5 9h14M5 15h14"/>',
   code: '<path d="m16 18 6-6-6-6M8 6l-6 6 6 6"/>',
   x: '<path d="M18 6 6 18M6 6l12 12"/>',

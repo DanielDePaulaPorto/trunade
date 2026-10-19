@@ -59,6 +59,19 @@ In ☰ › Run and export, **Export HTML** writes a single `.html` file next to 
 - The file stays as it was on screen, like a PDF: same theme, fonts and width, code with your edits, no settings panel and no editing. Navigation (<kbd>T</kbd>, <kbd>Space</kbd>, arrows), <kbd>F</kbd>, <kbd>Z</kbd> and <kbd>R</kbd> still work.
 - Quiz answers stay hidden until clicked, as in class.
 
+## Copy for Moodle
+
+In ☰ › Run and export, **Copy for Moodle** puts the whole lesson on the clipboard as plain HTML, to paste into a Moodle **Page** (in the normal editor or in source view). Moodle removes scripts and stylesheets, so this copy is made to survive that:
+
+- no effects, no scripts and no custom fonts: every style is written on each element;
+- code goes whole (template included, if any), colored in Monokai, ready for students to select and copy;
+- input, expected output and the output on screen go below each block: run everything first (<kbd>R</kbd>);
+- formulas go back to `\( … \)` and `\[ … \]`, for Moodle's MathJax filter to draw;
+- diagrams and images go as embedded images;
+- questions become a list with a **Show answer** that opens without JavaScript; steps become sections in sequence; `data-reveal` shows everything.
+
+Large GIFs make the copy heavy, as in the exported HTML.
+
 ## The symbol in the corner
 
 The symbol in the header shows whether a program is running: the rotor turns and the eyes light up while compiling or running, and it spins back once when it finishes.

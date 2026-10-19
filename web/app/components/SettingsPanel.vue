@@ -9,7 +9,7 @@ export interface HtmlExportOptions {
   theme: 'light' | 'dark'
 }
 
-const emit = defineEmits<{ close: []; print: []; runAll: []; exportHtml: [options: HtmlExportOptions] }>()
+const emit = defineEmits<{ close: []; print: []; runAll: []; exportHtml: [options: HtmlExportOptions]; copyMoodle: [] }>()
 const runBeforeExport = ref(true)
 const exportTheme = ref<'light' | 'dark'>('light')
 const { t } = useI18n()
@@ -184,6 +184,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKey))
               </button>
             </div>
             <p class="hint">{{ t('exportHtmlHint') }}</p>
+            <button class="export-button" @click="emit('copyMoodle')"><AppIcon name="clipboard" />{{ t('copyMoodle') }}</button>
+            <p class="hint">{{ t('copyMoodleHint') }}</p>
           </template>
 
           <div v-else-if="group.id === 'language'" class="segmented">

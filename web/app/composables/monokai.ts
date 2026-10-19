@@ -1,10 +1,10 @@
 import { EditorView } from '@codemirror/view'
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
-import { tags as t } from '@lezer/highlight'
+import { tags as t, type Tag } from '@lezer/highlight'
 import type { Extension } from '@codemirror/state'
 import type { Theme } from './usePreferences'
 
-interface Palette {
+export interface Palette {
   background: string
   foreground: string
   comment: string
@@ -20,7 +20,7 @@ interface Palette {
 }
 
 /** Classic Monokai. */
-const DARK: Palette = {
+export const DARK: Palette = {
   background: '#272822',
   foreground: '#f8f8f2',
   comment: '#75715e',
@@ -67,7 +67,19 @@ function monokai(palette: Palette, dark: boolean): Extension {
     },
     { dark },
   )
-  const highlight = HighlightStyle.define([
+  return [theme, syntaxHighlighting(HighlightStyle.define(highlightRules(palette)))]
+}
+
+export interface HighlightRule {
+  tag: Tag | Tag[]
+  color: string
+  fontStyle?: string
+  backgroundColor?: string
+}
+
+/** Token colors, shared by the editor and the Moodle copy (inline styles). */
+export function highlightRules(palette: Palette): HighlightRule[] {
+  return [
     { tag: t.comment, color: palette.comment, fontStyle: 'italic' },
     { tag: [t.keyword, t.operator, t.processingInstruction, t.modifier, t.controlKeyword], color: palette.keyword },
     { tag: [t.string, t.special(t.string), t.character], color: palette.string },
@@ -80,8 +92,7 @@ function monokai(palette: Palette, dark: boolean): Extension {
     { tag: [t.propertyName, t.attributeName], color: palette.foreground },
     { tag: t.special(t.variableName), color: palette.variable },
     { tag: t.invalid, color: palette.background, backgroundColor: palette.keyword },
-  ])
-  return [theme, syntaxHighlighting(highlight)]
+  ]
 }
 
 export const MONOKAI: Record<Theme, Extension> = {

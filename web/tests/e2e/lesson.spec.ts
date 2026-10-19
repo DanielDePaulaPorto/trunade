@@ -1,4 +1,4 @@
-import { readdirSync, readFileSync, rmSync } from 'node:fs'
+import { readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { expect, test, type Locator, type Page } from '@playwright/test'
 
@@ -167,6 +167,24 @@ test('data-reveal keeps an element hidden until its section reaches the top', as
   })
   await expect(secret).toBeVisible()
   await expect(secret).toContainText('segredo da aula')
+})
+
+test('copy for Moodle puts plain, inline-styled HTML on the clipboard', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await block(page, 0).getByTitle('Executar (Shift+Enter)').click()
+  await expect(terminalText(block(page, 0))).toContainText('42')
+  await page.locator('.menu-button').click()
+  await page.getByRole('button', { name: /Rodar e exportar/ }).click()
+  await page.getByRole('button', { name: 'Copiar para o Moodle' }).click()
+  await expect(page.locator('.export-status')).toContainText('aula copiada')
+  const html = await page.evaluate(() => navigator.clipboard.readText())
+  writeFileSync(join(process.env.TRUNADE_TEST_HOME!, 'moodle.html'), html)
+  expect(html).not.toMatch(/<script|<style|class="cm-|xterm/)
+  expect(html).toContain('<span style="color:#f92672">') // Monokai keyword, inline
+  expect(html).toMatch(/SAÍDA|saída/i)
+  expect(html).toContain('42')
+  expect(html).toContain('import</span> sys') // template lines go along: students copy whole programs
+  expect(html).toContain('<details>')
 })
 
 test('runs reach the usage log', async ({ page }) => {

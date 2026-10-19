@@ -143,11 +143,21 @@ function write(text: string) {
   terminal?.write(text)
 }
 
+/** What the terminal shows, as plain text (colors dropped). */
+function text() {
+  if (!terminal) return ''
+  const buffer = terminal.buffer.active
+  const lines: string[] = []
+  for (let i = 0; i < buffer.length; i++) lines.push(buffer.getLine(i)?.translateToString(true) ?? '')
+  while (lines.length && !lines.at(-1)!.trim()) lines.pop()
+  return lines.join('\n')
+}
+
 function size() {
   return { cols: terminal?.cols ?? 80, rows: PROGRAM_ROWS }
 }
 
-defineExpose({ reset, setInteractive, write, size })
+defineExpose({ reset, setInteractive, write, size, text })
 </script>
 
 <template>

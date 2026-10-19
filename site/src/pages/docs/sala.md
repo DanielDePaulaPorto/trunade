@@ -59,6 +59,19 @@ Em ☰ › Rodar e exportar, **Exportar HTML** grava um único arquivo `.html` a
 - O arquivo fica como estava na tela, como um PDF: mesmo tema, fontes e largura, código com as edições, sem painel de configurações e sem edição. Valem a navegação (<kbd>T</kbd>, <kbd>Espaço</kbd>, setas), <kbd>F</kbd>, <kbd>Z</kbd> e <kbd>R</kbd>.
 - As respostas das perguntas continuam ocultas até clicar, como na aula.
 
+## Copiar para o Moodle
+
+Em ☰ › Rodar e exportar, **Copiar para o Moodle** põe a aula inteira na área de transferência como HTML simples, para colar no conteúdo de uma **Página** do Moodle (no editor normal ou no modo código-fonte). O Moodle remove scripts e folhas de estilo, então essa cópia é feita para sobreviver a isso:
+
+- sem efeitos, sem scripts e sem fontes próprias: todo estilo vai escrito em cada elemento;
+- o código vai completo (com o molde, quando houver), colorido em Monokai, pronto para o aluno selecionar e copiar;
+- entrada, saída esperada e a saída que está na tela vão abaixo de cada bloco: rode tudo antes (<kbd>R</kbd>);
+- fórmulas voltam a `\( … \)` e `\[ … \]`, para o filtro MathJax do Moodle desenhar;
+- diagramas e imagens vão como imagem embutida;
+- perguntas viram uma lista com um **Ver resposta** que abre sem JavaScript; passos viram seções em sequência; `data-reveal` mostra tudo.
+
+GIFs grandes deixam a cópia pesada, como no HTML exportado.
+
 ## O símbolo no canto
 
 O símbolo no cabeçalho mostra se há programa rodando: o rotor gira e os olhos acendem enquanto compila ou executa, e dá uma volta para trás quando termina.

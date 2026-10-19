@@ -241,6 +241,8 @@ const { registerExportable, unregisterExportable } = useExport()
 registerExportable(props.cell.id, {
   edits: () => ({ source: source.value, cases: cases.value.map((c) => ({ ...c })) }),
   lastRun: currentRun,
+  program: () => `${props.cell.before}${source.value}\n${props.cell.after}`.trimEnd(),
+  terminalText: () => (hasOutput.value ? terminal.value?.text() ?? '' : ''),
 })
 
 const { registerRunner, unregisterRunner } = useRunAll()

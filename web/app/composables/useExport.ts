@@ -11,12 +11,16 @@ export interface ExportableBlock {
   edits: () => { source: string; cases: TestCase[] }
   /** The run on screen, if it was made with the code and input now shown. */
   lastRun: () => RunRecord | null
+  /** The whole program (template included) and what its terminal shows, for the Moodle copy. */
+  program: () => string
+  terminalText: () => string
 }
 
 export type ExportState =
   | { phase: 'running' | 'writing' }
   | { phase: 'done'; path: string }
   | { phase: 'failed'; error: string }
+  | { phase: 'copied' }
 
 const blocks = new Map<string, ExportableBlock>()
 const state = ref<ExportState | null>(null)
@@ -25,12 +29,25 @@ export function useExport() {
   return { state, exportHtml, closeExport, registerExportable, unregisterExportable }
 }
 
+export function exportableBlock(id: string) {
+  return blocks.get(id)
+}
+
 function registerExportable(id: string, block: ExportableBlock) {
   blocks.set(id, block)
 }
 
 function unregisterExportable(id: string) {
   blocks.delete(id)
+}
+
+/** The Moodle copy reports through the same status bar. */
+export function reportCopy(result: Promise<void>) {
+  state.value = { phase: 'writing' }
+  result.then(
+    () => (state.value = { phase: 'copied' }),
+    (error: unknown) => (state.value = { phase: 'failed', error: String(error) }),
+  )
 }
 
 function closeExport() {
@@ -84,7 +101,7 @@ function fontsInUse() {
   return [...new Set(names)]
 }
 
-function drawnDiagrams() {
+export function drawnDiagrams() {
   const diagrams: Record<string, string> = {}
   for (const host of document.querySelectorAll<HTMLElement>('.mermaid-diagram')) {
     if (host.dataset.source && host.querySelector('svg')) diagrams[host.dataset.source] = host.innerHTML
@@ -106,7 +123,7 @@ async function withInlineImages(cells: Cell[]): Promise<Cell[]> {
   )
 }
 
-async function inlineImages(html: string) {
+export async function inlineImages(html: string) {
   if (!html.includes('<img')) return html
   const template = document.createElement('template')
   template.innerHTML = html

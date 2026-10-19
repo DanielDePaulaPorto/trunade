@@ -73,6 +73,12 @@ function exportHtmlFromPanel(options: HtmlExportOptions) {
   useExport().exportHtml(options)
 }
 
+/** Straight from the click: the clipboard only accepts writes during the gesture. */
+function copyMoodleFromPanel() {
+  reportCopy(copyForMoodle())
+  settingsOpen.value = false
+}
+
 function runAllFromPanel() {
   settingsOpen.value = false
   runAll()
@@ -119,7 +125,7 @@ onBeforeUnmount(() => {
     </main>
 
     <Transition name="slide">
-      <SettingsPanel v-if="settingsOpen" @close="settingsOpen = false" @print="exportPdf" @run-all="runAllFromPanel" @export-html="exportHtmlFromPanel" />
+      <SettingsPanel v-if="settingsOpen" @close="settingsOpen = false" @print="exportPdf" @run-all="runAllFromPanel" @export-html="exportHtmlFromPanel" @copy-moodle="copyMoodleFromPanel" />
     </Transition>
     <RunAllStatus />
     <ExportStatus />
